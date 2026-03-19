@@ -265,6 +265,66 @@
     </section>
   </div>
 
+Parfait, on garde ta structure et on adapte tout à ton offre « courte » à 9 €.  
+Voici le bloc HTML prêt à coller, sur le modèle de ta carte existante :
+
+```html
+<div class="service-card fade-in">
+  <div class="service-card__content">
+    <h3>Voyance par mail – 1 question</h3>
+
+    <p>
+      Une réponse écrite, claire et concise, pour éclairer une
+      situation précise. Vous posez <strong>1 question</strong> bien ciblée,
+      je réalise un tirage et je vous réponds par mail avec les
+      messages essentiels à retenir.
+    </p>
+
+    <div class="service-card__details">
+      <span class="service-card__tag">1 question précise</span>
+      <span class="service-card__tag">Réponse sous 48h</span>
+      <span class="service-card__tag">Par mail</span>
+    </div>
+
+    <div class="service-card__pricing">
+      <p class="service-card__price">9 € / question</p>
+
+      <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank" rel="noopener noreferrer" class="paypal-form">
+        <input type="hidden" name="cmd" value="_xclick">
+        <!-- Ton compte PayPal -->
+        <input type="hidden" name="business" value="philippe.medium45@gmail.com">
+        <!-- Intitulé qui apparaîtra sur PayPal -->
+        <input type="hidden" name="item_name" value="Voyance par mail - 1 question">
+        <!-- Montant de la question -->
+        <input type="hidden" name="amount" value="9.00">
+        <input type="hidden" name="currency_code" value="EUR">
+        <input type="hidden" name="no_shipping" value="1">
+        <input type="hidden" name="lc" value="FR">
+        <input type="hidden" name="bn" value="PP-BuyNowBF:btn_buynow_LG.gif:NonHostedGuest">
+
+        <button type="submit" class="btn btn--paypal" aria-label="Payer 9€ via PayPal pour une voyance par mail 1 question">
+          <svg class="paypal-icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+            <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944.901C5.026.382 5.474 0 5.998 0h7.46c2.57 0 4.578.543 5.69 1.81 1.01 1.15 1.304 2.42 1.012 4.287-.023.143-.047.288-.077.437-.983 5.05-4.349 6.797-8.647 6.797h-2.19c-.524 0-.968.382-1.05.9l-1.12 7.106zm14.146-14.42a3.35 3.35 0 0 0-.607-.541c1.394 3.178-.184 6.946-5.336 6.946h-2.19a2.106 2.106 0 0 0-2.078 1.78l-1.12 7.106a.641.641 0 0 0 .633.74h3.394c.46 0 .85-.334.922-.788l.725-4.584a1.06 1.06 0 0 1 1.044-.895h.686c4.268 0 7.607-1.73 8.583-6.738.36-1.843.14-3.38-.656-4.026z"/>
+          </svg>
+          Payer avec PayPal
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <div class="service-card__image">
+    <!-- Mets ici ton visuel voyance par mail -->
+    <img src="voyance_mail_cosy.png"
+         alt="Voyance par mail 1 question"
+         width="400"
+         height="300"
+         loading="lazy">
+  </div>
+</div>
+```
+
+Tu veux que je t’écrive une petite phrase sous la carte (par exemple « après votre paiement, envoyez votre question à… ») pour guider la personne sur la marche à suivre ?
+  
   <!-- ==================== À PROPOS ==================== -->
   <div id="a-propos" class="page">
 

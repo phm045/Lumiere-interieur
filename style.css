@@ -1315,8 +1315,17 @@ section {
 @media (max-width: 768px) {
   .service-card__pricing {
     flex-direction: column;
-    align-items: flex-start;
+    align-items: stretch;
     gap: var(--space-3);
+  }
+  .service-card__pricing .btn--paypal,
+  .service-card__pricing .btn--stripe,
+  .service-card__pricing .btn--primary,
+  .service-card__pricing .btn--sm {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    text-align: center;
   }
 }
 

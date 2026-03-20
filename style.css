@@ -968,7 +968,7 @@ section {
    ======================================== */
 
 .trust-banner {
-  padding-block: var(--space-6);
+  padding-block: var(--space-2) var(--space-6);
 }
 
 .trust-banner__inner {

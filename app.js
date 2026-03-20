@@ -271,6 +271,41 @@
         '<p>L\u2019astrologie telle que je la pratique n\u2019a pas pour but de vous enfermer dans un signe ou une \u00e9tiquette, mais au contraire d\u2019<strong>ouvrir des portes</strong>, de vous r\u00e9concilier avec vous-m\u00eame et de vous rappeler que vous faites partie d\u2019un grand mouvement vivant.</p>' +
         '<p>Si vous ressentez l\u2019appel de mieux comprendre votre th\u00e8me natal ou de combiner astrologie et tirages de cartes, vous pouvez r\u00e9server une consultation sur <strong>Lumi\u00e8re Int\u00e9rieure</strong>. Ensemble, nous lirons le ciel comme une boussole symbolique au service de votre chemin int\u00e9rieur.</p>' +
         '<div class="blog-article__cta"><p>Envie de d\u00e9couvrir votre carte du ciel\u00a0? R\u00e9servez votre consultation astrologique.</p></div>'
+    },
+    'vraie-spiritualite': {
+      category: 'Spiritualit\u00e9',
+      title: 'La v\u00e9ritable spiritualit\u00e9\u00a0: au-del\u00e0 des illusions du web',
+      date: '20 mars 2026',
+      content: '<h2>Quand la spiritualit\u00e9 devient un produit</h2>' +
+        '<p>Il suffit de quelques minutes sur les r\u00e9seaux sociaux pour \u00eatre submerg\u00e9 de contenus dits \u00ab spirituels \u00bb\u00a0: mantras en stories, tirages de tarot en direct, promesses d\u2019\u00e9veil en 7 jours, formules magiques pour attirer l\u2019abondance. La spiritualit\u00e9 est devenue un march\u00e9. Elle se vend, se consomme et se scroll comme n\u2019importe quel autre contenu.</p>' +
+        '<p>Ce n\u2019est pas le propos ici de juger quiconque. Mais il est l\u00e9gitime de se demander\u00a0: <strong>o\u00f9 est pass\u00e9e la profondeur\u00a0?</strong> O\u00f9 est pass\u00e9 le silence, l\u2019introspection, la lenteur n\u00e9cessaire \u00e0 toute transformation v\u00e9ritable\u00a0?</p>' +
+        '<h2>Le pi\u00e8ge de l\u2019imm\u00e9diatet\u00e9</h2>' +
+        '<p>Nous vivons dans une \u00e9poque d\u2019imm\u00e9diatet\u00e9. Tout doit aller vite\u00a0: les r\u00e9ponses, les gu\u00e9risons, les prises de conscience. Mais la vie int\u00e9rieure ne fonctionne pas comme \u00e7a. Elle demande du <strong>temps</strong>, de la patience et surtout de l\u2019honn\u00eatet\u00e9 envers soi-m\u00eame.</p>' +
+        '<p>Un vrai cheminement spirituel n\u2019est pas toujours confortable. Il implique de regarder ses ombres, d\u2019accepter ses blessures et de traverser des p\u00e9riodes de doute. Ce n\u2019est pas ce que les algorithmes mettent en avant, parce que \u00e7a ne fait pas de likes.</p>' +
+        '<h2>Les nouveaux gourous du web</h2>' +
+        '<p>Derri\u00e8re certains comptes \u00e0 milliers d\u2019abonn\u00e9s se cachent parfois des personnes sans formation, sans exp\u00e9rience et sans \u00e9thique. Ils exploitent la vuln\u00e9rabilit\u00e9 de ceux qui cherchent des r\u00e9ponses, en proposant des \u00ab soins \u00e9nerg\u00e9tiques \u00bb miracles ou des \u00ab nettoyages karmiques \u00bb \u00e0 prix d\u2019or.</p>' +
+        '<p>Les autorit\u00e9s fran\u00e7aises alertent r\u00e9guli\u00e8rement sur la mont\u00e9e des d\u00e9rives sectaires li\u00e9es au bien-\u00eatre et au d\u00e9veloppement personnel en ligne. Ce ph\u00e9nom\u00e8ne s\u2019est amplifi\u00e9 depuis la crise sanitaire, port\u00e9 par des \u00ab coachs de vie \u00bb et des \u00ab influenceurs spirituels \u00bb dont les comp\u00e9tences sont, au mieux, al\u00e9atoires.</p>' +
+        '<h2>Alors, c\u2019est quoi la vraie spiritualit\u00e9\u00a0?</h2>' +
+        '<p>La v\u00e9ritable spiritualit\u00e9 est <strong>silencieuse</strong>. Elle ne cherche pas \u00e0 convaincre, \u00e0 briller ni \u00e0 vendre. Elle se vit de l\u2019int\u00e9rieur, dans la simplicit\u00e9 du quotidien.</p>' +
+        '<ul>' +
+        '<li>C\u2019est <strong>\u00e9couter</strong> avant de parler</li>' +
+        '<li>C\u2019est <strong>douter</strong> plut\u00f4t que de tout savoir</li>' +
+        '<li>C\u2019est <strong>accueillir</strong> ce qui vient sans chercher \u00e0 tout contr\u00f4ler</li>' +
+        '<li>C\u2019est respecter le <strong>libre arbitre</strong> de chacun, toujours</li>' +
+        '</ul>' +
+        '<p>La spiritualit\u00e9 authentique ne promet rien. Elle accompagne. Elle \u00e9claire. Elle offre un espace de recul pour mieux se comprendre et avancer \u00e0 son propre rythme.</p>' +
+        '<h2>Comment reconna\u00eetre un accompagnement sinc\u00e8re\u00a0?</h2>' +
+        '<p>Quelques rep\u00e8res simples\u00a0:</p>' +
+        '<ul>' +
+        '<li>Un praticien honn\u00eate ne vous rendra <strong>jamais d\u00e9pendant</strong> de lui</li>' +
+        '<li>Il ne vous fera <strong>jamais peur</strong> pour vous pousser \u00e0 payer</li>' +
+        '<li>Il reconna\u00eetra <strong>les limites</strong> de sa pratique et ne se substituera pas \u00e0 un m\u00e9decin ou un psychologue</li>' +
+        '<li>Il respectera votre <strong>rythme</strong> et vos choix, m\u00eame s\u2019ils diff\u00e8rent de ses conseils</li>' +
+        '</ul>' +
+        '<h2>Mon engagement sur Lumi\u00e8re Int\u00e9rieure</h2>' +
+        '<p>C\u2019est cette vision de la spiritualit\u00e9 que je d\u00e9fends au quotidien. Mes consultations ne sont pas l\u00e0 pour vous dire quoi faire, mais pour vous aider \u00e0 <strong>voir plus clair</strong>. Les cartes sont un support, pas une v\u00e9rit\u00e9 absolue. Et votre libre arbitre reste sacr\u00e9, toujours.</p>' +
+        '<p>Dans un monde o\u00f9 tout va vite, je crois profond\u00e9ment que la vraie lumi\u00e8re vient de l\u2019int\u00e9rieur. Pas d\u2019un \u00e9cran, pas d\u2019un gourou, pas d\u2019une tendance. De vous. De votre capacit\u00e9 \u00e0 vous arr\u00eater, \u00e0 respirer et \u00e0 \u00e9couter ce qui vibre en vous.</p>' +
+        '<div class="blog-article__cta"><p>Envie d\u2019un espace d\u2019\u00e9coute sinc\u00e8re et bienveillant\u00a0? N\u2019h\u00e9sitez pas \u00e0 me contacter.</p></div>'
     }
   };
 

@@ -564,23 +564,21 @@
         date: new Date().toISOString()
       });
 
-      // Send notification email
+      // Send notification email via Web3Forms (no mailto, no redirect)
       if (isNew) {
-        var subject = encodeURIComponent('Nouvelle inscription newsletter — Lumi\u00e8re Int\u00e9rieure');
-        var body = encodeURIComponent(
-          'Nouvelle inscription \u00e0 la newsletter :\n\n' +
-          'Pr\u00e9nom : ' + prenom + '\n' +
-          'Email : ' + email + '\n' +
-          'Date : ' + new Date().toLocaleDateString('fr-FR') + '\n\n' +
-          '\u2014 Notification automatique depuis lumiere-interieur.com'
-        );
-        // Open mail client silently via hidden iframe
-        var mailLink = document.createElement('a');
-        mailLink.href = 'mailto:philippe.medium45@gmail.com?subject=' + subject + '&body=' + body;
-        mailLink.style.display = 'none';
-        document.body.appendChild(mailLink);
-        mailLink.click();
-        document.body.removeChild(mailLink);
+        fetch('https://api.web3forms.com/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            access_key: '3e79fe0a-60ca-4686-82ff-19204a3ca85b',
+            subject: 'Nouvelle inscription newsletter \u2014 Lumi\u00e8re Int\u00e9rieure',
+            from_name: 'Lumi\u00e8re Int\u00e9rieure - Newsletter',
+            prenom: prenom,
+            email: email,
+            date: new Date().toLocaleDateString('fr-FR'),
+            message: 'Nouvelle inscription \u00e0 la newsletter.\nPr\u00e9nom : ' + prenom + '\nEmail : ' + email
+          })
+        }).catch(function() {});
       }
 
       // Show success message

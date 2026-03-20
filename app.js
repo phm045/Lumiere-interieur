@@ -334,15 +334,17 @@
   function saveLikes(articleId, data) {
     try { localStorage.setItem('blog_likes_' + articleId, JSON.stringify(data)); } catch(e) {}
   }
-  // --- Views: shared counter via counterapi.com (visible by everyone) ---
+  // --- Views: shared counter via countapi (visible by everyone) ---
   var viewsCache = {};
+  var COUNTAPI_BASE = 'https://countapi.mileshilliard.com/api/v1';
+  var COUNTAPI_PREFIX = 'lumiere-interieure-';
   function fetchViews(articleId, callback) {
-    var url = 'https://counterapi.com/api/lumiere-interieure/view/' + articleId + '?readOnly=true';
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
+    xhr.open('GET', COUNTAPI_BASE + '/get/' + COUNTAPI_PREFIX + articleId);
     xhr.responseType = 'json';
     xhr.onload = function() {
-      var val = (xhr.response && xhr.response.value) ? xhr.response.value : 0;
+      var val = 0;
+      if (xhr.response && xhr.response.value !== undefined) val = parseInt(xhr.response.value, 10) || 0;
       viewsCache[articleId] = val;
       if (callback) callback(val);
     };
@@ -350,12 +352,12 @@
     xhr.send();
   }
   function addView(articleId, callback) {
-    var url = 'https://counterapi.com/api/lumiere-interieure/view/' + articleId;
     var xhr = new XMLHttpRequest();
-    xhr.open('GET', url);
+    xhr.open('GET', COUNTAPI_BASE + '/hit/' + COUNTAPI_PREFIX + articleId);
     xhr.responseType = 'json';
     xhr.onload = function() {
-      var val = (xhr.response && xhr.response.value) ? xhr.response.value : 0;
+      var val = 0;
+      if (xhr.response && xhr.response.value !== undefined) val = parseInt(xhr.response.value, 10) || 0;
       viewsCache[articleId] = val;
       if (callback) callback(val);
     };

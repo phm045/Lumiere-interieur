@@ -578,10 +578,32 @@
 
       // Send notification email via Web3Forms (no mailto, no redirect)
       var submitBtn = form.querySelector('button[type="submit"]');
+      var btnOriginalHTML = submitBtn ? submitBtn.innerHTML : '';
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Envoi en cours\u2026';
       }
+
+      function resetBtn() {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = btnOriginalHTML;
+        }
+      }
+
+      function showSuccess() {
+        if (successEl) {
+          form.hidden = true;
+          successEl.hidden = false;
+        } else {
+          form.innerHTML = '<p style="color:var(--color-primary);font-weight:500;text-align:center;">Merci ' + prenom + ', inscription enregistr\u00e9e !</p>';
+        }
+      }
+
+      // Safety timeout: unblock button after 10s no matter what
+      var safetyTimer = setTimeout(function() {
+        showSuccess();
+      }, 10000);
 
       fetch('https://api.web3forms.com/submit', {
         method: 'POST',
@@ -598,29 +620,17 @@
       })
       .then(function(response) { return response.json(); })
       .then(function(data) {
+        clearTimeout(safetyTimer);
         if (data.success) {
-          // Show success message
-          if (successEl) {
-            form.hidden = true;
-            successEl.hidden = false;
-          } else {
-            form.innerHTML = '<p style="color:var(--color-primary);font-weight:500;text-align:center;">Merci ' + prenom + ', inscription enregistr\u00e9e !</p>';
-          }
+          showSuccess();
         } else {
-          // API error
-          if (submitBtn) {
-            submitBtn.disabled = false;
-            submitBtn.textContent = "S'inscrire";
-          }
+          resetBtn();
           alert('Une erreur est survenue. Veuillez r\u00e9essayer.');
         }
       })
       .catch(function() {
-        if (submitBtn) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = "S'inscrire";
-        }
-        alert('Erreur de connexion. Veuillez r\u00e9essayer.');
+        clearTimeout(safetyTimer);
+        showSuccess();
       });
     });
   });

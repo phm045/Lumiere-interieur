@@ -727,8 +727,21 @@
           </div>
 
           <div class="contact-location fade-in">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-            <p>Ma localisation : Orléans, 45000</p>
+            <div class="contact-location__header">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <p>Ma localisation &mdash; Orléans, 45000</p>
+            </div>
+            <div class="contact-location__map">
+              <iframe
+                src="https://www.openstreetmap.org/export/embed.html?bbox=1.88%2C47.87%2C1.94%2C47.92&layer=mapnik&marker=47.9025%2C1.9090"
+                width="100%"
+                height="250"
+                style="border:0; border-radius: var(--radius-md);"
+                loading="lazy"
+                title="Localisation Orléans"
+                allowfullscreen>
+              </iframe>
+            </div>
           </div>
 
           <div class="contact-availability fade-in">

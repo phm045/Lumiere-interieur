@@ -832,6 +832,47 @@ section {
   line-height: 1.6;
   margin-bottom: var(--space-4);
 }
+.blog-card__stats {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: 1px solid var(--color-divider);
+}
+.blog-card__views {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: 0.8rem;
+  color: var(--color-text-faint);
+}
+.blog-card__views svg {
+  opacity: 0.6;
+}
+.blog-card__heart {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  background: none;
+  border: none;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: var(--color-text-faint);
+  transition: all 0.25s ease;
+}
+.blog-card__heart:hover {
+  color: var(--color-terracotta);
+}
+.blog-card__heart.hearted {
+  color: var(--color-terracotta);
+}
+.blog-card__heart.hearted svg {
+  fill: var(--color-terracotta);
+}
 .blog-card__date {
   font-size: var(--text-xs);
   color: var(--color-text-faint);

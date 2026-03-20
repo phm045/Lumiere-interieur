@@ -326,13 +326,36 @@
   var closeBtn = overlay ? overlay.querySelector('.blog-overlay__close') : null;
   var backdrop = overlay ? overlay.querySelector('.blog-overlay__backdrop') : null;
 
-  // --- Likes & Comments helpers (localStorage) ---
+  // --- Likes, Views & Comments helpers (localStorage) ---
   function getLikes(articleId) {
     try { return JSON.parse(localStorage.getItem('blog_likes_' + articleId)) || { count: 0, liked: false }; }
     catch(e) { return { count: 0, liked: false }; }
   }
   function saveLikes(articleId, data) {
     try { localStorage.setItem('blog_likes_' + articleId, JSON.stringify(data)); } catch(e) {}
+  }
+  function getViews(articleId) {
+    try { return parseInt(localStorage.getItem('blog_views_' + articleId), 10) || 0; }
+    catch(e) { return 0; }
+  }
+  function addView(articleId) {
+    var count = getViews(articleId) + 1;
+    try { localStorage.setItem('blog_views_' + articleId, count); } catch(e) {}
+    return count;
+  }
+  function updateCardStats(articleId) {
+    var card = document.querySelector('.blog-card[data-article="' + articleId + '"]');
+    if (!card) return;
+    var viewEl = card.querySelector('.view-count');
+    var heartBtn = card.querySelector('.blog-card__heart');
+    var heartCount = card.querySelector('.heart-count');
+    var likes = getLikes(articleId);
+    if (viewEl) viewEl.textContent = getViews(articleId);
+    if (heartCount) heartCount.textContent = likes.count;
+    if (heartBtn) {
+      if (likes.liked) { heartBtn.classList.add('hearted'); heartBtn.querySelector('svg').setAttribute('fill', 'var(--color-terracotta)'); }
+      else { heartBtn.classList.remove('hearted'); heartBtn.querySelector('svg').setAttribute('fill', 'none'); }
+    }
   }
   function getComments(articleId) {
     try { return JSON.parse(localStorage.getItem('blog_comments_' + articleId)) || []; }
@@ -392,6 +415,10 @@
     var article = blogArticles[articleId];
     if (!article || !overlay || !articleBody) return;
 
+    // Increment views
+    addView(articleId);
+    updateCardStats(articleId);
+
     articleBody.innerHTML =
       '<p class="blog-article__category">' + article.category + '</p>' +
       '<h1 class="blog-article__title">' + article.title + '</h1>' +
@@ -424,6 +451,7 @@
         void svg.offsetWidth;
         svg.classList.add('like-anim');
         this.querySelector('.like-count').textContent = data.count;
+        updateCardStats(articleId);
       });
     }
 
@@ -459,9 +487,32 @@
 
   // Blog card click handlers
   document.querySelectorAll('.blog-card[data-article]').forEach(function (card) {
-    card.addEventListener('click', function () {
+    card.addEventListener('click', function (e) {
+      // Don't open article if clicking the heart button
+      if (e.target.closest('.blog-card__heart')) return;
       var articleId = this.getAttribute('data-article');
       openBlogArticle(articleId);
+    });
+  });
+
+  // Initialize card stats & heart click handlers
+  document.querySelectorAll('.blog-card__heart[data-heart]').forEach(function (btn) {
+    var articleId = btn.getAttribute('data-heart');
+    // Init display
+    updateCardStats(articleId);
+    // Heart click on card
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      var data = getLikes(articleId);
+      if (data.liked) {
+        data.count = Math.max(0, data.count - 1);
+        data.liked = false;
+      } else {
+        data.count += 1;
+        data.liked = true;
+      }
+      saveLikes(articleId, data);
+      updateCardStats(articleId);
     });
   });
 

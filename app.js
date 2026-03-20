@@ -334,14 +334,33 @@
   function saveLikes(articleId, data) {
     try { localStorage.setItem('blog_likes_' + articleId, JSON.stringify(data)); } catch(e) {}
   }
-  function getViews(articleId) {
-    try { return parseInt(localStorage.getItem('blog_views_' + articleId), 10) || 0; }
-    catch(e) { return 0; }
+  // --- Views: shared counter via counterapi.com (visible by everyone) ---
+  var viewsCache = {};
+  function fetchViews(articleId, callback) {
+    var url = 'https://counterapi.com/api/lumiere-interieure/view/' + articleId + '?readOnly=true';
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.responseType = 'json';
+    xhr.onload = function() {
+      var val = (xhr.response && xhr.response.value) ? xhr.response.value : 0;
+      viewsCache[articleId] = val;
+      if (callback) callback(val);
+    };
+    xhr.onerror = function() { if (callback) callback(viewsCache[articleId] || 0); };
+    xhr.send();
   }
-  function addView(articleId) {
-    var count = getViews(articleId) + 1;
-    try { localStorage.setItem('blog_views_' + articleId, count); } catch(e) {}
-    return count;
+  function addView(articleId, callback) {
+    var url = 'https://counterapi.com/api/lumiere-interieure/view/' + articleId;
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.responseType = 'json';
+    xhr.onload = function() {
+      var val = (xhr.response && xhr.response.value) ? xhr.response.value : 0;
+      viewsCache[articleId] = val;
+      if (callback) callback(val);
+    };
+    xhr.onerror = function() { if (callback) callback(viewsCache[articleId] || 0); };
+    xhr.send();
   }
   function updateCardStats(articleId) {
     var card = document.querySelector('.blog-card[data-article="' + articleId + '"]');
@@ -350,7 +369,7 @@
     var heartBtn = card.querySelector('.blog-card__heart');
     var heartCount = card.querySelector('.heart-count');
     var likes = getLikes(articleId);
-    if (viewEl) viewEl.textContent = getViews(articleId);
+    if (viewEl && viewsCache[articleId] !== undefined) viewEl.textContent = viewsCache[articleId];
     if (heartCount) heartCount.textContent = likes.count;
     if (heartBtn) {
       if (likes.liked) { heartBtn.classList.add('hearted'); heartBtn.querySelector('svg').setAttribute('fill', 'var(--color-terracotta)'); }
@@ -415,9 +434,10 @@
     var article = blogArticles[articleId];
     if (!article || !overlay || !articleBody) return;
 
-    // Increment views
-    addView(articleId);
-    updateCardStats(articleId);
+    // Increment views (shared counter)
+    addView(articleId, function() {
+      updateCardStats(articleId);
+    });
 
     articleBody.innerHTML =
       '<p class="blog-article__category">' + article.category + '</p>' +
@@ -498,7 +518,11 @@
   // Initialize card stats & heart click handlers
   document.querySelectorAll('.blog-card__heart[data-heart]').forEach(function (btn) {
     var articleId = btn.getAttribute('data-heart');
-    // Init display
+    // Fetch shared view count from API, then update display
+    fetchViews(articleId, function() {
+      updateCardStats(articleId);
+    });
+    // Init likes display (local)
     updateCardStats(articleId);
     // Heart click on card
     btn.addEventListener('click', function (e) {

@@ -564,32 +564,64 @@
         date: new Date().toISOString()
       });
 
-      // Send notification email via Web3Forms (no mailto, no redirect)
-      if (isNew) {
-        fetch('https://api.web3forms.com/submit', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-          body: JSON.stringify({
-            access_key: '3e79fe0a-60ca-4686-82ff-19204a3ca85b',
-            subject: 'Nouvelle inscription newsletter \u2014 Lumi\u00e8re Int\u00e9rieure',
-            from_name: 'Lumi\u00e8re Int\u00e9rieure - Newsletter',
-            prenom: prenom,
-            email: email,
-            date: new Date().toLocaleDateString('fr-FR'),
-            message: 'Nouvelle inscription \u00e0 la newsletter.\nPr\u00e9nom : ' + prenom + '\nEmail : ' + email
-          })
-        }).catch(function() {});
+      var successEl = form.parentElement.querySelector('.newsletter-success');
+
+      if (!isNew) {
+        // Already subscribed
+        if (successEl) {
+          successEl.querySelector('p').textContent = 'Vous \u00eates d\u00e9j\u00e0 inscrit(e) avec cet email.';
+          form.hidden = true;
+          successEl.hidden = false;
+        }
+        return;
       }
 
-      // Show success message
-      var successEl = form.parentElement.querySelector('.newsletter-success');
-      if (successEl) {
-        form.hidden = true;
-        successEl.hidden = false;
-      } else {
-        // Fallback: replace form content
-        form.innerHTML = '<p style="color:var(--color-primary);font-weight:500;text-align:center;">Merci ' + prenom + ', inscription enregistr\u00e9e !</p>';
+      // Send notification email via Web3Forms (no mailto, no redirect)
+      var submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Envoi en cours\u2026';
       }
+
+      fetch('https://api.web3forms.com/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+        body: JSON.stringify({
+          access_key: '3e79fe0a-60ca-4686-82ff-19204a3ca85b',
+          subject: 'Nouvelle inscription newsletter \u2014 Lumi\u00e8re Int\u00e9rieure',
+          from_name: 'Lumi\u00e8re Int\u00e9rieure - Newsletter',
+          prenom: prenom,
+          email: email,
+          date: new Date().toLocaleDateString('fr-FR'),
+          message: 'Nouvelle inscription \u00e0 la newsletter.\nPr\u00e9nom : ' + prenom + '\nEmail : ' + email
+        })
+      })
+      .then(function(response) { return response.json(); })
+      .then(function(data) {
+        if (data.success) {
+          // Show success message
+          if (successEl) {
+            form.hidden = true;
+            successEl.hidden = false;
+          } else {
+            form.innerHTML = '<p style="color:var(--color-primary);font-weight:500;text-align:center;">Merci ' + prenom + ', inscription enregistr\u00e9e !</p>';
+          }
+        } else {
+          // API error
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "S'inscrire";
+          }
+          alert('Une erreur est survenue. Veuillez r\u00e9essayer.');
+        }
+      })
+      .catch(function() {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = "S'inscrire";
+        }
+        alert('Erreur de connexion. Veuillez r\u00e9essayer.');
+      });
     });
   });
 

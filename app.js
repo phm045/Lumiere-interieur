@@ -318,6 +318,44 @@
         '<p>Et c\u2019est peut-\u00eatre \u00e7a, finalement, la v\u00e9ritable spiritualit\u00e9\u00a0: non pas chercher la lumi\u00e8re \u00e0 l\u2019ext\u00e9rieur, mais se rappeler qu\u2019elle a toujours \u00e9t\u00e9 l\u00e0, en soi, patiente et silencieuse, attendant simplement qu\u2019on lui accorde un instant d\u2019attention.</p>' +
         '<div class="blog-article__cta"><p>Envie d\u2019un espace d\u2019\u00e9coute sinc\u00e8re et bienveillant\u00a0? N\u2019h\u00e9sitez pas \u00e0 me contacter.</p></div>'
     }
+    'numerologie-pythagoricienne': {
+  category: 'Numérologie',
+  title: 'La numérologie pythagoricienne : décoder les chiffres de votre vie',
+  date: '28 mars 2026',
+  content: '<h2>Pythagore et les chiffres sacrés</h2>' +
+    '<p>Bien avant que les chiffres ne deviennent de simples outils mathématiques, <strong>Pythagore</strong> — philosophe et mathématicien grec du VIe siècle avant J.-C. — enseignait que chaque nombre possède une vibration propre, un sens profond qui va bien au-delà de sa valeur numérique. Pour lui, « tout est nombre ». Cette intuition fondatrice est à l'origine de ce que nous appelons aujourd'hui la <strong>numérologie pythagoricienne</strong>.</p>' +
+    '<p>Contrairement à d'autres systèmes divinatoires, la numérologie ne s'appuie pas sur des symboles externes. Elle puise ses informations dans ce que vous portez déjà : votre <strong>date de naissance</strong> et les lettres de votre <strong>prénom et nom</strong>. Elle part du principe que rien n'est accidentel dans ces données — qu'elles contiennent une information précieuse sur votre essence, votre mission de vie et vos cycles.</p>' +
+    '<h2>Les trois nombres fondamentaux</h2>' +
+    '<p><strong>Le Chemin de vie</strong> est sans doute le nombre le plus important. Calculé à partir de votre date de naissance, il révèle votre orientation profonde, ce que vous êtes venu(e) expérimenter et développer au cours de cette existence. C'est la colonne vertébrale de votre numérologie personnelle.</p>' +
+    '<p><strong>Le nombre d'Expression</strong> est obtenu en convertissant les lettres de votre nom complet en chiffres. Il révèle vos talents naturels, vos aptitudes et la façon dont vous vous manifestez dans le monde. C'est en quelque sorte ce que vous <em>avez</em> pour accomplir votre chemin.</p>' +
+    '<p><strong>L'Intime Conviction</strong> (ou nombre de l'Être intime) est calculé à partir des seules voyelles de votre nom. Il représente vos motivations profondes, vos désirs secrets, ce qui vous anime intérieurement mais que vous montrez rarement au monde.</p>' +
+    '<h2>Les chiffres de 1 à 9 et leurs vibrations</h2>' +
+    '<p>En numérologie pythagoricienne, tout nombre est réduit à un chiffre de 1 à 9 (sauf les <strong>nombres maîtres</strong> 11, 22 et 33, qui conservent leur double nature). Chacun porte une vibration symbolique :</p>' +
+    '<ul>' +
+    '<li><strong>1 :</strong> leadership, pionnier, individualité, nouveau départ</li>' +
+    '<li><strong>2 :</strong> coopération, sensibilité, diplomatie, relation à l'autre</li>' +
+    '<li><strong>3 :</strong> créativité, expression, joie de vivre, communication</li>' +
+    '<li><strong>4 :</strong> stabilité, travail, structure, sens du concret</li>' +
+    '<li><strong>5 :</strong> liberté, changement, aventure, adaptabilité</li>' +
+    '<li><strong>6 :</strong> responsabilité, harmonie, famille, service aux autres</li>' +
+    '<li><strong>7 :</strong> introspection, spiritualité, analyse, quête de vérité</li>' +
+    '<li><strong>8 :</strong> ambition, pouvoir, réussite matérielle, karma de l'abondance</li>' +
+    '<li><strong>9 :</strong> sagesse, universalité, accomplissement, transmission</li>' +
+    '</ul>' +
+    '<h2>Les nombres maîtres : une vibration d'exception</h2>' +
+    '<p>Les nombres <strong>11, 22 et 33</strong> sont appelés « nombres maîtres » car ils portent une vibration particulièrement intense. Le 11 est le nombre de l'intuition et de l'éveil spirituel ; le 22 est le « bâtisseur maître », celui qui peut construire quelque chose de grand et de durable ; le 33 est le nombre de la compassion universelle et de l'enseignement spirituel.</p>' +
+    '<p>Porter un nombre maître dans son numérothème est une invitation à un chemin plus exigeant, mais aussi plus riche en profondeur et en sens.</p>' +
+    '<h2>La numérologie et les cycles de vie</h2>' +
+    '<p>Au-delà du caractère, la numérologie pythagoricienne permet de comprendre les <strong>cycles temporels</strong> qui rythment votre existence. L'Année Personnelle, calculée à partir de votre date d'anniversaire et de l'année en cours, donne une couleur particulière à chaque période de 12 mois.</p>' +
+    '<p>Par exemple, une Année Personnelle 1 annonce un nouveau départ, une période de semailles ; une Année 9 marque la fin d'un cycle, une invitation à lâcher ce qui ne vous correspond plus pour préparer un nouveau commencement. Connaître son cycle permet d'agir <strong>en harmonie avec ses propres rythmes</strong>, plutôt qu'à contre-courant.</p>' +
+    '<h2>Numérologie et voyance : deux lectures complémentaires</h2>' +
+    '<p>Comme l'astrologie, la numérologie offre une vision à plus long terme, une cartographie de fond. Les cartes, elles, s'ancrent dans l'énergie du moment présent. Associer les deux, c'est disposer à la fois d'une <strong>boussole de vie</strong> et d'un éclairage sur le « ici et maintenant ».</p>' +
+    '<p>Lors d'une consultation sur <strong>Lumière Intérieure</strong>, il m'arrive d'intégrer des éléments numérologique pour enrichir la lecture des cartes — notamment pour comprendre pourquoi certains thèmes reviennent, ou pour situer une question dans un cycle de vie plus large.</p>' +
+    '<h2>La numérologie n'enferme pas, elle éclaire</h2>' +
+    '<p>Comme toute approche divinatoire ou symbolique, la numérologie n'a pas vocation à vous figer dans une étiquette. Un Chemin de vie 4 n'est pas « condamné » à la routine, pas plus qu'un Chemin de vie 5 n'est incapable de stabilité. Ces vibrations sont des <strong>tendances, des ressources, des invitations</strong> — jamais des sentences.</p>' +
+    '<p>L'objectif est de mieux vous connaître, de comprendre vos forces et vos défis avec bienveillance, et de cheminer vers une vie plus alignée avec ce que vous êtes profondément.</p>' +
+    '<div class="blog-article__cta"><p>Curieux(se) de découvrir votre Chemin de vie ou votre numérothème complet ? Parlons-en lors de votre prochaine consultation.</p></div>'
+}
   };
 
   // --- Blog Overlay Logic ---

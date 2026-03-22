@@ -1269,7 +1269,9 @@
           '<span class="compte-liste__statut ' + (r.statut === 'annul\u00e9' ? 'compte-liste__statut--expire' : (passe ? 'compte-liste__statut--expire' : 'compte-liste__statut--actif')) + '">' + statutTexte + '</span>' +
         '</div>';
       }).join('') + '</div>';
-    } catch (e) {}
+    } catch (e) {
+      console.error('Erreur chargerRDV:', e);
+    }
   }
 
   // --- Pr\u00e9remplir les liens Cal.com avec l'email du client connect\u00e9 ---

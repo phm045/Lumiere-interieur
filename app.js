@@ -700,44 +700,29 @@
   });
 
   // ========================================
-  // AUTHENTIFICATION — TEMPORAIREMENT DÉSACTIVÉE
+  // AUTHENTIFICATION — Backend Express / JWT
   // ========================================
-  // Pour réactiver : décommenter tout le bloc ci-dessous
-  // et rétablir les sections HTML (inscription, connexion, mon-compte)
-
-  /* TEMP DISABLED — auth client
-  var SUPABASE_URL = 'https://dhbbwzpfwtdtdiuixrmq.supabase.co';
-  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYmJ3enBmd3RkdGRpdWl4cm1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMzNjQ4MjQsImV4cCI6MjA4OTY3MjgxNH0.ysMB2mgIV83NjTI_63WNlkHVul20zu34us-W-wzdyfg';
-  var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
   var navConnexion = document.getElementById('nav-connexion');
   var navCompte = document.getElementById('nav-compte');
 
-  // --- Vérifier l'état de connexion au chargement ---
-  async function verifierStatutAuth() {
-    try {
-      var { data: { session } } = await supabase.auth.getSession();
-      if (session && session.user) {
-        var meta = session.user.user_metadata || {};
-        afficherEtatConnecte({ prenom: meta.prenom || '', nom: meta.nom || '', email: session.user.email });
-      } else {
-        afficherEtatDeconnecte();
-      }
-    } catch (e) {
-      afficherEtatDeconnecte();
-    }
+  // --- Helpers : appels API ---
+  async function apiPost(url, body) {
+    var res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',
+      body: JSON.stringify(body)
+    });
+    return res.json();
   }
 
-  // Écouter les changements d'état d'auth
-  supabase.auth.onAuthStateChange(function (event, session) {
-    if (session && session.user) {
-      var meta = session.user.user_metadata || {};
-      afficherEtatConnecte({ prenom: meta.prenom || '', nom: meta.nom || '', email: session.user.email });
-    } else {
-      afficherEtatDeconnecte();
-    }
-  });
+  async function apiGet(url) {
+    var res = await fetch(url, { credentials: 'same-origin' });
+    return res.json();
+  }
 
+  // --- État de la navigation ---
   function afficherEtatConnecte(client) {
     if (navConnexion) navConnexion.hidden = true;
     if (navCompte) {
@@ -751,7 +736,7 @@
     if (navCompte) navCompte.hidden = true;
   }
 
-  // Afficher un message dans un formulaire d'auth
+  // --- Messages dans les formulaires ---
   function afficherMessage(elementId, message, type) {
     var el = document.getElementById(elementId);
     if (!el) return;
@@ -781,6 +766,20 @@
     });
   });
 
+  // --- Vérifier le statut au chargement ---
+  async function verifierStatutAuth() {
+    try {
+      var data = await apiGet('/api/auth/statut');
+      if (data.connecte) {
+        afficherEtatConnecte(data.client);
+      } else {
+        afficherEtatDeconnecte();
+      }
+    } catch (e) {
+      afficherEtatDeconnecte();
+    }
+  }
+
   // --- Formulaire d'inscription ---
   var formInscription = document.getElementById('form-inscription');
   if (formInscription) {
@@ -804,42 +803,35 @@
         btnSubmit.textContent = 'Créer mon compte';
         return;
       }
-      if (motDePasse.length < 8) {
-        afficherMessage('insc-message', 'Le mot de passe doit contenir au moins 8 caractères.', 'erreur');
+      if (motDePasse.length < 8 || !/[A-Z]/.test(motDePasse) || !/[0-9]/.test(motDePasse)) {
+        afficherMessage('insc-message', 'Le mot de passe doit contenir au moins 8 caractères, une majuscule et un chiffre.', 'erreur');
         btnSubmit.disabled = false;
         btnSubmit.textContent = 'Créer mon compte';
         return;
       }
 
       try {
-        var { data, error } = await supabase.auth.signUp({
+        var data = await apiPost('/api/auth/inscription', {
+          prenom: prenom,
+          nom: nom,
           email: email,
-          password: motDePasse,
-          options: {
-            data: {
-              prenom: prenom,
-              nom: nom,
-              telephone: telephone
-            }
-          }
+          mot_de_passe: motDePasse,
+          telephone: telephone
         });
 
-        if (error) {
-          var msg = error.message;
-          if (msg.includes('already registered')) msg = 'Un compte existe déjà avec cette adresse email.';
-          afficherMessage('insc-message', msg, 'erreur');
+        if (!data.succes) {
+          afficherMessage('insc-message', data.erreurs || 'Une erreur est survenue.', 'erreur');
         } else {
-          afficherMessage('insc-message', 'Inscription réussie ! Bienvenue, ' + prenom + '.', 'succes');
-          afficherEtatConnecte({ prenom: prenom, nom: nom, email: email });
+          afficherMessage('insc-message', data.message, 'succes');
+          afficherEtatConnecte(data.client);
           formInscription.reset();
           setTimeout(function () {
             history.pushState(null, '', '#mon-compte');
             showPage('mon-compte');
-            chargerProfil();
           }, 1500);
         }
       } catch (err) {
-        afficherMessage('insc-message', 'Erreur de connexion. Veuillez réessayer.', 'erreur');
+        afficherMessage('insc-message', 'Erreur de connexion au serveur. Veuillez réessayer.', 'erreur');
       }
 
       btnSubmit.disabled = false;
@@ -861,28 +853,24 @@
       var motDePasse = document.getElementById('conn-mdp').value;
 
       try {
-        var { data, error } = await supabase.auth.signInWithPassword({
+        var data = await apiPost('/api/auth/connexion', {
           email: email,
-          password: motDePasse
+          mot_de_passe: motDePasse
         });
 
-        if (error) {
-          var msg = error.message;
-          if (msg.includes('Invalid login')) msg = 'Email ou mot de passe incorrect.';
-          afficherMessage('conn-message', msg, 'erreur');
+        if (!data.succes) {
+          afficherMessage('conn-message', data.erreurs || 'Email ou mot de passe incorrect.', 'erreur');
         } else {
-          var meta = data.user.user_metadata || {};
-          afficherMessage('conn-message', 'Connexion réussie ! Bonjour, ' + (meta.prenom || '') + '.', 'succes');
-          afficherEtatConnecte({ prenom: meta.prenom || '', nom: meta.nom || '', email: data.user.email });
+          afficherMessage('conn-message', data.message, 'succes');
+          afficherEtatConnecte(data.client);
           formConnexion.reset();
           setTimeout(function () {
             history.pushState(null, '', '#mon-compte');
             showPage('mon-compte');
-            chargerProfil();
           }, 1500);
         }
       } catch (err) {
-        afficherMessage('conn-message', 'Erreur de connexion. Veuillez réessayer.', 'erreur');
+        afficherMessage('conn-message', 'Erreur de connexion au serveur. Veuillez réessayer.', 'erreur');
       }
 
       btnSubmit.disabled = false;
@@ -893,25 +881,31 @@
   // --- Charger le profil sur la page Mon compte ---
   async function chargerProfil() {
     try {
-      var { data: { session } } = await supabase.auth.getSession();
-      if (session && session.user) {
-        var u = session.user;
-        var meta = u.user_metadata || {};
+      var data = await apiGet('/api/auth/profil');
+      if (data.succes && data.client) {
+        var c = data.client;
         var el;
         el = document.getElementById('compte-titre');
-        if (el) el.textContent = 'Bonjour, ' + (meta.prenom || '') + ' !';
+        if (el) el.textContent = 'Bonjour, ' + (c.prenom || '') + ' \u0021';
         el = document.getElementById('compte-prenom');
-        if (el) el.textContent = meta.prenom || '';
+        if (el) el.textContent = c.prenom || '';
         el = document.getElementById('compte-nom');
-        if (el) el.textContent = meta.nom || '';
+        if (el) el.textContent = c.nom || '';
         el = document.getElementById('compte-email');
-        if (el) el.textContent = u.email;
+        if (el) el.textContent = c.email || '';
         el = document.getElementById('compte-telephone');
-        if (el) el.textContent = meta.telephone || 'Non renseigné';
+        if (el) el.textContent = c.telephone || 'Non renseigné';
         el = document.getElementById('compte-date');
-        if (el) el.textContent = new Date(u.created_at).toLocaleDateString('fr-FR', {
-          year: 'numeric', month: 'long', day: 'numeric'
-        });
+        if (el && c.date_creation) {
+          el.textContent = new Date(c.date_creation).toLocaleDateString('fr-FR', {
+            year: 'numeric', month: 'long', day: 'numeric'
+          });
+        }
+      } else {
+        // Non authentifié — rediriger vers connexion
+        afficherEtatDeconnecte();
+        history.pushState(null, '', '#connexion');
+        showPage('connexion');
       }
     } catch (e) {}
   }
@@ -920,14 +914,16 @@
   var btnDeconnexion = document.getElementById('btn-deconnexion');
   if (btnDeconnexion) {
     btnDeconnexion.addEventListener('click', async function () {
-      await supabase.auth.signOut();
+      try {
+        await apiPost('/api/auth/deconnexion', {});
+      } catch (e) {}
       afficherEtatDeconnecte();
       history.pushState(null, '', '#accueil');
       showPage('accueil');
     });
   }
 
-  // Charger le profil quand on navigue vers Mon compte
+  // --- Charger le profil quand on navigue vers Mon compte ---
   var origShowPage = showPage;
   showPage = function (pageId) {
     origShowPage(pageId);
@@ -936,8 +932,7 @@
     }
   };
 
-  // Vérifier le statut auth au chargement
+  // --- Vérifier le statut auth au chargement ---
   verifierStatutAuth();
-  TEMP DISABLED — auth client */
 
 })();

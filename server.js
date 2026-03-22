@@ -12,6 +12,18 @@ const rateLimit = require('express-rate-limit');
 const { verifierToken } = require('./middleware/auth');
 const authRoutes = require('./routes/auth');
 
+// --- Vérification des variables d'environnement obligatoires ---
+if (!process.env.JWT_SECRET) {
+  console.error('\n\u2718 ERREUR FATALE : JWT_SECRET non défini.');
+  console.error('  Créez un fichier .env avec : JWT_SECRET=votre-secret-ici\n');
+  process.exit(1);
+}
+if (!process.env.COOKIE_SECRET) {
+  console.error('\n\u2718 ERREUR FATALE : COOKIE_SECRET non défini.');
+  console.error('  Créez un fichier .env avec : COOKIE_SECRET=votre-secret-ici\n');
+  process.exit(1);
+}
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 

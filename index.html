@@ -29,9 +29,7 @@
 
 <link rel="stylesheet" href="./base.css">
 
-<!-- TEMP DISABLED — auth client
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
--->
+<!-- SDK Supabase retiré — auth gérée par le backend Express/JWT -->
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -59,10 +57,8 @@
       <a href="#boutique" data-page="boutique">Boutique</a>
       <a href="#blog" data-page="blog">Blog</a>
       <a href="#contact" data-page="contact">Contact</a>
-      <!-- TEMP DISABLED — auth client
       <a href="#connexion" data-page="connexion" class="nav-auth nav-auth--guest" id="nav-connexion">Se connecter</a>
       <a href="#mon-compte" data-page="mon-compte" class="nav-auth nav-auth--client" id="nav-compte" hidden>Mon compte</a>
-      -->
       <button class="theme-toggle" data-theme-toggle aria-label="Changer le thème">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -1026,8 +1022,7 @@
     </section>
   </div>
 
-  <!-- TEMP DISABLED — auth client
-  ==================== INSCRIPTION ====================
+  <!-- ==================== INSCRIPTION ==================== -->
   <div id="inscription" class="page">
     <section class="auth-section">
       <div class="container container--narrow">
@@ -1085,10 +1080,9 @@
         </div>
       </div>
     </section>
-  </div -->
+  </div>
 
-  <!-- TEMP DISABLED — auth client
-  ==================== CONNEXION ====================
+  <!-- ==================== CONNEXION ==================== -->
   <div id="connexion" class="page">
     <section class="auth-section">
       <div class="container container--narrow">
@@ -1129,10 +1123,9 @@
         </div>
       </div>
     </section>
-  </div -->
+  </div>
 
-  <!-- TEMP DISABLED — auth client
-  ==================== MON COMPTE ====================
+  <!-- ==================== MON COMPTE ==================== -->
   <div id="mon-compte" class="page">
     <section class="auth-section">
       <div class="container container--narrow">
@@ -1171,7 +1164,7 @@
         </div>
       </div>
     </section>
-  </div -->
+  </div>
 
 </main>
 

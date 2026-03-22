@@ -157,7 +157,7 @@
                     <svg class="stripe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                     Payer par CB
                 </a>
-                <a href="https://cal.eu/philippe-medium-amzdok/consultations?duration=30" class="btn btn--primary btn--sm" target="_blank" rel="noopener noreferrer" data-cal-service="Focus Intuitif">Réserver maintenant</a>
+                <button class="btn btn--primary btn--sm" data-cal-link="philippe-medium-amzdok/consultations" data-cal-namespace="consultations" data-cal-config='{"layout":"month_view","duration":"30"}' data-cal-service="Focus Intuitif">Réserver maintenant</button>
               </div>
             </div>
             <div class="service-card__image">
@@ -194,7 +194,7 @@
                     <svg class="stripe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                     Payer par CB
                 </a>
-                <a href="https://cal.eu/philippe-medium-amzdok/consultations?duration=45" class="btn btn--primary btn--sm" target="_blank" rel="noopener noreferrer" data-cal-service="Révélations Intuitives">Réserver maintenant</a>
+                <button class="btn btn--primary btn--sm" data-cal-link="philippe-medium-amzdok/consultations" data-cal-namespace="consultations" data-cal-config='{"layout":"month_view","duration":"45"}' data-cal-service="Révélations Intuitives">Réserver maintenant</button>
               </div>
             </div>
             <div class="service-card__image">
@@ -231,7 +231,7 @@
                     <svg class="stripe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
                     Payer par CB
                 </a>
-                <a href="https://cal.eu/philippe-medium-amzdok/consultations?duration=60" class="btn btn--primary btn--sm" target="_blank" rel="noopener noreferrer" data-cal-service="Panorama Intuitif">Réserver maintenant</a>
+                <button class="btn btn--primary btn--sm" data-cal-link="philippe-medium-amzdok/consultations" data-cal-namespace="consultations" data-cal-config='{"layout":"month_view","duration":"60"}' data-cal-service="Panorama Intuitif">Réserver maintenant</button>
               </div>
             </div>
             <div class="service-card__image">
@@ -1320,6 +1320,32 @@
   </div>
 </footer>
 
+<!-- Cal.com Embed -->
+<script>
+(function (C, A, L) {
+  let p = function (a, ar) { a.q.push(ar); };
+  let d = C.document;
+  C.Cal = C.Cal || function () {
+    let cal = C.Cal, ar = arguments;
+    if (!cal.loaded) {
+      cal.ns = {}; cal.q = cal.q || [];
+      d.head.appendChild(d.createElement("script")).src = A;
+      cal.loaded = true;
+    }
+    if (ar[0] === L) {
+      const api = function () { p(api, arguments); }, ns = ar[1];
+      api.q = api.q || [];
+      if (typeof ns === "string") {
+        cal.ns[ns] = cal.ns[ns] || api;
+        p(cal.ns[ns], ar); p(cal, ["initNamespace", ns]);
+      } else p(cal, ar);
+      return;
+    }
+    p(cal, ar);
+  };
+})(window, "https://app.cal.com/embed/embed.js", "init");
+Cal("init", "consultations", { origin: "https://cal.eu" });
+</script>
 <script src="./app.js" defer></script>
 <script data-pplx-inline-edit>
 (function(){

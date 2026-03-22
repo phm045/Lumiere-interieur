@@ -1292,15 +1292,70 @@
     } catch (e) {}
   }
 
-  // --- Stocker le service Cal.com avant navigation ---
-  document.querySelectorAll('a[data-cal-service]').forEach(function (lien) {
-    lien.addEventListener('click', function () {
+  // --- Stocker le service Cal.com avant ouverture du popup ---
+  document.querySelectorAll('[data-cal-service]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
       var service = this.getAttribute('data-cal-service');
       if (service) {
         sessionStorage.setItem('cal_service_pending', service);
       }
     });
   });
+
+  // --- \u00c9couter les r\u00e9servations Cal.com embed ---
+  function setupCalListener() {
+    if (!window.Cal || !window.Cal.ns || !window.Cal.ns.consultations) return false;
+    Cal.ns.consultations('on', {
+      action: 'bookingSuccessfulV2',
+      callback: async function (e) {
+        var data = e.detail.data;
+        var uid = data.uid;
+        var startTime = data.startTime;
+        var title = data.title;
+        var serviceName = sessionStorage.getItem('cal_service_pending') || title || 'Consultation';
+        sessionStorage.removeItem('cal_service_pending');
+
+        try {
+          var { data: { session } } = await supabase.auth.getSession();
+          if (!session) return;
+
+          // V\u00e9rifier doublon
+          var { data: existe } = await supabase
+            .from('reservations')
+            .select('id')
+            .eq('notes', 'cal:' + uid)
+            .maybeSingle();
+          if (existe) return;
+
+          await supabase.from('reservations').insert({
+            user_id: session.user.id,
+            service: serviceName,
+            date_rdv: startTime || new Date().toISOString(),
+            statut: '\u00e0 venir',
+            notes: 'cal:' + uid
+          });
+
+          // Naviguer vers Mes RDV
+          history.pushState(null, '', '#mon-compte');
+          showPage('mon-compte');
+          setTimeout(function () {
+            var btnRdv = document.querySelector('[data-tab="rdv"]');
+            if (btnRdv) btnRdv.click();
+          }, 500);
+        } catch (err) {
+          console.error('Erreur enregistrement RDV Cal.com:', err);
+        }
+      }
+    });
+    return true;
+  }
+  // Tenter de configurer le listener, r\u00e9essayer si Cal.com n'est pas encore charg\u00e9
+  if (!setupCalListener()) {
+    var calRetry = setInterval(function () {
+      if (setupCalListener()) clearInterval(calRetry);
+    }, 500);
+    setTimeout(function () { clearInterval(calRetry); }, 10000);
+  }
 
   // --- V\u00e9rifier retour Cal.com apr\u00e8s r\u00e9servation ---
   // Cal.com envoie : uid, title, startTime, endTime, email, attendeeName

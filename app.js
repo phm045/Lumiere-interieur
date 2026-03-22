@@ -1189,7 +1189,106 @@
     });
   }
 
-  // V\u00e9rifier retour Stripe au chargement
+  // --- Charger les RDV ---
+  async function chargerRDV() {
+    var liste = document.getElementById('rdv-liste');
+    var vide = document.getElementById('rdv-vide');
+    if (!liste || !vide) return;
+
+    try {
+      var { data, error } = await supabase
+        .from('reservations')
+        .select('*')
+        .order('date_rdv', { ascending: true });
+
+      if (error || !data || data.length === 0) {
+        liste.innerHTML = '';
+        vide.style.display = '';
+        return;
+      }
+
+      vide.style.display = 'none';
+      var maintenant = new Date();
+      liste.innerHTML = '<div class="compte-liste">' + data.map(function (r) {
+        var dateRdv = new Date(r.date_rdv);
+        var dateStr = dateRdv.toLocaleDateString('fr-FR', {
+          weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+        });
+        var heureStr = dateRdv.toLocaleTimeString('fr-FR', {
+          hour: '2-digit', minute: '2-digit'
+        });
+        var passe = dateRdv < maintenant;
+        var statutClasse = passe ? 'compte-liste__statut--expire' : 'compte-liste__statut--actif';
+        var statutTexte = passe ? 'Termin\u00e9' : '\u00c0 venir';
+        if (r.statut === 'annul\u00e9') { statutClasse = 'compte-liste__statut--expire'; statutTexte = 'Annul\u00e9'; }
+
+        return '<div class="compte-liste__item">' +
+          '<div class="compte-liste__info">' +
+            '<span class="compte-liste__service">' + r.service + '</span>' +
+            '<span class="compte-liste__date">' + dateStr + ' \u00e0 ' + heureStr + '</span>' +
+          '</div>' +
+          '<span class="compte-liste__statut ' + statutClasse + '">' + statutTexte + '</span>' +
+        '</div>';
+      }).join('') + '</div>';
+    } catch (e) {}
+  }
+
+  // --- Pr\u00e9remplir les liens Cal.com avec l'email du client connect\u00e9 ---
+  async function personnaliserLiensCal() {
+    try {
+      var { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) return;
+      var email = encodeURIComponent(session.user.email);
+      var meta = session.user.user_metadata || {};
+      var nom = encodeURIComponent((meta.prenom || '') + ' ' + (meta.nom || ''));
+      document.querySelectorAll('a[href*="cal.eu/philippe-medium-amzdok"]').forEach(function (lien) {
+        var url = lien.getAttribute('href');
+        if (url.indexOf('?') === -1) {
+          lien.setAttribute('href', url + '?email=' + email + '&name=' + nom);
+        }
+      });
+    } catch (e) {}
+  }
+
+  // --- V\u00e9rifier retour Cal.com apr\u00e8s r\u00e9servation ---
+  async function verifierRetourCal() {
+    var params = new URLSearchParams(window.location.search);
+    var calBooking = params.get('cal_booking');
+    var calService = params.get('cal_service');
+    var calDate = params.get('cal_date');
+    if (!calBooking) return;
+
+    history.replaceState(null, '', window.location.pathname + '#mon-compte');
+
+    try {
+      var { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      var { data: existe } = await supabase
+        .from('reservations')
+        .select('id')
+        .eq('notes', 'cal:' + calBooking)
+        .maybeSingle();
+      if (existe) return;
+
+      await supabase.from('reservations').insert({
+        user_id: session.user.id,
+        service: decodeURIComponent(calService || 'Consultation'),
+        date_rdv: calDate || new Date().toISOString(),
+        statut: '\u00e0 venir',
+        notes: 'cal:' + calBooking
+      });
+
+      showPage('mon-compte');
+      setTimeout(function () {
+        var btnRdv = document.querySelector('[data-tab="rdv"]');
+        if (btnRdv) btnRdv.click();
+      }, 500);
+    } catch (e) {}
+  }
+
+  personnaliserLiensCal();
+  verifierRetourCal();
   verifierRetourStripe();
 
   // --- Onglets Mon Compte ---
@@ -1211,6 +1310,7 @@
       if (target) target.classList.add('compte-tab-content--active');
 
       // Charger les données de l'onglet
+      if (tabId === 'rdv') chargerRDV();
       if (tabId === 'commandes') chargerCommandes();
       if (tabId === 'paiements') chargerPaiements();
       if (tabId === 'coupons') chargerCoupons();

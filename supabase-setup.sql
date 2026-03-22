@@ -79,6 +79,22 @@ CREATE TRIGGER trigger_usage_coupon
   FOR EACH ROW
   EXECUTE FUNCTION incrementer_usage_coupon();
 
+-- Table des réservations / RDV
+CREATE TABLE IF NOT EXISTS reservations (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  service TEXT NOT NULL,
+  date_rdv TIMESTAMPTZ NOT NULL,
+  statut TEXT NOT NULL DEFAULT 'à venir',
+  notes TEXT DEFAULT '',
+  date_creation TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE reservations ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "clients_voir_rdv" ON reservations FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "clients_creer_rdv" ON reservations FOR INSERT WITH CHECK (auth.uid() = user_id);
+
 -- Exemple de coupon de bienvenue (vous pouvez modifier)
 INSERT INTO coupons (code, description, reduction_pourcent, valide_jusqu_au)
 VALUES ('BIENVENUE10', 'Réduction de bienvenue : -10% sur votre première consultation', 10, '2027-12-31');

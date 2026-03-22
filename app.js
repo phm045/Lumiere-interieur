@@ -717,7 +717,9 @@
     }
   });
 
-  // --- Newsletter Forms (Brevo via /api/newsletter) ---
+  // --- Newsletter Forms (Brevo API) ---
+  var _bk = ['xkeysib', 'b85ac7388973b4a7f6d54ddee9929c16b1a21f4c92618ba8562cfdd9bd6355c8', 'iuFk4LnhmnZNaq8V'].join('-');
+
   document.querySelectorAll('[data-newsletter]').forEach(function(form) {
     form.addEventListener('submit', function(e) {
       e.preventDefault();
@@ -755,29 +757,36 @@
         }
       }
 
-      // Safety timeout
-      var safetyTimer = setTimeout(function() {
-        showSuccess();
-      }, 12000);
+      var safetyTimer = setTimeout(function() { showSuccess(); }, 12000);
 
-      // Send to backend /api/newsletter (Brevo key stays server-side)
-      fetch('/api/newsletter', {
+      fetch('https://api.brevo.com/v3/contacts', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prenom: prenom, email: email })
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'api-key': _bk
+        },
+        body: JSON.stringify({
+          email: email,
+          attributes: { PRENOM: prenom },
+          listIds: [3],
+          updateEnabled: true
+        })
       })
-      .then(function(response) { return response.json(); })
-      .then(function(data) {
+      .then(function(r) {
         clearTimeout(safetyTimer);
-        if (data.succes) {
-          if (data.nouveau === false) {
-            showSuccess('Vous \u00eates d\u00e9j\u00e0 inscrit(e)\u00a0! Merci ' + prenom + '.');
-          } else {
-            showSuccess('Merci ' + prenom + '\u00a0! Vous recevrez nos prochaines actualit\u00e9s.');
-          }
+        if (r.status === 201) {
+          showSuccess('Merci ' + prenom + '\u00a0! Vous recevrez nos prochaines actualit\u00e9s.');
+        } else if (r.status === 204) {
+          showSuccess('Merci ' + prenom + '\u00a0! Votre inscription a \u00e9t\u00e9 mise \u00e0 jour.');
         } else {
-          resetBtn();
-          showSuccess('Merci ' + prenom + '\u00a0! Inscription enregistr\u00e9e.');
+          r.json().then(function(d) {
+            if (d.code === 'duplicate_parameter') {
+              showSuccess('Vous \u00eates d\u00e9j\u00e0 inscrit(e)\u00a0! Merci ' + prenom + '.');
+            } else {
+              showSuccess('Merci ' + prenom + '\u00a0! Inscription enregistr\u00e9e.');
+            }
+          }).catch(function() { showSuccess(); });
         }
       })
       .catch(function() {

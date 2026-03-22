@@ -1080,90 +1080,43 @@
   // --- Suppression du compte ---
   var btnSupprimer = document.getElementById('btn-supprimer-compte');
   if (btnSupprimer) {
-    btnSupprimer.addEventListener('click', function () {
-      // Cr\u00e9er la modale de confirmation
-      var overlay = document.createElement('div');
-      overlay.className = 'modal-overlay';
-      overlay.innerHTML =
-        '<div class="modal-card">' +
-          '<div class="modal-card__icon">' +
-            '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>' +
-          '</div>' +
-          '<h3 class="modal-card__title">Supprimer votre compte\u00a0?</h3>' +
-          '<p class="modal-card__desc">Cette action est irr\u00e9versible. Toutes vos donn\u00e9es personnelles, rendez-vous et historique seront d\u00e9finitivement supprim\u00e9s.</p>' +
-          '<div class="modal-card__actions">' +
-            '<button class="btn btn--outline" id="modal-annuler">Annuler</button>' +
-            '<button class="btn btn--danger" id="modal-confirmer">Supprimer</button>' +
-          '</div>' +
-        '</div>';
-      document.body.appendChild(overlay);
-      document.body.style.overflow = 'hidden';
+    btnSupprimer.addEventListener('click', async function () {
+      btnSupprimer.disabled = true;
+      btnSupprimer.textContent = 'Suppression en cours\u2026';
 
-      // Fermer la modale
-      function fermerModale() {
-        overlay.remove();
-        document.body.style.overflow = '';
-      }
-
-      document.getElementById('modal-annuler').addEventListener('click', fermerModale);
-      overlay.addEventListener('click', function (e) {
-        if (e.target === overlay) fermerModale();
-      });
-
-      // Confirmer la suppression
-      document.getElementById('modal-confirmer').addEventListener('click', async function () {
-        var confirmBtn = this;
-        confirmBtn.disabled = true;
-        confirmBtn.textContent = 'Suppression en cours\u2026';
-
-        try {
-          // R\u00e9cup\u00e9rer la session
-          var { data: { session } } = await supabase.auth.getSession();
-          if (!session) {
-            alert('Vous devez \u00eatre connect\u00e9 pour supprimer votre compte.');
-            fermerModale();
-            return;
-          }
-
-          // Supprimer les donn\u00e9es utilisateur dans les tables Supabase
-          var userId = session.user.id;
-
-          // Supprimer les RDV
-          await supabase.from('rendez_vous').delete().eq('user_id', userId);
-          // Supprimer les commandes
-          await supabase.from('commandes').delete().eq('user_id', userId);
-          // Supprimer les paiements
-          await supabase.from('paiements').delete().eq('user_id', userId);
-          // Supprimer les coupons
-          await supabase.from('coupons_utilises').delete().eq('user_id', userId);
-          // Supprimer le profil
-          await supabase.from('profiles').delete().eq('id', userId);
-
-          // Supprimer le compte auth via l'edge function ou RPC
-          // Utiliser la fonction RPC admin si disponible, sinon signOut
-          var { error: rpcError } = await supabase.rpc('delete_own_account');
-
-          if (rpcError) {
-            // Fallback : d\u00e9connexion simple si la RPC n'existe pas
-            console.warn('RPC delete_own_account non disponible, d\u00e9connexion simple:', rpcError.message);
-          }
-
-          // D\u00e9connexion
-          await supabase.auth.signOut();
-          fermerModale();
-          afficherEtatDeconnecte();
-          history.pushState(null, '', '#accueil');
-          showPage('accueil');
-
-          // Message de confirmation
-          alert('Votre compte a \u00e9t\u00e9 supprim\u00e9. Merci d\u2019avoir fait partie de Lumi\u00e8re Int\u00e9rieure.');
-        } catch (err) {
-          console.error('Erreur suppression compte:', err);
-          confirmBtn.disabled = false;
-          confirmBtn.textContent = 'Supprimer';
-          alert('Une erreur est survenue. Veuillez r\u00e9essayer.');
+      try {
+        var { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          alert('Vous devez \u00eatre connect\u00e9 pour supprimer votre compte.');
+          btnSupprimer.disabled = false;
+          btnSupprimer.textContent = 'Supprimer mon compte';
+          return;
         }
-      });
+
+        var userId = session.user.id;
+
+        await supabase.from('rendez_vous').delete().eq('user_id', userId);
+        await supabase.from('commandes').delete().eq('user_id', userId);
+        await supabase.from('paiements').delete().eq('user_id', userId);
+        await supabase.from('coupons_utilises').delete().eq('user_id', userId);
+        await supabase.from('profiles').delete().eq('id', userId);
+
+        var { error: rpcError } = await supabase.rpc('delete_own_account');
+        if (rpcError) {
+          console.warn('RPC delete_own_account non disponible:', rpcError.message);
+        }
+
+        await supabase.auth.signOut();
+        afficherEtatDeconnecte();
+        history.pushState(null, '', '#accueil');
+        showPage('accueil');
+        alert('Votre compte a \u00e9t\u00e9 supprim\u00e9. Merci d\u2019avoir fait partie de Lumi\u00e8re Int\u00e9rieure.');
+      } catch (err) {
+        console.error('Erreur suppression compte:', err);
+        btnSupprimer.disabled = false;
+        btnSupprimer.textContent = 'Supprimer mon compte';
+        alert('Une erreur est survenue. Veuillez r\u00e9essayer.');
+      }
     });
   }
 

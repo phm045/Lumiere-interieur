@@ -29,6 +29,8 @@
 
 <link rel="stylesheet" href="./base.css">
 
+<!-- Supabase Auth -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -56,7 +58,8 @@
       <a href="#boutique" data-page="boutique">Boutique</a>
       <a href="#blog" data-page="blog">Blog</a>
       <a href="#contact" data-page="contact">Contact</a>
-
+      <a href="#connexion" data-page="connexion" class="nav-auth nav-auth--guest" id="nav-connexion">Se connecter</a>
+      <a href="#mon-compte" data-page="mon-compte" class="nav-auth nav-auth--client" id="nav-compte" hidden>Mon compte</a>
       <button class="theme-toggle" data-theme-toggle aria-label="Changer le thème">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
@@ -1015,6 +1018,150 @@
           <p>Les présentes CGV sont soumises au droit français. En cas de litige, une solution amiable sera recherchée en priorité.</p>
 
           <p class="legal-page__updated">Dernière mise à jour : mars 2026</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ==================== INSCRIPTION ==================== -->
+  <div id="inscription" class="page">
+    <section class="auth-section">
+      <div class="container container--narrow">
+        <div class="auth-card">
+          <div class="auth-card__header">
+            <p class="section-header__label">Nouveau client</p>
+            <h1 class="section-header__title">Créer un compte</h1>
+            <p class="auth-card__desc">Rejoignez Lumière Intérieure pour accéder à votre espace personnel et suivre vos consultations.</p>
+          </div>
+
+          <form class="auth-form" id="form-inscription" novalidate>
+            <div class="auth-form__row">
+              <div class="auth-form__group">
+                <label for="insc-prenom" class="auth-form__label">Prénom <span class="auth-form__required">*</span></label>
+                <input type="text" id="insc-prenom" name="prenom" class="auth-form__input" placeholder="Votre prénom" required maxlength="100" autocomplete="given-name">
+              </div>
+              <div class="auth-form__group">
+                <label for="insc-nom" class="auth-form__label">Nom <span class="auth-form__required">*</span></label>
+                <input type="text" id="insc-nom" name="nom" class="auth-form__input" placeholder="Votre nom" required maxlength="100" autocomplete="family-name">
+              </div>
+            </div>
+
+            <div class="auth-form__group">
+              <label for="insc-email" class="auth-form__label">Adresse email <span class="auth-form__required">*</span></label>
+              <input type="email" id="insc-email" name="email" class="auth-form__input" placeholder="exemple@email.com" required autocomplete="email">
+            </div>
+
+            <div class="auth-form__group">
+              <label for="insc-mdp" class="auth-form__label">Mot de passe <span class="auth-form__required">*</span></label>
+              <div class="auth-form__password-wrapper">
+                <input type="password" id="insc-mdp" name="mot_de_passe" class="auth-form__input" placeholder="Minimum 8 caractères" required minlength="8" autocomplete="new-password">
+                <button type="button" class="auth-form__toggle-pwd" aria-label="Afficher le mot de passe" data-toggle-pwd="insc-mdp">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+              <p class="auth-form__hint">Au moins 8 caractères, une majuscule et un chiffre.</p>
+            </div>
+
+            <div class="auth-form__group">
+              <label for="insc-tel" class="auth-form__label">Téléphone <span class="auth-form__optional">(optionnel)</span></label>
+              <input type="tel" id="insc-tel" name="telephone" class="auth-form__input" placeholder="+33 6 00 00 00 00" autocomplete="tel">
+            </div>
+
+            <div class="auth-form__message" id="insc-message" hidden></div>
+
+            <button type="submit" class="btn btn--primary auth-form__submit" id="btn-inscription">
+              Créer mon compte
+            </button>
+          </form>
+
+          <p class="auth-card__footer">
+            Vous avez déjà un compte ?
+            <a href="#connexion" data-page="connexion" class="auth-card__link">Se connecter</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ==================== CONNEXION ==================== -->
+  <div id="connexion" class="page">
+    <section class="auth-section">
+      <div class="container container--narrow">
+        <div class="auth-card">
+          <div class="auth-card__header">
+            <p class="section-header__label">Espace client</p>
+            <h1 class="section-header__title">Se connecter</h1>
+            <p class="auth-card__desc">Accédez à votre espace personnel pour retrouver vos informations et consultations.</p>
+          </div>
+
+          <form class="auth-form" id="form-connexion" novalidate>
+            <div class="auth-form__group">
+              <label for="conn-email" class="auth-form__label">Adresse email</label>
+              <input type="email" id="conn-email" name="email" class="auth-form__input" placeholder="exemple@email.com" required autocomplete="email">
+            </div>
+
+            <div class="auth-form__group">
+              <label for="conn-mdp" class="auth-form__label">Mot de passe</label>
+              <div class="auth-form__password-wrapper">
+                <input type="password" id="conn-mdp" name="mot_de_passe" class="auth-form__input" placeholder="Votre mot de passe" required autocomplete="current-password">
+                <button type="button" class="auth-form__toggle-pwd" aria-label="Afficher le mot de passe" data-toggle-pwd="conn-mdp">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <div class="auth-form__message" id="conn-message" hidden></div>
+
+            <button type="submit" class="btn btn--primary auth-form__submit" id="btn-connexion">
+              Se connecter
+            </button>
+          </form>
+
+          <p class="auth-card__footer">
+            Pas encore de compte ?
+            <a href="#inscription" data-page="inscription" class="auth-card__link">Créer un compte</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- ==================== MON COMPTE ==================== -->
+  <div id="mon-compte" class="page">
+    <section class="auth-section">
+      <div class="container container--narrow">
+        <div class="auth-card">
+          <div class="auth-card__header">
+            <p class="section-header__label">Mon espace</p>
+            <h1 class="section-header__title" id="compte-titre">Mon compte</h1>
+          </div>
+
+          <div class="compte-info" id="compte-info">
+            <div class="compte-info__item">
+              <span class="compte-info__label">Prénom</span>
+              <span class="compte-info__value" id="compte-prenom">—</span>
+            </div>
+            <div class="compte-info__item">
+              <span class="compte-info__label">Nom</span>
+              <span class="compte-info__value" id="compte-nom">—</span>
+            </div>
+            <div class="compte-info__item">
+              <span class="compte-info__label">Email</span>
+              <span class="compte-info__value" id="compte-email">—</span>
+            </div>
+            <div class="compte-info__item">
+              <span class="compte-info__label">Téléphone</span>
+              <span class="compte-info__value" id="compte-telephone">—</span>
+            </div>
+            <div class="compte-info__item">
+              <span class="compte-info__label">Membre depuis</span>
+              <span class="compte-info__value" id="compte-date">—</span>
+            </div>
+          </div>
+
+          <button class="btn btn--outline auth-form__submit" id="btn-deconnexion">
+            Se déconnecter
+          </button>
         </div>
       </div>
     </section>

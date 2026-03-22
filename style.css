@@ -2096,6 +2096,11 @@ textarea.blog-comments__input {
   color: var(--color-text);
 }
 
+/* --- Mon Compte : cadre élargi --- */
+#mon-compte .auth-card {
+  max-width: 680px;
+}
+
 /* --- Onglets Mon Compte --- */
 .compte-tabs {
   display: flex;
@@ -2103,6 +2108,13 @@ textarea.blog-comments__input {
   margin-bottom: var(--space-6);
   border-bottom: 1px solid var(--color-divider);
   padding-bottom: var(--space-1);
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.compte-tabs::-webkit-scrollbar {
+  display: none;
 }
 
 .compte-tabs__btn {

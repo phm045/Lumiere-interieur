@@ -98,3 +98,12 @@ CREATE POLICY "clients_creer_rdv" ON reservations FOR INSERT WITH CHECK (auth.ui
 -- Exemple de coupon de bienvenue (vous pouvez modifier)
 INSERT INTO coupons (code, description, reduction_pourcent, valide_jusqu_au)
 VALUES ('BIENVENUE10', 'Réduction de bienvenue : -10% sur votre première consultation', 10, '2027-12-31');
+
+-- Fonction RPC pour permettre à un utilisateur de supprimer son propre compte
+-- Les tables avec ON DELETE CASCADE suppriment automatiquement les données liées
+CREATE OR REPLACE FUNCTION delete_own_account()
+RETURNS void AS $$
+BEGIN
+  DELETE FROM auth.users WHERE id = auth.uid();
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;

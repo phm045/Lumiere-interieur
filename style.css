@@ -2449,6 +2449,105 @@ textarea.blog-comments__input {
   }
 }
 
+/* --- Zone de danger (suppression compte) --- */
+.compte-danger {
+  margin-top: var(--space-10);
+  padding-top: var(--space-6);
+  border-top: 1px solid oklch(from var(--color-terracotta) l c h / 0.2);
+}
+
+.compte-danger__label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-terracotta);
+  margin-bottom: var(--space-2);
+}
+
+.compte-danger__desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin-bottom: var(--space-4);
+}
+
+.btn--danger {
+  background: transparent;
+  color: var(--color-terracotta);
+  border: 1px solid oklch(from var(--color-terracotta) l c h / 0.3);
+}
+.btn--danger:hover {
+  background: var(--color-terracotta);
+  color: var(--color-text-inverse);
+  border-color: var(--color-terracotta);
+}
+
+/* --- Modale de confirmation --- */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: oklch(0 0 0 / 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  animation: modal-fade-in 0.2s ease;
+}
+
+@keyframes modal-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.modal-card {
+  background: var(--color-bg);
+  border-radius: var(--radius-xl);
+  padding: var(--space-8);
+  max-width: 440px;
+  width: 100%;
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+}
+
+.modal-card__icon {
+  width: 56px;
+  height: 56px;
+  margin: 0 auto var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: oklch(from var(--color-terracotta) l c h / 0.1);
+  border-radius: var(--radius-full);
+  color: var(--color-terracotta);
+}
+
+.modal-card__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  margin-bottom: var(--space-3);
+}
+
+.modal-card__desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.6;
+  margin-bottom: var(--space-6);
+}
+
+.modal-card__actions {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+}
+
+.modal-card__actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
 /* --- Indicateur paiement RDV --- */
 .rdv-paiement {
   display: inline-flex;

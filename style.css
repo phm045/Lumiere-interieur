@@ -2483,6 +2483,14 @@ textarea.blog-comments__input {
   border-color: var(--color-terracotta);
 }
 
+.compte-danger__actions {
+  display: flex;
+  gap: var(--space-3);
+}
+.compte-danger__actions .btn {
+  flex: 1;
+}
+
 /* --- Modale de confirmation --- */
 .modal-overlay {
   position: fixed;

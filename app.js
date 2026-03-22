@@ -1082,7 +1082,22 @@
   var groupeMdp = document.getElementById('groupe-mdp-suppression');
   var inputMdp = document.getElementById('mdp-suppression');
   var erreurMdp = document.getElementById('erreur-mdp-suppression');
+  var btnAnnuler = document.getElementById('btn-annuler-suppression');
   var etapeSuppr = 0; // 0 = bouton initial, 1 = mot de passe demand\u00e9
+
+  function annulerSuppression() {
+    etapeSuppr = 0;
+    groupeMdp.hidden = true;
+    inputMdp.value = '';
+    erreurMdp.hidden = true;
+    btnAnnuler.hidden = true;
+    btnSupprimer.disabled = false;
+    btnSupprimer.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Supprimer mon compte';
+  }
+
+  if (btnAnnuler) {
+    btnAnnuler.addEventListener('click', annulerSuppression);
+  }
 
   if (btnSupprimer && groupeMdp && inputMdp) {
     btnSupprimer.addEventListener('click', async function () {
@@ -1090,6 +1105,7 @@
       // \u00c9tape 1 : afficher le champ mot de passe
       if (etapeSuppr === 0) {
         groupeMdp.hidden = false;
+        if (btnAnnuler) btnAnnuler.hidden = false;
         inputMdp.focus();
         btnSupprimer.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Confirmer la suppression';
         etapeSuppr = 1;

@@ -1078,22 +1078,167 @@
   }
 
   // --- Suppression du compte (avec confirmation mot de passe) ---
-  var btnSupprimer = document.getElementById('btn-supprimer-compte');
-  var groupeMdp = document.getElementById('groupe-mdp-suppression');
-  var inputMdp = document.getElementById('mdp-suppression');
-  var erreurMdp = document.getElementById('erreur-mdp-suppression');
-  var btnAnnuler = document.getElementById('btn-annuler-suppression');
-  var etapeSuppr = 0; // 0 = bouton initial, 1 = mot de passe demand\u00e9
+ // --- Suppression du compte — Modale de confirmation ---
+var btnSupprimer = document.getElementById('btn-supprimer-compte');
 
-  function annulerSuppression() {
-    etapeSuppr = 0;
-    groupeMdp.hidden = true;
-    inputMdp.value = '';
-    erreurMdp.hidden = true;
-    btnAnnuler.hidden = true;
-    btnSupprimer.disabled = false;
-    btnSupprimer.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Supprimer mon compte';
-  }
+// Créer et injecter la modale dans le DOM
+var modalHTML = `
+<div id="modal-suppression" class="modal-overlay" hidden>
+  <div class="modal-card">
+    <div class="modal-card__icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="3 6 5 6 21 6"/>
+        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
+        <line x1="10" y1="11" x2="10" y2="17"/>
+        <line x1="14" y1="11" x2="14" y2="17"/>
+      </svg>
+    </div>
+    <h2 class="modal-card__title">Supprimer mon compte ?</h2>
+    <p class="modal-card__desc">
+      Cette action est <strong>irréversible</strong>. Toutes vos données (profil, rendez-vous, commandes) seront définitivement supprimées.
+    </p>
+    <div class="modal-card__group">
+      <label for="modal-mdp" class="auth-form__label">Confirmez votre mot de passe</label>
+      <div class="auth-form__password-wrapper">
+        <input type="password" id="modal-mdp" class="auth-form__input" placeholder="Votre mot de passe" autocomplete="current-password">
+        <button type="button" class="auth-form__toggle-pwd" data-toggle-pwd="modal-mdp" aria-label="Afficher le mot de passe">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+      <div class="auth-form__message auth-form__message--erreur" id="modal-mdp-erreur" hidden></div>
+    </div>
+    <div class="modal-card__actions">
+      <button class="btn btn--outline" id="btn-modal-annuler">Annuler</button>
+      <button class="btn btn--danger" id="btn-modal-confirmer">Supprimer définitivement</button>
+    </div>
+  </div>
+</div>`;
+document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+var modal = document.getElementById('modal-suppression');
+var btnModalAnnuler = document.getElementById('btn-modal-annuler');
+var btnModalConfirmer = document.getElementById('btn-modal-confirmer');
+var modalMdp = document.getElementById('modal-mdp');
+var modalMdpErreur = document.getElementById('modal-mdp-erreur');
+
+// Ouvrir la modale
+if (btnSupprimer) {
+  btnSupprimer.addEventListener('click', function () {
+    modalMdp.value = '';
+    modalMdpErreur.hidden = true;
+    modal.hidden = false;
+    document.body.style.overflow = 'hidden';
+    setTimeout(function () { modalMdp.focus(); }, 100);
+  });
+}
+
+// Fermer la modale
+function fermerModal() {
+  modal.hidden = true;
+  document.body.style.overflow = '';
+  modalMdp.value = '';
+  modalMdpErreur.hidden = true;
+  btnModalConfirmer.disabled = false;
+  btnModalConfirmer.textContent = 'Supprimer définitivement';
+}
+
+if (btnModalAnnuler) {
+  btnModalAnnuler.addEventListener('click', fermerModal);
+}
+
+// Fermer en cliquant sur l'overlay
+if (modal) {
+  modal.addEventListener('click', function (e) {
+    if (e.target === modal) fermerModal();
+  });
+}
+
+// Fermer avec Escape
+document.addEventListener('keydown', function (e) {
+  if (e.key === 'Escape' && modal && !modal.hidden) fermerModal();
+});
+
+// Afficher/masquer le mot de passe dans la modale
+var toggleModalPwd = modal.querySelector('[data-toggle-pwd="modal-mdp"]');
+if (toggleModalPwd) {
+  toggleModalPwd.addEventListener('click', function () {
+    var estVisible = modalMdp.type === 'text';
+    modalMdp.type = estVisible ? 'password' : 'text';
+    this.setAttribute('aria-label', estVisible ? 'Afficher le mot de passe' : 'Masquer le mot de passe');
+  });
+}
+
+// Confirmer la suppression
+if (btnModalConfirmer) {
+  btnModalConfirmer.addEventListener('click', async function () {
+    var mdp = modalMdp.value.trim();
+    if (!mdp) {
+      modalMdpErreur.textContent = 'Veuillez saisir votre mot de passe.';
+      modalMdpErreur.hidden = false;
+      modalMdp.focus();
+      return;
+    }
+
+    modalMdpErreur.hidden = true;
+    btnModalConfirmer.disabled = true;
+    btnModalConfirmer.textContent = 'Suppression en cours…';
+
+    try {
+      var { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        modalMdpErreur.textContent = 'Session expirée. Veuillez vous reconnecter.';
+        modalMdpErreur.hidden = false;
+        btnModalConfirmer.disabled = false;
+        btnModalConfirmer.textContent = 'Supprimer définitivement';
+        return;
+      }
+
+      // Vérifier le mot de passe
+      var { error: authError } = await supabase.auth.signInWithPassword({
+        email: session.user.email,
+        password: mdp
+      });
+
+      if (authError) {
+        modalMdpErreur.textContent = 'Mot de passe incorrect.';
+        modalMdpErreur.hidden = false;
+        modalMdp.value = '';
+        modalMdp.focus();
+        btnModalConfirmer.disabled = false;
+        btnModalConfirmer.textContent = 'Supprimer définitivement';
+        return;
+      }
+
+      // Supprimer les données
+      var userId = session.user.id;
+      await supabase.from('rendez_vous').delete().eq('user_id', userId);
+      await supabase.from('commandes').delete().eq('user_id', userId);
+      await supabase.from('paiements').delete().eq('user_id', userId);
+      await supabase.from('coupons_utilises').delete().eq('user_id', userId);
+      await supabase.from('profiles').delete().eq('id', userId);
+
+      var { error: rpcError } = await supabase.rpc('delete_own_account');
+      if (rpcError) console.warn('RPC delete_own_account:', rpcError.message);
+
+      await supabase.auth.signOut();
+      fermerModal();
+      afficherEtatDeconnecte();
+      history.pushState(null, '', '#accueil');
+      showPage('accueil');
+      alert('Votre compte a été supprimé. Merci d\'avoir fait partie de Lumière Intérieure.');
+
+    } catch (err) {
+      console.error('Erreur suppression:', err);
+      modalMdpErreur.textContent = 'Une erreur est survenue. Veuillez réessayer.';
+      modalMdpErreur.hidden = false;
+      btnModalConfirmer.disabled = false;
+      btnModalConfirmer.textContent = 'Supprimer définitivement';
+    }
+  });
+}
 
   if (btnAnnuler) {
     btnAnnuler.addEventListener('click', annulerSuppression);

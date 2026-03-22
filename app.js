@@ -700,9 +700,12 @@
   });
 
   // ========================================
-  // AUTHENTIFICATION — Supabase Auth
+  // AUTHENTIFICATION — TEMPORAIREMENT DÉSACTIVÉE
   // ========================================
+  // Pour réactiver : décommenter tout le bloc ci-dessous
+  // et rétablir les sections HTML (inscription, connexion, mon-compte)
 
+  /* TEMP DISABLED — auth client
   var SUPABASE_URL = 'https://dhbbwzpfwtdtdiuixrmq.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYmJ3enBmd3RkdGRpdWl4cm1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDMzNjQ4MjQsImV4cCI6MjA4OTY3MjgxNH0.ysMB2mgIV83NjTI_63WNlkHVul20zu34us-W-wzdyfg';
   var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -935,5 +938,6 @@
 
   // Vérifier le statut auth au chargement
   verifierStatutAuth();
+  TEMP DISABLED — auth client */
 
 })();

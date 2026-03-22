@@ -988,6 +988,15 @@
         stripe_session_id: sessionId
       });
 
+      // Cr\u00e9er aussi un RDV \u00e0 planifier pour cette commande
+      await supabase.from('reservations').insert({
+        user_id: session.user.id,
+        service: infos.service,
+        date_rdv: new Date().toISOString(),
+        statut: '\u00e0 planifier',
+        notes: 'stripe:' + sessionId
+      });
+
       // Naviguer vers Mon compte > Commandes
       showPage('mon-compte');
       setTimeout(function () {
@@ -1225,11 +1234,16 @@
         var statutClasse = passe ? 'compte-liste__statut--expire' : 'compte-liste__statut--actif';
         var statutTexte = passe ? 'Termin\u00e9' : '\u00c0 venir';
         if (r.statut === 'annul\u00e9') { statutClasse = 'compte-liste__statut--expire'; statutTexte = 'Annul\u00e9'; }
+        if (r.statut === '\u00e0 planifier') { statutClasse = 'compte-liste__statut--paye'; statutTexte = '\u00c0 planifier'; }
+
+        var dateAffichee = r.statut === '\u00e0 planifier'
+          ? 'Pay\u00e9 le ' + new Date(r.date_creation || r.date_rdv).toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric' })
+          : dateStr + ' \u00e0 ' + heureStr;
 
         return '<div class="compte-liste__item">' +
           '<div class="compte-liste__info">' +
             '<span class="compte-liste__service">' + r.service + '</span>' +
-            '<span class="compte-liste__date">' + dateStr + ' \u00e0 ' + heureStr + '</span>' +
+            '<span class="compte-liste__date">' + dateAffichee + '</span>' +
           '</div>' +
           '<span class="compte-liste__statut ' + statutClasse + '">' + statutTexte + '</span>' +
         '</div>';

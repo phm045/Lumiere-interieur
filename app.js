@@ -699,4 +699,215 @@
     });
   });
 
+  // ========================================
+  // AUTHENTIFICATION — Gestion des comptes clients
+  // ========================================
+
+  var navConnexion = document.getElementById('nav-connexion');
+  var navCompte = document.getElementById('nav-compte');
+
+  // --- Vérifier l'état de connexion au chargement ---
+  function verifierStatutAuth() {
+    fetch('/api/auth/statut')
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.connecte) {
+          afficherEtatConnecte(data.client);
+        } else {
+          afficherEtatDeconnecte();
+        }
+      })
+      .catch(function () {
+        afficherEtatDeconnecte();
+      });
+  }
+
+  function afficherEtatConnecte(client) {
+    if (navConnexion) navConnexion.hidden = true;
+    if (navCompte) {
+      navCompte.hidden = false;
+      navCompte.textContent = client.prenom || 'Mon compte';
+    }
+  }
+
+  function afficherEtatDeconnecte() {
+    if (navConnexion) navConnexion.hidden = false;
+    if (navCompte) navCompte.hidden = true;
+  }
+
+  // Afficher un message dans un formulaire d'auth
+  function afficherMessage(elementId, message, type) {
+    var el = document.getElementById(elementId);
+    if (!el) return;
+    el.hidden = false;
+    el.className = 'auth-form__message auth-form__message--' + type;
+    if (Array.isArray(message)) {
+      el.innerHTML = message.join('<br>');
+    } else {
+      el.textContent = message;
+    }
+  }
+
+  function cacherMessage(elementId) {
+    var el = document.getElementById(elementId);
+    if (el) el.hidden = true;
+  }
+
+  // --- Boutons afficher/masquer mot de passe ---
+  document.querySelectorAll('[data-toggle-pwd]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var inputId = this.getAttribute('data-toggle-pwd');
+      var input = document.getElementById(inputId);
+      if (!input) return;
+      var estVisible = input.type === 'text';
+      input.type = estVisible ? 'password' : 'text';
+      this.setAttribute('aria-label', estVisible ? 'Afficher le mot de passe' : 'Masquer le mot de passe');
+    });
+  });
+
+  // --- Formulaire d'inscription ---
+  var formInscription = document.getElementById('form-inscription');
+  if (formInscription) {
+    formInscription.addEventListener('submit', function (e) {
+      e.preventDefault();
+      cacherMessage('insc-message');
+      var btnSubmit = document.getElementById('btn-inscription');
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Création en cours…';
+
+      var donnees = {
+        prenom: document.getElementById('insc-prenom').value.trim(),
+        nom: document.getElementById('insc-nom').value.trim(),
+        email: document.getElementById('insc-email').value.trim(),
+        mot_de_passe: document.getElementById('insc-mdp').value,
+        telephone: document.getElementById('insc-tel').value.trim()
+      };
+
+      fetch('/api/auth/inscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(donnees)
+      })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.succes) {
+          afficherMessage('insc-message', data.message, 'succes');
+          afficherEtatConnecte(data.client);
+          formInscription.reset();
+          // Rediriger vers Mon compte après 1.5s
+          setTimeout(function () {
+            history.pushState(null, '', '#mon-compte');
+            showPage('mon-compte');
+            chargerProfil();
+          }, 1500);
+        } else {
+          afficherMessage('insc-message', data.erreurs || ['Erreur inconnue.'], 'erreur');
+        }
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Créer mon compte';
+      })
+      .catch(function () {
+        afficherMessage('insc-message', 'Erreur de connexion au serveur.', 'erreur');
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Créer mon compte';
+      });
+    });
+  }
+
+  // --- Formulaire de connexion ---
+  var formConnexion = document.getElementById('form-connexion');
+  if (formConnexion) {
+    formConnexion.addEventListener('submit', function (e) {
+      e.preventDefault();
+      cacherMessage('conn-message');
+      var btnSubmit = document.getElementById('btn-connexion');
+      btnSubmit.disabled = true;
+      btnSubmit.textContent = 'Connexion en cours…';
+
+      var donnees = {
+        email: document.getElementById('conn-email').value.trim(),
+        mot_de_passe: document.getElementById('conn-mdp').value
+      };
+
+      fetch('/api/auth/connexion', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(donnees)
+      })
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.succes) {
+          afficherMessage('conn-message', data.message, 'succes');
+          afficherEtatConnecte(data.client);
+          formConnexion.reset();
+          setTimeout(function () {
+            history.pushState(null, '', '#mon-compte');
+            showPage('mon-compte');
+            chargerProfil();
+          }, 1500);
+        } else {
+          afficherMessage('conn-message', data.erreurs || ['Erreur inconnue.'], 'erreur');
+        }
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Se connecter';
+      })
+      .catch(function () {
+        afficherMessage('conn-message', 'Erreur de connexion au serveur.', 'erreur');
+        btnSubmit.disabled = false;
+        btnSubmit.textContent = 'Se connecter';
+      });
+    });
+  }
+
+  // --- Charger le profil sur la page Mon compte ---
+  function chargerProfil() {
+    fetch('/api/auth/profil')
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        if (data.succes && data.client) {
+          var c = data.client;
+          document.getElementById('compte-titre').textContent = 'Bonjour, ' + c.prenom + ' !';
+          document.getElementById('compte-prenom').textContent = c.prenom;
+          document.getElementById('compte-nom').textContent = c.nom;
+          document.getElementById('compte-email').textContent = c.email;
+          document.getElementById('compte-telephone').textContent = c.telephone || 'Non renseigné';
+          document.getElementById('compte-date').textContent = new Date(c.date_creation).toLocaleDateString('fr-FR', {
+            year: 'numeric', month: 'long', day: 'numeric'
+          });
+        }
+      })
+      .catch(function () {});
+  }
+
+  // --- Déconnexion ---
+  var btnDeconnexion = document.getElementById('btn-deconnexion');
+  if (btnDeconnexion) {
+    btnDeconnexion.addEventListener('click', function () {
+      fetch('/api/auth/deconnexion', { method: 'POST' })
+        .then(function (res) { return res.json(); })
+        .then(function () {
+          afficherEtatDeconnecte();
+          history.pushState(null, '', '#accueil');
+          showPage('accueil');
+        })
+        .catch(function () {
+          afficherEtatDeconnecte();
+          history.pushState(null, '', '#accueil');
+          showPage('accueil');
+        });
+    });
+  }
+
+  // Charger le profil quand on navigue vers Mon compte
+  var origShowPage = showPage;
+  showPage = function (pageId) {
+    origShowPage(pageId);
+    if (pageId === 'mon-compte') {
+      chargerProfil();
+    }
+  };
+
+  // Vérifier le statut auth au chargement
+  verifierStatutAuth();
+
 })();

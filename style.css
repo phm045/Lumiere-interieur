@@ -366,11 +366,193 @@ section {
   inset: 0;
   background: linear-gradient(
     135deg,
-    oklch(from var(--color-bg) l c h / 0.92) 0%,
-    oklch(from var(--color-bg) l c h / 0.75) 40%,
-    oklch(from var(--color-bg) l c h / 0.35) 100%
+    oklch(from var(--color-bg) l c h / 0.88) 0%,
+    oklch(from var(--color-bg) l c h / 0.68) 40%,
+    oklch(from var(--color-bg) l c h / 0.28) 100%
   );
+  z-index: 1;
 }
+/* ========================================
+   HERO — Animation lumineuse d'arrière-plan
+   Particules, étoiles, halo — thème "lumière intérieure"
+   ======================================== */
+
+.hero-anim {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* --- Halo central lumineux --- */
+.hero-anim__halo {
+  position: absolute;
+  top: 30%;
+  left: 25%;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    oklch(from var(--color-accent) l c h / 0.12) 0%,
+    oklch(from var(--color-accent) l c h / 0.06) 30%,
+    oklch(from var(--color-accent) l c h / 0.02) 60%,
+    transparent 100%
+  );
+  animation: halo-breathe 8s ease-in-out infinite;
+  filter: blur(40px);
+}
+
+@keyframes halo-breathe {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.15); opacity: 1; }
+}
+
+/* --- Rayon de lumière diagonal --- */
+.hero-anim__ray {
+  position: absolute;
+  top: -20%;
+  right: 10%;
+  width: 200px;
+  height: 140%;
+  background: linear-gradient(
+    180deg,
+    oklch(from var(--color-accent) l c h / 0.08) 0%,
+    oklch(from var(--color-accent) l c h / 0.03) 50%,
+    transparent 100%
+  );
+  transform: rotate(25deg);
+  animation: ray-drift 12s ease-in-out infinite;
+  filter: blur(30px);
+}
+
+@keyframes ray-drift {
+  0%, 100% { transform: rotate(25deg) translateX(0); opacity: 0.5; }
+  50% { transform: rotate(25deg) translateX(-30px); opacity: 0.8; }
+}
+
+/* --- Particules flottantes --- */
+.hero-anim__particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: particle-float linear infinite;
+  will-change: transform, opacity;
+}
+
+/* Tailles et couleurs variées */
+.hero-anim__particle--1  { width: 6px;  height: 6px;  background: oklch(from var(--color-accent) l c h / 0.4);  left: 8%;   top: 15%;  animation-duration: 14s; animation-delay: 0s; }
+.hero-anim__particle--2  { width: 4px;  height: 4px;  background: oklch(from var(--color-terracotta) l c h / 0.35); left: 20%;  top: 60%;  animation-duration: 18s; animation-delay: -2s; }
+.hero-anim__particle--3  { width: 8px;  height: 8px;  background: oklch(from var(--color-accent) l c h / 0.25);  left: 35%;  top: 30%;  animation-duration: 20s; animation-delay: -5s; }
+.hero-anim__particle--4  { width: 5px;  height: 5px;  background: oklch(from var(--color-primary) l c h / 0.3);   left: 50%;  top: 70%;  animation-duration: 16s; animation-delay: -3s; }
+.hero-anim__particle--5  { width: 3px;  height: 3px;  background: oklch(from var(--color-accent) l c h / 0.5);  left: 65%;  top: 20%;  animation-duration: 22s; animation-delay: -7s; }
+.hero-anim__particle--6  { width: 7px;  height: 7px;  background: oklch(from var(--color-terracotta) l c h / 0.2); left: 78%;  top: 50%;  animation-duration: 15s; animation-delay: -1s; }
+.hero-anim__particle--7  { width: 4px;  height: 4px;  background: oklch(from var(--color-accent) l c h / 0.35);  left: 90%;  top: 35%;  animation-duration: 19s; animation-delay: -9s; }
+.hero-anim__particle--8  { width: 5px;  height: 5px;  background: oklch(from var(--color-primary) l c h / 0.25);   left: 15%;  top: 80%;  animation-duration: 17s; animation-delay: -4s; }
+.hero-anim__particle--9  { width: 6px;  height: 6px;  background: oklch(from var(--color-accent) l c h / 0.3);  left: 42%;  top: 10%;  animation-duration: 21s; animation-delay: -6s; }
+.hero-anim__particle--10 { width: 3px;  height: 3px;  background: oklch(from var(--color-terracotta) l c h / 0.4); left: 55%;  top: 85%;  animation-duration: 13s; animation-delay: -8s; }
+.hero-anim__particle--11 { width: 5px;  height: 5px;  background: oklch(from var(--color-accent) l c h / 0.3);  left: 72%;  top: 75%;  animation-duration: 16s; animation-delay: -10s; }
+.hero-anim__particle--12 { width: 4px;  height: 4px;  background: oklch(from var(--color-primary) l c h / 0.35);   left: 88%;  top: 15%;  animation-duration: 18s; animation-delay: -2s; }
+
+@keyframes particle-float {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate(-30px, -60px) scale(1.3);
+    opacity: 0.7;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(20px, -120px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+/* --- Étoiles scintillantes (SVG) --- */
+.hero-anim__stars {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.hero-anim__star {
+  fill: var(--color-accent);
+  animation: star-twinkle ease-in-out infinite;
+}
+
+.hero-anim__star--1  { animation-duration: 3s;   animation-delay: 0s; }
+.hero-anim__star--2  { animation-duration: 4s;   animation-delay: -1.2s; }
+.hero-anim__star--3  { animation-duration: 3.5s; animation-delay: -0.5s; }
+.hero-anim__star--4  { animation-duration: 5s;   animation-delay: -2.5s; }
+.hero-anim__star--5  { animation-duration: 3.2s; animation-delay: -1.8s; }
+.hero-anim__star--6  { animation-duration: 4.5s; animation-delay: -0.8s; }
+.hero-anim__star--7  { animation-duration: 3.8s; animation-delay: -3s; }
+.hero-anim__star--8  { animation-duration: 4.2s; animation-delay: -1.5s; }
+.hero-anim__star--9  { animation-duration: 3.6s; animation-delay: -2.2s; }
+.hero-anim__star--10 { animation-duration: 5.5s; animation-delay: -0.3s; }
+.hero-anim__star--11 { animation-duration: 4s;   animation-delay: -3.5s; }
+.hero-anim__star--12 { animation-duration: 3.3s; animation-delay: -1s; }
+.hero-anim__star--13 { animation-duration: 4.8s; animation-delay: -2.8s; }
+.hero-anim__star--14 { animation-duration: 3.7s; animation-delay: -0.7s; }
+.hero-anim__star--15 { animation-duration: 5.2s; animation-delay: -4s; }
+
+@keyframes star-twinkle {
+  0%, 100% { opacity: 0.15; transform: scale(0.8); }
+  50% { opacity: 0.9; transform: scale(1.4); }
+}
+
+/* --- Respect du prefers-reduced-motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .hero-anim__particle,
+  .hero-anim__star,
+  .hero-anim__halo,
+  .hero-anim__ray {
+    animation: none;
+    opacity: 0.3;
+  }
+}
+
+/* --- Mobile : réduire les effets pour la performance --- */
+@media (max-width: 768px) {
+  .hero-anim__halo {
+    width: 300px;
+    height: 300px;
+    top: 20%;
+    left: 10%;
+    filter: blur(25px);
+  }
+  .hero-anim__ray {
+    width: 120px;
+    filter: blur(20px);
+  }
+  .hero-anim__particle--7,
+  .hero-anim__particle--8,
+  .hero-anim__particle--9,
+  .hero-anim__particle--10,
+  .hero-anim__particle--11,
+  .hero-anim__particle--12 {
+    display: none;
+  }
+  .hero-anim__star--8,
+  .hero-anim__star--9,
+  .hero-anim__star--10,
+  .hero-anim__star--11,
+  .hero-anim__star--12,
+  .hero-anim__star--13,
+  .hero-anim__star--14,
+  .hero-anim__star--15 {
+    display: none;
+  }
+}
+
 @media (max-width: 768px) {
   .hero {
     min-height: 70vh;
@@ -397,7 +579,7 @@ section {
 
 .hero__content {
   position: relative;
-  z-index: 1;
+  z-index: 3;
   max-width: 650px;
   padding: var(--space-8);
 }

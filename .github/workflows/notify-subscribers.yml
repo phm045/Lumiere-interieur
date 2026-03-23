@@ -1,0 +1,305 @@
+# =============================================================
+# Lumière Intérieure — Notification automatique aux abonnés
+# =============================================================
+# Ce workflow détecte les modifications dans le blog, les services
+# et la boutique, puis envoie un email via l'API Brevo aux abonnés.
+#
+# GRATUIT : GitHub Actions (2000 min/mois) + Brevo API (300 emails/jour)
+# =============================================================
+
+name: "📧 Notifier les abonnés"
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+
+jobs:
+  detect-and-notify:
+    runs-on: ubuntu-latest
+    steps:
+      # 1. Récupérer le code source
+      - name: Checkout du code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2  # On a besoin du commit précédent pour comparer
+
+      # 2. Détecter les changements dans les sections
+      - name: Détecter les modifications
+        id: detect
+        run: |
+          echo "🔍 Analyse des modifications dans index.html..."
+
+          # Récupérer le diff entre le commit actuel et le précédent
+          DIFF=$(git diff HEAD~1 HEAD -- index.html || echo "")
+
+          if [ -z "$DIFF" ]; then
+            echo "Aucune modification dans index.html"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Détecter les sections modifiées
+          BLOG_CHANGED=false
+          SERVICES_CHANGED=false
+          BOUTIQUE_CHANGED=false
+          THERAPIE_CHANGED=false
+
+          # Analyser le diff pour identifier les sections touchées
+          # On cherche les marqueurs de section dans les lignes ajoutées/modifiées
+          if echo "$DIFF" | grep -qiE '(blog-card|data-article|blog-card__title|blog-card__excerpt|id="blog")'; then
+            BLOG_CHANGED=true
+            echo "📝 Modification détectée : BLOG"
+          fi
+
+          if echo "$DIFF" | grep -qiE '(service-card|service-card__price|service-card__title|id="services")'; then
+            SERVICES_CHANGED=true
+            echo "🛎️ Modification détectée : SERVICES"
+          fi
+
+          if echo "$DIFF" | grep -qiE '(boutique|boutique-coming|boutique-product|id="boutique")'; then
+            BOUTIQUE_CHANGED=true
+            echo "🛍️ Modification détectée : BOUTIQUE"
+          fi
+
+          if echo "$DIFF" | grep -qiE '(therapie|thérapie|id="therapie")'; then
+            THERAPIE_CHANGED=true
+            echo "💆 Modification détectée : THÉRAPIE"
+          fi
+
+          # Vérifier s'il y a des changements pertinents
+          if [ "$BLOG_CHANGED" = false ] && [ "$SERVICES_CHANGED" = false ] && [ "$BOUTIQUE_CHANGED" = false ] && [ "$THERAPIE_CHANGED" = false ]; then
+            echo "Aucune modification dans les sections surveillées"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "has_changes=true" >> $GITHUB_OUTPUT
+          echo "blog_changed=$BLOG_CHANGED" >> $GITHUB_OUTPUT
+          echo "services_changed=$SERVICES_CHANGED" >> $GITHUB_OUTPUT
+          echo "boutique_changed=$BOUTIQUE_CHANGED" >> $GITHUB_OUTPUT
+          echo "therapie_changed=$THERAPIE_CHANGED" >> $GITHUB_OUTPUT
+
+          # Construire le résumé des changements
+          SUMMARY=""
+          if [ "$BLOG_CHANGED" = true ]; then
+            SUMMARY="${SUMMARY}📝 Nouvel article ou mise à jour du blog\n"
+          fi
+          if [ "$SERVICES_CHANGED" = true ]; then
+            SUMMARY="${SUMMARY}🛎️ Mise à jour des services et consultations\n"
+          fi
+          if [ "$BOUTIQUE_CHANGED" = true ]; then
+            SUMMARY="${SUMMARY}🛍️ Nouveauté dans la boutique\n"
+          fi
+          if [ "$THERAPIE_CHANGED" = true ]; then
+            SUMMARY="${SUMMARY}💆 Mise à jour des soins thérapeutiques\n"
+          fi
+
+          echo "summary<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # 3. Extraire les détails des nouveaux contenus
+      - name: Extraire les détails
+        if: steps.detect.outputs.has_changes == 'true'
+        id: details
+        run: |
+          echo "📋 Extraction des détails des modifications..."
+
+          SUBJECT=""
+          BODY_SECTIONS=""
+
+          # --- BLOG : extraire les titres des articles ajoutés ---
+          if [ "${{ steps.detect.outputs.blog_changed }}" = "true" ]; then
+            DIFF_BLOG=$(git diff HEAD~1 HEAD -- index.html | grep "^+" | grep -i "blog-card__title" || echo "")
+
+            NEW_TITLES=""
+            if [ -n "$DIFF_BLOG" ]; then
+              # Extraire les titres des nouvelles cartes blog
+              NEW_TITLES=$(echo "$DIFF_BLOG" | sed 's/.*<h2[^>]*>//;s/<\/h2>.*//' | head -3)
+            fi
+
+            if [ -n "$NEW_TITLES" ]; then
+              FIRST_TITLE=$(echo "$NEW_TITLES" | head -1)
+              SUBJECT="✨ Nouveau sur le blog : ${FIRST_TITLE}"
+              BODY_SECTIONS="${BODY_SECTIONS}<h2 style=\"color:#8b5e3c;margin-top:30px;\">📝 Nouveau sur le blog</h2>"
+              while IFS= read -r title; do
+                BODY_SECTIONS="${BODY_SECTIONS}<p style=\"font-size:16px;\">• ${title}</p>"
+              done <<< "$NEW_TITLES"
+            else
+              SUBJECT="✨ Le blog a été mis à jour"
+              BODY_SECTIONS="${BODY_SECTIONS}<h2 style=\"color:#8b5e3c;margin-top:30px;\">📝 Blog mis à jour</h2><p>De nouveaux contenus vous attendent sur le blog.</p>"
+            fi
+          fi
+
+          # --- SERVICES ---
+          if [ "${{ steps.detect.outputs.services_changed }}" = "true" ]; then
+            if [ -z "$SUBJECT" ]; then
+              SUBJECT="🛎️ Nouveauté dans les services"
+            fi
+            BODY_SECTIONS="${BODY_SECTIONS}<h2 style=\"color:#8b5e3c;margin-top:30px;\">🛎️ Services mis à jour</h2><p style=\"font-size:16px;\">Les consultations et services ont été mis à jour. Découvrez les nouveautés.</p>"
+          fi
+
+          # --- BOUTIQUE ---
+          if [ "${{ steps.detect.outputs.boutique_changed }}" = "true" ]; then
+            if [ -z "$SUBJECT" ]; then
+              SUBJECT="🛍️ Nouveauté dans la boutique"
+            fi
+            BODY_SECTIONS="${BODY_SECTIONS}<h2 style=\"color:#8b5e3c;margin-top:30px;\">🛍️ Boutique</h2><p style=\"font-size:16px;\">La boutique a été mise à jour ! Venez découvrir les nouveautés.</p>"
+          fi
+
+          # --- THÉRAPIE ---
+          if [ "${{ steps.detect.outputs.therapie_changed }}" = "true" ]; then
+            if [ -z "$SUBJECT" ]; then
+              SUBJECT="💆 Mise à jour des soins thérapeutiques"
+            fi
+            BODY_SECTIONS="${BODY_SECTIONS}<h2 style=\"color:#8b5e3c;margin-top:30px;\">💆 Thérapie & Bien-être</h2><p style=\"font-size:16px;\">Les soins thérapeutiques ont été mis à jour. Découvrez les nouvelles offres.</p>"
+          fi
+
+          # Fallback
+          if [ -z "$SUBJECT" ]; then
+            SUBJECT="✨ Nouveautés sur Lumière Intérieure"
+          fi
+
+          # Sauvegarder les résultats
+          echo "subject=${SUBJECT}" >> $GITHUB_OUTPUT
+          echo "body_sections<<EOF" >> $GITHUB_OUTPUT
+          echo "$BODY_SECTIONS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      # 4. Envoyer l'email via l'API Brevo
+      - name: Envoyer la notification par email
+        if: steps.detect.outputs.has_changes == 'true'
+        env:
+          BREVO_API_KEY: ${{ secrets.BREVO_API_KEY }}
+          BREVO_LIST_ID: ${{ secrets.BREVO_LIST_ID }}
+          SENDER_NAME: "Lumière Intérieure"
+          SENDER_EMAIL: ${{ secrets.SENDER_EMAIL }}
+          SITE_URL: "https://phm045.github.io/Lumiere-interieur"
+        run: |
+          echo "📧 Envoi de l'email aux abonnés via Brevo..."
+
+          SUBJECT="${{ steps.details.outputs.subject }}"
+          BODY_SECTIONS='${{ steps.details.outputs.body_sections }}'
+
+          # Construire le template HTML de l'email
+          HTML_CONTENT=$(cat <<'HTMLEOF'
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head><meta charset="UTF-8"></head>
+          <body style="margin:0;padding:0;background-color:#faf8f5;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;">
+            <div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
+
+              <!-- Header -->
+              <div style="background:linear-gradient(135deg,#1a1a2e 0%,#2d1b4e 100%);padding:40px 30px;text-align:center;">
+                <h1 style="color:#d4a574;font-size:24px;margin:0;font-weight:300;letter-spacing:2px;">✨ Lumière Intérieure</h1>
+                <p style="color:#c0b0a0;font-size:14px;margin-top:8px;">Voyance & Guidance</p>
+              </div>
+
+              <!-- Contenu -->
+              <div style="padding:30px;">
+                <p style="font-size:16px;color:#333;line-height:1.6;">
+                  Bonjour {{ contact.PRENOM | default: "cher(e) abonné(e)" }},
+                </p>
+                <p style="font-size:16px;color:#333;line-height:1.6;">
+                  De nouvelles mises à jour vous attendent sur <strong>Lumière Intérieure</strong> :
+                </p>
+
+                BODY_SECTIONS_PLACEHOLDER
+
+                <!-- Bouton CTA -->
+                <div style="text-align:center;margin:35px 0;">
+                  <a href="SITE_URL_PLACEHOLDER" style="display:inline-block;background:linear-gradient(135deg,#8b5e3c,#d4a574);color:#ffffff;text-decoration:none;padding:14px 35px;border-radius:8px;font-size:16px;font-weight:600;letter-spacing:0.5px;">
+                    Découvrir →
+                  </a>
+                </div>
+
+                <p style="font-size:14px;color:#888;line-height:1.5;">
+                  À très bientôt,<br>
+                  <em>Philippe — Lumière Intérieure</em>
+                </p>
+              </div>
+
+              <!-- Footer -->
+              <div style="background:#f5f0eb;padding:20px 30px;text-align:center;border-top:1px solid #e8e0d8;">
+                <p style="font-size:12px;color:#999;margin:0;">
+                  Vous recevez cet email car vous êtes inscrit(e) à la newsletter de Lumière Intérieure.<br>
+                  <a href="{{ unsubscribe }}" style="color:#8b5e3c;">Se désinscrire</a>
+                </p>
+              </div>
+
+            </div>
+          </body>
+          </html>
+          HTMLEOF
+          )
+
+          # Remplacer les placeholders
+          HTML_CONTENT=$(echo "$HTML_CONTENT" | sed "s|BODY_SECTIONS_PLACEHOLDER|${BODY_SECTIONS}|g")
+          HTML_CONTENT=$(echo "$HTML_CONTENT" | sed "s|SITE_URL_PLACEHOLDER|${SITE_URL}|g")
+
+          # Appel API Brevo pour envoyer la campagne email
+          RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+            "https://api.brevo.com/v3/emailCampaigns" \
+            -H "accept: application/json" \
+            -H "api-key: ${BREVO_API_KEY}" \
+            -H "content-type: application/json" \
+            -d "{
+              \"sender\": {
+                \"name\": \"${SENDER_NAME}\",
+                \"email\": \"${SENDER_EMAIL}\"
+              },
+              \"name\": \"Auto — $(date +'%d/%m/%Y %H:%M')\",
+              \"subject\": \"${SUBJECT}\",
+              \"htmlContent\": $(echo "$HTML_CONTENT" | jq -Rs .),
+              \"recipients\": {
+                \"listIds\": [${BREVO_LIST_ID}]
+              },
+              \"inlineImageActivation\": false,
+              \"sendAtBestTime\": false
+            }")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | sed '$d')
+
+          echo "Réponse Brevo (HTTP ${HTTP_CODE}): ${BODY}"
+
+          if [ "$HTTP_CODE" -ge 200 ] && [ "$HTTP_CODE" -lt 300 ]; then
+            CAMPAIGN_ID=$(echo "$BODY" | jq -r '.id')
+            echo "✅ Campagne créée (ID: ${CAMPAIGN_ID})"
+
+            # Envoyer immédiatement la campagne
+            SEND_RESPONSE=$(curl -s -w "\n%{http_code}" -X POST \
+              "https://api.brevo.com/v3/emailCampaigns/${CAMPAIGN_ID}/sendNow" \
+              -H "accept: application/json" \
+              -H "api-key: ${BREVO_API_KEY}")
+
+            SEND_CODE=$(echo "$SEND_RESPONSE" | tail -1)
+            echo "📤 Envoi immédiat (HTTP ${SEND_CODE})"
+
+            if [ "$SEND_CODE" -ge 200 ] && [ "$SEND_CODE" -lt 300 ]; then
+              echo "✅ Email envoyé avec succès aux abonnés !"
+            else
+              echo "⚠️ Erreur lors de l'envoi : $(echo "$SEND_RESPONSE" | sed '$d')"
+              exit 1
+            fi
+          else
+            echo "❌ Erreur lors de la création de la campagne"
+            echo "$BODY"
+            exit 1
+          fi
+
+      # 5. Résumé dans les logs GitHub
+      - name: Résumé
+        if: always()
+        run: |
+          echo "========================================="
+          echo "📊 Résumé de l'exécution"
+          echo "========================================="
+          echo "Changements détectés : ${{ steps.detect.outputs.has_changes }}"
+          echo "Blog modifié : ${{ steps.detect.outputs.blog_changed }}"
+          echo "Services modifiés : ${{ steps.detect.outputs.services_changed }}"
+          echo "Boutique modifiée : ${{ steps.detect.outputs.boutique_changed }}"
+          echo "Thérapie modifiée : ${{ steps.detect.outputs.therapie_changed }}"
+          echo "========================================="

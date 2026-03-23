@@ -1347,6 +1347,10 @@ section {
   color: var(--color-text);
   font-weight: 500;
 }
+.legal-page p strong {
+  color: var(--color-text);
+  font-weight: 500;
+}
 .legal-page__updated {
   margin-top: var(--space-12);
   font-size: var(--text-sm);

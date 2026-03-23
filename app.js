@@ -2008,6 +2008,27 @@
     });
   });
 
+  // --- Bouton réservation accueil -> popup ---
+  var accueilResBtn = document.getElementById('accueil-reservation-btn');
+  if (accueilResBtn) {
+    accueilResBtn.addEventListener('click', function () {
+      var modal = document.getElementById('modal-reservation');
+      var serviceEl = document.getElementById('modal-reservation-service');
+      if (serviceEl) serviceEl.textContent = '';
+      var confirmBtn = document.getElementById('modal-reservation-confirm');
+      if (confirmBtn) {
+        confirmBtn.onclick = function () {
+          closeAllModals();
+          window.open('https://cal.eu/philippe-medium-amzdok/consultations', '_blank');
+        };
+      }
+      if (modal) {
+        modal.hidden = false;
+        document.body.style.overflow = 'hidden';
+      }
+    });
+  }
+
   // --- Pop-up Réflexologie ---
   (function () {
     // Trouver le bouton "Prendre rendez-vous" dans la carte réflexologie

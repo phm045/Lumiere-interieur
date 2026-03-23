@@ -2223,12 +2223,21 @@
     formVoyanceMail.addEventListener('submit', async function (e) {
       e.preventDefault();
       var prenom = document.getElementById('vm-prenom').value.trim();
+      var dobInput = document.getElementById('vm-dob');
+      var dob = dobInput ? dobInput.value : '';
       var email = document.getElementById('vm-email').value.trim();
       var question = document.getElementById('vm-question').value.trim();
       var msgEl = document.getElementById('vm-message');
       var submitBtn = formVoyanceMail.querySelector('[type="submit"]');
 
-      if (!prenom || !email || !question) return;
+      if (!prenom || !dob || !email || !question) return;
+
+      // Formater la date en français
+      var dobFormatted = dob;
+      try {
+        var d = new Date(dob + 'T00:00:00');
+        dobFormatted = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+      } catch (e) {}
 
       // Désactiver le bouton pendant l'envoi
       if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Envoi en cours\u2026'; }
@@ -2239,6 +2248,7 @@
           sujet: 'Voyance par mail \u2013 1 question \u2014 ' + prenom,
           contenu: '<h2>Voyance par mail \u2013 1 question</h2>'
             + '<p><strong>Pr\u00e9nom :</strong> ' + prenom + '</p>'
+            + '<p><strong>Date de naissance :</strong> ' + dobFormatted + '</p>'
             + '<p><strong>Email :</strong> ' + email + '</p>'
             + '<p><strong>Question :</strong></p>'
             + '<blockquote style="border-left:3px solid #b5704a;padding-left:12px;color:#333;">' + question.replace(/\n/g, '<br>') + '</blockquote>',

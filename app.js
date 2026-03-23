@@ -541,6 +541,55 @@
         '<p>Les pierres ne remplacent pas la guidance des cartes, et les cartes ne remplacent pas les pierres. Ensemble, elles offrent un accompagnement \u00e0 la fois subtil et concret\u00a0: les cartes \u00e9clairent le chemin, et les pierres vous soutiennent en le parcourant.</p>' +
         '<p>Si vous \u00eates curieux(se) de d\u00e9couvrir quelle pierre vous accompagnerait le mieux en ce moment, n\u2019h\u00e9sitez pas \u00e0 en parler lors de votre prochaine consultation. Ensemble, nous trouverons la pierre qui r\u00e9sonne avec votre \u00e9nergie du moment.</p>' +
         '<div class="blog-article__cta"><p>Envie de savoir quelle pierre vous correspond\u202f? Parlons-en lors d\u2019une consultation pour trouver votre alli\u00e9e min\u00e9rale.</p></div>'
+    },
+    mediumnite: {
+      category: 'M\u00e9diumnit\u00e9',
+      title: 'La m\u00e9diumnit\u00e9\u00a0: quand l\u2019invisible se r\u00e9v\u00e8le',
+      date: '23 mars 2026',
+      content: '<h2>Qu\u2019est-ce que la m\u00e9diumnit\u00e9\u202f?</h2>' +
+        '<p>La m\u00e9diumnit\u00e9 est la capacit\u00e9 de percevoir des informations, des \u00e9nergies ou des pr\u00e9sences qui \u00e9chappent aux cinq sens habituels. Le mot \u00ab\u00a0m\u00e9dium\u00a0\u00bb vient du latin <em>medium</em>, qui signifie \u00ab\u00a0milieu\u00a0\u00bb, \u00ab\u00a0interm\u00e9diaire\u00a0\u00bb. Un m\u00e9dium est litt\u00e9ralement un pont entre le monde visible et l\u2019invisible.</p>' +
+        '<p>Contrairement \u00e0 certaines id\u00e9es re\u00e7ues, la m\u00e9diumnit\u00e9 n\u2019est pas r\u00e9serv\u00e9e \u00e0 une \u00e9lite. <strong>Nous poss\u00e9dons tous, \u00e0 des degr\u00e9s divers, une sensibilit\u00e9 subtile.</strong> Certains la ressentent d\u00e8s l\u2019enfance, d\u2019autres la d\u00e9couvrent \u00e0 l\u2019\u00e2ge adulte, souvent \u00e0 la suite d\u2019un \u00e9v\u00e9nement de vie marquant.</p>' +
+        '<h2>Les diff\u00e9rentes formes de m\u00e9diumnit\u00e9</h2>' +
+        '<p>La m\u00e9diumnit\u00e9 ne se manifeste pas de la m\u00eame fa\u00e7on chez tout le monde. Voici les principales formes\u00a0:</p>' +
+        '<ul>' +
+        '<li><strong>Clairvoyance\u00a0:</strong> percevoir des images, des sc\u00e8nes ou des symboles par l\u2019\u0153il int\u00e9rieur. C\u2019est souvent sous forme de flashs ou de visions.</li>' +
+        '<li><strong>Clairaudience\u00a0:</strong> entendre des mots, des phrases ou des sons qui ne proviennent pas du monde physique. Une petite voix int\u00e9rieure, distincte de la pens\u00e9e.</li>' +
+        '<li><strong>Clairsentience\u00a0:</strong> ressentir dans son corps les \u00e9motions ou les sensations d\u2019autrui. C\u2019est la forme la plus r\u00e9pandue, souvent confondue avec l\u2019hypersensibilit\u00e9.</li>' +
+        '<li><strong>Claircognizance\u00a0:</strong> savoir quelque chose sans pouvoir l\u2019expliquer rationnellement. Une certitude int\u00e9rieure qui surgit spontan\u00e9ment.</li>' +
+        '</ul>' +
+        '<p>Dans ma pratique, je fais appel \u00e0 plusieurs de ces canaux simultan\u00e9ment. Les cartes servent de support, mais c\u2019est le ressenti qui guide v\u00e9ritablement la consultation.</p>' +
+        '<h2>Signes que vous avez une sensibilit\u00e9 m\u00e9diumnique</h2>' +
+        '<p>Certaines exp\u00e9riences peuvent indiquer une m\u00e9diumnit\u00e9 latente\u00a0:</p>' +
+        '<ul>' +
+        '<li>Vous ressentez l\u2019atmosph\u00e8re d\u2019un lieu d\u00e8s que vous y entrez</li>' +
+        '<li>Vous captez les \u00e9motions des autres, parfois au point de les confondre avec les v\u00f4tres</li>' +
+        '<li>Vous avez des r\u00eaves pr\u00e9monitoires ou tr\u00e8s symboliques</li>' +
+        '<li>Vous ressentez des pr\u00e9sences invisibles, surtout dans certains lieux</li>' +
+        '<li>Vous avez une intuition tr\u00e8s d\u00e9velopp\u00e9e qui se confirme souvent</li>' +
+        '<li>Enfant, vous aviez des amis \u00ab\u00a0imaginaires\u00a0\u00bb ou vous perceviez des choses que les adultes ne voyaient pas</li>' +
+        '</ul>' +
+        '<p>Si vous vous reconnaissez dans plusieurs de ces signes, il est possible que votre sensibilit\u00e9 m\u00e9diumnique demande \u00e0 \u00eatre reconnue et accompagn\u00e9e.</p>' +
+        '<h2>Comment d\u00e9velopper sa m\u00e9diumnit\u00e9 en toute s\u00e9curit\u00e9</h2>' +
+        '<p>D\u00e9velopper sa m\u00e9diumnit\u00e9 n\u2019est pas un jeu. C\u2019est un chemin qui demande <strong>discipline, humilit\u00e9 et ancrage</strong>. Voici quelques fondamentaux\u00a0:</p>' +
+        '<ul>' +
+        '<li><strong>La m\u00e9ditation\u00a0:</strong> c\u2019est la base. En calmant le mental, on permet aux perceptions subtiles de se manifester.</li>' +
+        '<li><strong>L\u2019ancrage\u00a0:</strong> rester connect\u00e9 \u00e0 la terre est essentiel pour ne pas se perdre dans les perceptions. Marcher pieds nus, jardiner, respirer consciemment.</li>' +
+        '<li><strong>La protection \u00e9nerg\u00e9tique\u00a0:</strong> avant toute pratique, prot\u00e9gez votre espace et votre \u00e9nergie. La visualisation d\u2019une bulle de lumi\u00e8re blanche est un exercice simple et puissant.</li>' +
+        '<li><strong>Le journal de bord\u00a0:</strong> notez vos ressentis, vos r\u00eaves, vos impressions. Avec le temps, des sch\u00e9mas se r\u00e9v\u00e8lent.</li>' +
+        '<li><strong>L\u2019accompagnement\u00a0:</strong> ne restez pas seul(e) avec vos perceptions. Un m\u00e9dium exp\u00e9riment\u00e9 peut vous guider et vous aider \u00e0 comprendre ce que vous vivez.</li>' +
+        '</ul>' +
+        '<h2>M\u00e9diumnit\u00e9 et voyance\u00a0: quelle diff\u00e9rence\u202f?</h2>' +
+        '<p>On confond souvent les deux, mais ils sont compl\u00e9mentaires\u00a0:</p>' +
+        '<ul>' +
+        '<li><strong>La voyance</strong> consiste \u00e0 percevoir des \u00e9v\u00e9nements pass\u00e9s, pr\u00e9sents ou futurs \u2014 souvent \u00e0 l\u2019aide de supports (cartes, pendule, boule de cristal).</li>' +
+        '<li><strong>La m\u00e9diumnit\u00e9</strong> va au-del\u00e0\u00a0: c\u2019est la connexion directe avec des \u00e9nergies, des entit\u00e9s ou des \u00e2mes d\u00e9sincarnes. Le m\u00e9dium re\u00e7oit des messages qui ne viennent pas de sa propre pens\u00e9e.</li>' +
+        '</ul>' +
+        '<p>Dans mes consultations, je combine les deux. Les cartes ouvrent le dialogue, et la m\u00e9diumnit\u00e9 apporte la profondeur et la pr\u00e9cision qui touchent au c\u0153ur de ce que vous traversez.</p>' +
+        '<h2>Un don au service de l\u2019autre</h2>' +
+        '<p>La m\u00e9diumnit\u00e9 n\u2019est pas un pouvoir, c\u2019est une <strong>responsabilit\u00e9</strong>. Recevoir des messages, c\u2019est accepter de les transmettre avec justesse, bienveillance et honnetet\u00e9 \u2014 m\u00eame quand ils sont d\u00e9licats \u00e0 entendre.</p>' +
+        '<p>Ce qui me guide dans chaque consultation, c\u2019est le respect de votre libre arbitre. Les messages que je re\u00e7ois ne sont jamais des ordres. Ce sont des \u00e9clairages, des pistes, des confirmations. <strong>C\u2019est toujours vous qui d\u00e9cidez.</strong></p>' +
+        '<p>Si vous ressentez un appel vers la m\u00e9diumnit\u00e9, que ce soit pour comprendre vos propres capacit\u00e9s ou pour recevoir des messages, sachez que cet espace est fait pour vous accueillir sans jugement.</p>' +
+        '<div class="blog-article__cta"><p>Vous souhaitez explorer votre sensibilit\u00e9 m\u00e9diumnique ou recevoir des messages de guidance\u202f? R\u00e9servez une consultation, je serai honor\u00e9 de vous accompagner.</p></div>'
     }
   };
 

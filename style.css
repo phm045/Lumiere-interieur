@@ -3394,7 +3394,7 @@ textarea.blog-comments__input {
 /* Mobile adjustments */
 @media (max-width: 640px) {
   .sound-healer {
-    bottom: 1rem;
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
     right: 1rem;
   }
   .sound-healer__btn {
@@ -3404,5 +3404,13 @@ textarea.blog-comments__input {
   .sound-healer__btn svg {
     width: 22px;
     height: 22px;
+  }
+}
+
+/* Tablettes */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .sound-healer {
+    bottom: 1.25rem;
+    right: 1.25rem;
   }
 }

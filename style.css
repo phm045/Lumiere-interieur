@@ -3297,3 +3297,112 @@ textarea.blog-comments__input {
     text-align: center;
   }
 }
+
+/* ========================================
+   SONS DE GUÉRISON — Bouton flottant
+   ======================================== */
+.sound-healer {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sound-healer__btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-accent);
+  background: var(--color-surface);
+  color: var(--color-accent);
+  cursor: pointer;
+  transition: all 320ms var(--ease-out);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.sound-healer__btn:hover {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  transform: scale(1.08);
+  box-shadow: 0 6px 28px rgba(184, 149, 46, 0.25);
+}
+
+.sound-healer__btn:active {
+  transform: scale(0.96);
+}
+
+.sound-healer__label {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 300ms var(--ease-out);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.sound-healer:hover .sound-healer__label {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Pulse animation when playing */
+.sound-healer__pulse {
+  position: absolute;
+  inset: -4px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-accent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.sound-healer--playing .sound-healer__pulse {
+  animation: sound-pulse 2.4s ease-out infinite;
+}
+
+.sound-healer--playing .sound-healer__btn {
+  background: var(--color-accent);
+  color: var(--color-text-inverse);
+  border-color: var(--color-accent);
+}
+
+@keyframes sound-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .sound-healer {
+    bottom: 1rem;
+    right: 1rem;
+  }
+  .sound-healer__btn {
+    width: 46px;
+    height: 46px;
+  }
+  .sound-healer__btn svg {
+    width: 22px;
+    height: 22px;
+  }
+}

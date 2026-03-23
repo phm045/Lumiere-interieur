@@ -2284,4 +2284,87 @@
   }
 
 
+  // ========================================
+  // SONS DE GUÉRISON — Bol Chantant (fond sonore)
+  // ========================================
+  (function initSoundHealer() {
+    var container = document.getElementById('sound-healer');
+    var btn = document.getElementById('sound-toggle');
+    var audio = document.getElementById('sound-audio');
+    if (!btn || !audio || !container) return;
+
+    var iconOff = btn.querySelector('.sound-healer__icon--off');
+    var iconOn  = btn.querySelector('.sound-healer__icon--on');
+    var isPlaying = false;
+    var fadeInterval = null;
+    var targetVolume = 0.25;  // Volume doux pour fond sonore
+
+    function fadeIn(duration) {
+      audio.volume = 0;
+      audio.play().then(function() {
+        var step = targetVolume / (duration / 30);
+        clearInterval(fadeInterval);
+        fadeInterval = setInterval(function() {
+          if (audio.volume + step >= targetVolume) {
+            audio.volume = targetVolume;
+            clearInterval(fadeInterval);
+          } else {
+            audio.volume = Math.min(audio.volume + step, 1);
+          }
+        }, 30);
+      }).catch(function(e) {
+        console.log('Audio autoplay bloqué:', e);
+      });
+    }
+
+    function fadeOut(duration) {
+      var step = audio.volume / (duration / 30);
+      clearInterval(fadeInterval);
+      fadeInterval = setInterval(function() {
+        if (audio.volume - step <= 0.001) {
+          audio.volume = 0;
+          audio.pause();
+          clearInterval(fadeInterval);
+        } else {
+          audio.volume = Math.max(audio.volume - step, 0);
+        }
+      }, 30);
+    }
+
+    function updateUI() {
+      if (isPlaying) {
+        container.classList.add('sound-healer--playing');
+        iconOff.style.display = 'none';
+        iconOn.style.display  = '';
+        btn.setAttribute('aria-label', 'Désactiver les sons de guérison');
+      } else {
+        container.classList.remove('sound-healer--playing');
+        iconOff.style.display = '';
+        iconOn.style.display  = 'none';
+        btn.setAttribute('aria-label', 'Activer les sons de guérison');
+      }
+      // Mémoriser le choix
+      try { safeLocal.setItem('li_sound', isPlaying ? '1' : '0'); } catch(e) {}
+    }
+
+    btn.addEventListener('click', function() {
+      isPlaying = !isPlaying;
+      updateUI();
+      if (isPlaying) {
+        fadeIn(1500);  // Fondu de 1.5s
+      } else {
+        fadeOut(800);  // Fondu de 0.8s
+      }
+    });
+
+    // Restaurer l'état précédent (mais ne pas auto-play sans geste)
+    try {
+      if (safeLocal.getItem('li_sound') === '1') {
+        // On montre l'icône "on" pour indiquer que le son était actif,
+        // mais on attend le premier clic (politique navigateurs)
+      }
+    } catch(e) {}
+  })();
+
+
 })();

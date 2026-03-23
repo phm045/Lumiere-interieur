@@ -192,6 +192,7 @@
 }
 
 .header__logo {
+  position: relative;
   display: flex;
   align-items: center;
   gap: var(--space-2);
@@ -199,18 +200,48 @@
   color: var(--color-text);
 }
 
-.header__logo svg {
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
+/* Halo lumineux derrière le logo */
+.header__logo::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 32px;
+  width: 70px;
+  height: 70px;
+  transform: translate(-50%, -50%);
+  background: radial-gradient(
+    circle,
+    rgba(184, 149, 46, 0.55) 0%,
+    rgba(212, 175, 55, 0.28) 35%,
+    rgba(107, 127, 78, 0.12) 60%,
+    transparent 100%
+  );
+  border-radius: 50%;
+  filter: blur(12px);
+  animation: logo-glow 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 0;
 }
 
 .header__logo-img {
+  position: relative;
+  z-index: 1;
   height: 64px;
   width: auto;
   max-width: 280px;
   display: block;
   object-fit: contain;
+}
+
+@keyframes logo-glow {
+  0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+  50%      { opacity: 1;   transform: translate(-50%, -50%) scale(1.2); }
+}
+
+.header__logo svg {
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
 }
 
 .footer__brand .header__logo-img {

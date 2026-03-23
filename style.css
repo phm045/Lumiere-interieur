@@ -3093,6 +3093,37 @@ textarea.blog-comments__input {
   font-family: inherit;
 }
 
+/* --- Voyance mail tips box --- */
+.modal-voyance-tips {
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  background: oklch(from var(--color-accent) l c h / 0.06);
+  border: 1px solid oklch(from var(--color-accent) l c h / 0.15);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-5);
+  line-height: 1.6;
+}
+.modal-voyance-tips__title {
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0 0 var(--space-2) 0;
+  font-size: var(--text-sm);
+}
+.modal-voyance-tips ul {
+  margin: 0;
+  padding-left: var(--space-5);
+}
+.modal-voyance-tips li {
+  margin-bottom: var(--space-1);
+}
+.modal-voyance-tips li:last-child {
+  margin-bottom: 0;
+  font-style: italic;
+  color: var(--color-primary);
+}
+
 /* --- Star rating for avis --- */
 .avis-stars {
   display: flex;

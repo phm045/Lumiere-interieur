@@ -323,7 +323,7 @@
           <svg class="stripe-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
           Payer par CB
       </a>
-      <a href="mailto:philippe.medium45@gmail.com?subject=Voyance%20par%20mail%20%E2%80%93%201%20question" class="btn btn--primary btn--sm">M'écrire maintenant</a>
+      <button class="btn btn--primary btn--sm" id="btn-voyance-mail">M'écrire maintenant</button>
     </div>
   </div>
 
@@ -1802,6 +1802,47 @@
 <!-- ========================================
      POP-UPS / MODALES
      ======================================== -->
+
+<!-- Pop-up Voyance par mail — 1 question -->
+<div class="modal-overlay" id="modal-voyance-mail" hidden>
+  <div class="modal-card modal-card--wide">
+    <button class="modal-close" aria-label="Fermer" data-modal-close>&times;</button>
+    <div class="modal-card__icon modal-card__icon--email">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+    </div>
+    <h3 class="modal-card__title">Voyance par mail &mdash; 1 question</h3>
+    <p class="modal-card__desc" style="margin-bottom:var(--space-3);">Posez votre question ci-dessous. Après paiement (9 €), je réalise un tirage personnalisé et vous envoie ma réponse détaillée sous 48h.</p>
+    <div class="modal-voyance-tips">
+      <p class="modal-voyance-tips__title">Conseils pour une question efficace :</p>
+      <ul>
+        <li>Soyez précis et concis (1 seule question)</li>
+        <li>Précisez le contexte (amour, travail, famille…)</li>
+        <li>Évitez les questions fermées (oui/non)</li>
+        <li>Exemple : « Que me réservent les prochains mois sur le plan professionnel ? »</li>
+      </ul>
+    </div>
+    <form class="modal-email-form" id="form-voyance-mail">
+      <div class="auth-form__group">
+        <label for="vm-prenom" class="auth-form__label">Prénom</label>
+        <input type="text" id="vm-prenom" class="auth-form__input" placeholder="Votre prénom" required maxlength="100">
+      </div>
+      <div class="auth-form__group">
+        <label for="vm-email" class="auth-form__label">Adresse email (pour recevoir la réponse)</label>
+        <input type="email" id="vm-email" class="auth-form__input" placeholder="exemple@email.com" required>
+      </div>
+      <div class="auth-form__group">
+        <label for="vm-question" class="auth-form__label">Votre question</label>
+        <textarea id="vm-question" class="auth-form__input modal-textarea" placeholder="Formulez votre question ici…" required maxlength="1000" rows="4"></textarea>
+        <p class="auth-form__hint"><span id="vm-question-count">0</span>/1000 caractères</p>
+      </div>
+      <div class="auth-form__message" id="vm-message" hidden></div>
+      <button type="submit" class="btn btn--primary auth-form__submit">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        Envoyer ma question
+      </button>
+    </form>
+  </div>
+</div>
 
 <!-- Pop-up PayPal confirmation -->
 <div class="modal-overlay" id="modal-paypal" hidden>

@@ -2144,4 +2144,70 @@
   })();
 
 
+
+  // ========================================
+  // POP-UP — Voyance par mail (1 question)
+  // ========================================
+  var btnVoyanceMail = document.getElementById('btn-voyance-mail');
+  if (btnVoyanceMail) {
+    btnVoyanceMail.addEventListener('click', function () {
+      openModal('modal-voyance-mail');
+    });
+  }
+
+  // Compteur de caractères
+  var vmQuestion = document.getElementById('vm-question');
+  var vmCount = document.getElementById('vm-question-count');
+  if (vmQuestion && vmCount) {
+    vmQuestion.addEventListener('input', function () {
+      vmCount.textContent = vmQuestion.value.length;
+    });
+  }
+
+  // Soumission du formulaire
+  var formVoyanceMail = document.getElementById('form-voyance-mail');
+  if (formVoyanceMail) {
+    formVoyanceMail.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var prenom = document.getElementById('vm-prenom').value.trim();
+      var email = document.getElementById('vm-email').value.trim();
+      var question = document.getElementById('vm-question').value.trim();
+      var msgEl = document.getElementById('vm-message');
+
+      if (!prenom || !email || !question) return;
+
+      // Construire le mailto pré-rempli
+      var subject = 'Voyance par mail \u2013 1 question \u2014 ' + prenom;
+      var body = 'Bonjour Philippe,\n\n'
+        + 'Je souhaite une voyance par mail (1 question).\n\n'
+        + 'Pr\u00e9nom : ' + prenom + '\n'
+        + 'Email : ' + email + '\n\n'
+        + 'Ma question :\n' + question + '\n\n'
+        + 'Merci,\n' + prenom;
+
+      var mailtoUrl = 'mailto:philippe.medium45@gmail.com'
+        + '?subject=' + encodeURIComponent(subject)
+        + '&body=' + encodeURIComponent(body);
+
+      // Message de confirmation
+      if (msgEl) {
+        msgEl.hidden = false;
+        msgEl.className = 'auth-form__message auth-form__message--succes';
+        msgEl.textContent = 'Votre client email va s\'ouvrir avec votre question pr\u00e9-remplie.';
+      }
+
+      // Ouvrir le mailto
+      window.location.href = mailtoUrl;
+
+      // Fermer après un délai
+      setTimeout(function () {
+        closeAllModals();
+        formVoyanceMail.reset();
+        if (vmCount) vmCount.textContent = '0';
+        if (msgEl) msgEl.hidden = true;
+      }, 2500);
+    });
+  }
+
+
 })();

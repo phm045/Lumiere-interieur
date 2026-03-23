@@ -2008,23 +2008,16 @@
     });
   });
 
-  // --- Bouton réservation accueil -> popup ---
+  // --- Bouton réservation accueil -> popup Cal.com ---
   var accueilResBtn = document.getElementById('accueil-reservation-btn');
   if (accueilResBtn) {
     accueilResBtn.addEventListener('click', function () {
-      var modal = document.getElementById('modal-reservation');
-      var serviceEl = document.getElementById('modal-reservation-service');
-      if (serviceEl) serviceEl.textContent = '';
-      var confirmBtn = document.getElementById('modal-reservation-confirm');
-      if (confirmBtn) {
-        confirmBtn.onclick = function () {
-          closeAllModals();
-          window.open('https://cal.eu/philippe-medium-amzdok/consultations', '_blank');
-        };
-      }
-      if (modal) {
-        modal.hidden = false;
-        document.body.style.overflow = 'hidden';
+      if (typeof Cal !== 'undefined' && Cal.ns && Cal.ns.consultations) {
+        Cal.ns.consultations('modal', {
+          calLink: 'philippe-medium-amzdok/consultations'
+        });
+      } else {
+        window.open('https://cal.eu/philippe-medium-amzdok/consultations', '_blank');
       }
     });
   }

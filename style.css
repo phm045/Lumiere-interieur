@@ -3855,6 +3855,7 @@ textarea.blog-comments__input {
   }
 }
 
+
 /* ==========================================
    SECTION DERNIÈRES NOUVEAUTÉS (Accueil)
    ========================================== */
@@ -3865,7 +3866,7 @@ textarea.blog-comments__input {
 
 .nouveautes-header {
   text-align: center;
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .nouveautes-header__desc {
@@ -3876,23 +3877,63 @@ textarea.blog-comments__input {
   line-height: 1.6;
 }
 
+/* Filtres */
+.nouveautes-filters {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.nouveautes-filter {
+  background: transparent;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  padding: 0.45rem 1rem;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+
+.nouveautes-filter:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.nouveautes-filter.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
+
+/* Grille */
 .nouveautes-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 1.5rem;
 }
 
+/* Carte */
 .nouveautes-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card, 12px);
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
   text-decoration: none;
   color: inherit;
   display: flex;
   flex-direction: column;
+  opacity: 1;
+}
+
+.nouveautes-card.hidden {
+  display: none;
 }
 
 .nouveautes-card:hover {
@@ -3918,46 +3959,60 @@ textarea.blog-comments__input {
   transform: scale(1.05);
 }
 
+/* Badge type */
 .nouveautes-card__badge {
   position: absolute;
   top: 0.75rem;
   left: 0.75rem;
-  background: var(--color-accent);
   color: #fff;
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  padding: 0.25rem 0.6rem;
+  padding: 0.25rem 0.65rem;
   border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
 }
 
+.nouveautes-card__badge svg {
+  width: 12px;
+  height: 12px;
+}
+
+.nouveautes-card__badge--blog { background: var(--color-accent); }
+.nouveautes-card__badge--service { background: var(--color-primary); }
+.nouveautes-card__badge--therapie { background: #7b68ae; }
+.nouveautes-card__badge--boutique { background: #c07a4e; }
+
+/* Corps */
 .nouveautes-card__body {
-  padding: 1.25rem;
+  padding: 1.15rem 1.25rem;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .nouveautes-card__category {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-accent);
-  margin-bottom: 0.4rem;
+  margin-bottom: 0.35rem;
 }
 
 .nouveautes-card__title {
-  font-size: 1.05rem;
+  font-size: 1.02rem;
   font-weight: 600;
   line-height: 1.35;
   color: var(--color-text);
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.45rem;
 }
 
 .nouveautes-card__excerpt {
-  font-size: 0.88rem;
+  font-size: 0.85rem;
   color: var(--color-text-muted);
   line-height: 1.5;
   flex: 1;
@@ -3967,17 +4022,30 @@ textarea.blog-comments__input {
   overflow: hidden;
 }
 
-.nouveautes-card__date {
-  font-size: 0.78rem;
+.nouveautes-card__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.76rem;
   color: var(--color-text-faint);
   margin-top: 0.75rem;
-  padding-top: 0.75rem;
+  padding-top: 0.7rem;
   border-top: 1px solid var(--color-border);
+}
+
+.nouveautes-card__price {
+  font-weight: 700;
+  color: var(--color-accent);
+  font-size: 0.9rem;
 }
 
 .nouveautes-cta {
   text-align: center;
   margin-top: 2rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 /* Responsive */
@@ -3986,13 +4054,11 @@ textarea.blog-comments__input {
     grid-template-columns: 1fr;
     gap: 1.25rem;
   }
-  .nouveautes-section {
-    padding: 3rem 0 2rem;
-  }
+  .nouveautes-section { padding: 3rem 0 2rem; }
+  .nouveautes-filters { gap: 0.35rem; }
+  .nouveautes-filter { font-size: 0.78rem; padding: 0.4rem 0.8rem; }
 }
 
 @media (min-width: 769px) and (max-width: 1024px) {
-  .nouveautes-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+  .nouveautes-grid { grid-template-columns: repeat(2, 1fr); }
 }

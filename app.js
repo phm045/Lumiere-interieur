@@ -593,82 +593,177 @@
     }
   };
 
-  // --- Dernières nouveautés (Accueil) ---
+  // --- Dernières nouveautés (Accueil) — Toutes rubriques ---
   (function populateNouveautes() {
     var grid = document.getElementById('nouveautes-grid');
     if (!grid) return;
 
-    // Récupérer les cartes blog du DOM pour garder l'ordre exact
-    var blogCards = document.querySelectorAll('.blog-card[data-article]');
-    var articles = [];
-
-    // Parser les dates françaises pour trier par date décroissante
-    var moisFr = {'janvier':0,'février':1,'mars':2,'avril':3,'mai':4,'juin':5,'juillet':6,'août':7,'septembre':8,'octobre':9,'novembre':10,'décembre':11};
+    var items = [];
+    var moisFr = {'janvier':0,'f\u00e9vrier':1,'mars':2,'avril':3,'mai':4,'juin':5,'juillet':6,'ao\u00fbt':7,'septembre':8,'octobre':9,'novembre':10,'d\u00e9cembre':11};
     function parseDate(str) {
       var parts = str.trim().split(' ');
       if (parts.length !== 3) return new Date(0);
       return new Date(parseInt(parts[2]), moisFr[parts[1].toLowerCase()] || 0, parseInt(parts[0]));
     }
 
-    blogCards.forEach(function(card) {
+    // Ic\u00f4nes SVG par type
+    var icons = {
+      blog: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>',
+      service: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
+      therapie: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>',
+      boutique: '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>'
+    };
+
+    // 1. ARTICLES DE BLOG
+    document.querySelectorAll('.blog-card[data-article]').forEach(function(card) {
       var slug = card.getAttribute('data-article');
       var img = card.querySelector('.blog-card__image img');
-      var category = card.querySelector('.blog-card__category');
+      var cat = card.querySelector('.blog-card__category');
       var title = card.querySelector('.blog-card__title');
       var excerpt = card.querySelector('.blog-card__excerpt');
       var date = card.querySelector('.blog-card__date');
       if (title && date) {
-        articles.push({
-          slug: slug,
+        items.push({
+          type: 'blog', slug: slug,
           img: img ? img.getAttribute('src') : '',
           imgAlt: img ? img.getAttribute('alt') : '',
-          category: category ? category.textContent : '',
+          category: cat ? cat.textContent : 'Blog',
           title: title.textContent,
           excerpt: excerpt ? excerpt.textContent : '',
           dateStr: date.textContent,
-          dateObj: parseDate(date.textContent)
+          dateObj: parseDate(date.textContent),
+          price: null,
+          navTarget: 'blog'
         });
       }
     });
 
-    // Trier par date décroissante et prendre les 3 premiers
-    articles.sort(function(a, b) { return b.dateObj - a.dateObj; });
-    var latest = articles.slice(0, 3);
+    // 2. SERVICES (consultations)
+    document.querySelectorAll('#services .service-card').forEach(function(card) {
+      var h3 = card.querySelector('h3');
+      var p = card.querySelector('.service-card__content > p');
+      var img = card.querySelector('.service-card__image img');
+      var price = card.querySelector('.service-card__price');
+      if (h3) {
+        items.push({
+          type: 'service', slug: 'svc-' + (h3.textContent || '').toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          img: img ? img.getAttribute('src') : 'services-tarot.png',
+          imgAlt: h3.textContent,
+          category: 'Consultation',
+          title: h3.textContent,
+          excerpt: p ? p.textContent.substring(0, 120) + '\u2026' : '',
+          dateStr: 'Disponible',
+          dateObj: new Date(2026, 2, 20),
+          price: price ? price.textContent.trim() : null,
+          navTarget: 'services'
+        });
+      }
+    });
 
-    latest.forEach(function(art) {
+    // 3. TH\u00c9RAPIE (soins)
+    document.querySelectorAll('#therapie .service-card').forEach(function(card) {
+      var h3 = card.querySelector('h3');
+      var p = card.querySelector('.service-card__content > p');
+      var img = card.querySelector('.service-card__image img');
+      if (h3) {
+        items.push({
+          type: 'therapie', slug: 'thp-' + (h3.textContent || '').toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          img: img ? img.getAttribute('src') : 'crystals-nature.png',
+          imgAlt: h3.textContent,
+          category: 'Th\u00e9rapie',
+          title: h3.textContent,
+          excerpt: p ? p.textContent.substring(0, 120) + '\u2026' : '',
+          dateStr: '\u00c0 venir',
+          dateObj: new Date(2026, 2, 18),
+          price: null,
+          navTarget: 'therapie'
+        });
+      }
+    });
+
+    // 4. BOUTIQUE (produits \u00e0 venir)
+    var boutiquePage = document.getElementById('boutique');
+    if (boutiquePage) {
+      var boutiqueComing = boutiquePage.querySelector('.boutique-coming__title');
+      if (boutiqueComing) {
+        items.push({
+          type: 'boutique', slug: 'boutique-coming',
+          img: 'crystals-nature.png',
+          imgAlt: 'Boutique Lumi\u00e8re Int\u00e9rieure',
+          category: 'Boutique',
+          title: 'Boutique bient\u00f4t disponible',
+          excerpt: 'Cristaux, encens naturels, supports de m\u00e9ditation\u2026 Inscrivez-vous pour \u00eatre pr\u00e9venu(e) d\u00e8s l\u2019ouverture.',
+          dateStr: 'Bient\u00f4t',
+          dateObj: new Date(2026, 2, 15),
+          price: null,
+          navTarget: 'boutique'
+        });
+      }
+    }
+
+    // Trier par date d\u00e9croissante
+    items.sort(function(a, b) { return b.dateObj - a.dateObj; });
+
+    // Limiter \u00e0 6 éléments max
+    var display = items.slice(0, 6);
+
+    // G\u00e9n\u00e9rer les cartes
+    display.forEach(function(item) {
       var card = document.createElement('div');
       card.className = 'nouveautes-card fade-in';
-      card.setAttribute('data-nav', 'blog');
-      card.setAttribute('data-open-article', art.slug);
+      card.setAttribute('data-type', item.type);
+
+      var metaRight = item.price
+        ? '<span class="nouveautes-card__price">' + item.price + '</span>'
+        : '<span>' + item.dateStr + '</span>';
+
       card.innerHTML =
         '<div class="nouveautes-card__image">' +
-          '<span class="nouveautes-card__badge">Nouveau</span>' +
-          '<img src="' + art.img + '" alt="' + art.imgAlt + '" width="640" height="400" loading="lazy">' +
+          '<span class="nouveautes-card__badge nouveautes-card__badge--' + item.type + '">' + icons[item.type] + ' ' + item.category + '</span>' +
+          '<img src="' + item.img + '" alt="' + item.imgAlt + '" width="640" height="400" loading="lazy">' +
         '</div>' +
         '<div class="nouveautes-card__body">' +
-          '<p class="nouveautes-card__category">' + art.category + '</p>' +
-          '<h3 class="nouveautes-card__title">' + art.title + '</h3>' +
-          '<p class="nouveautes-card__excerpt">' + art.excerpt + '</p>' +
-          '<p class="nouveautes-card__date">' + art.dateStr + '</p>' +
+          '<p class="nouveautes-card__category">' + item.category + '</p>' +
+          '<h3 class="nouveautes-card__title">' + item.title + '</h3>' +
+          '<p class="nouveautes-card__excerpt">' + item.excerpt + '</p>' +
+          '<div class="nouveautes-card__meta">' +
+            '<span>' + item.type.charAt(0).toUpperCase() + item.type.slice(1) + '</span>' +
+            metaRight +
+          '</div>' +
         '</div>';
 
-      // Clic → naviguer vers le blog et ouvrir l'article
       card.addEventListener('click', function() {
-        // Naviguer vers la page blog
         document.querySelectorAll('.page').forEach(function(p) { p.classList.remove('active'); });
-        var blogPage = document.getElementById('blog');
-        if (blogPage) blogPage.classList.add('active');
+        var target = document.getElementById(item.navTarget);
+        if (target) target.classList.add('active');
         document.querySelectorAll('[data-nav]').forEach(function(n) { n.classList.remove('active'); });
-        document.querySelectorAll('[data-nav="blog"]').forEach(function(n) { n.classList.add('active'); });
+        document.querySelectorAll('[data-nav="' + item.navTarget + '"]').forEach(function(n) { n.classList.add('active'); });
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        // Ouvrir l'article après un court délai
-        setTimeout(function() {
-          var blogCard = document.querySelector('.blog-card[data-article="' + art.slug + '"]');
-          if (blogCard) blogCard.click();
-        }, 300);
+        if (item.type === 'blog') {
+          setTimeout(function() {
+            var blogCard = document.querySelector('.blog-card[data-article="' + item.slug + '"]');
+            if (blogCard) blogCard.click();
+          }, 300);
+        }
       });
 
       grid.appendChild(card);
+    });
+
+    // Filtres
+    document.querySelectorAll('.nouveautes-filter').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.nouveautes-filter').forEach(function(b) { b.classList.remove('active'); });
+        btn.classList.add('active');
+        var filter = btn.getAttribute('data-filter');
+        grid.querySelectorAll('.nouveautes-card').forEach(function(c) {
+          if (filter === 'all' || c.getAttribute('data-type') === filter) {
+            c.classList.remove('hidden');
+          } else {
+            c.classList.add('hidden');
+          }
+        });
+      });
     });
   })();
 

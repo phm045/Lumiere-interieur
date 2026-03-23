@@ -761,6 +761,7 @@ section {
 }
 
 .service-card {
+  position: relative;
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: var(--space-8);
@@ -774,6 +775,31 @@ section {
     transform 0.45s cubic-bezier(0.23, 1, 0.32, 1),
     box-shadow 0.45s cubic-bezier(0.23, 1, 0.32, 1),
     border-color 0.45s ease;
+}
+
+/* Inner shimmer — soft warm glow that appears on hover */
+.service-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background:
+    radial-gradient(ellipse 60% 50% at 15% 20%, rgba(184, 149, 46, 0.08), transparent 70%),
+    radial-gradient(ellipse 50% 60% at 85% 80%, rgba(107, 127, 78, 0.07), transparent 70%);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.service-card:hover::before {
+  opacity: 1;
+}
+
+/* Ensure content stays above the shimmer */
+.service-card__content,
+.service-card__image {
+  position: relative;
+  z-index: 1;
 }
 
 .service-card:hover {
@@ -873,6 +899,9 @@ section {
   .service-card:hover {
     transform: none;
     box-shadow: none;
+  }
+  .service-card::before {
+    display: none;
   }
   .service-card:nth-child(even) .service-card__image { order: 0; }
   .service-card__image {

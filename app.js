@@ -167,7 +167,7 @@
     belline: {
       category: 'Oracle Belline',
       title: 'Comprendre l\u2019Oracle Belline : guide pour d\u00e9butants',
-      date: '12 mars 2026',
+      date: '10 mars 2026',
       content: '<h2>Un h\u00e9ritage de la voyance fran\u00e7aise</h2>' +
         '<p>L\u2019Oracle Belline est n\u00e9 de la collaboration entre deux figures majeures de la voyance : <strong>Edmond</strong>, c\u00e9l\u00e8bre voyant du XIXe si\u00e8cle, et <strong>Marcel Belline</strong>, qui a red\u00e9couvert et popularis\u00e9 ce jeu dans les ann\u00e9es 1960. Compos\u00e9 de 52 cartes et une carte suppl\u00e9mentaire (la Clef), cet oracle est consid\u00e9r\u00e9 comme l\u2019un des plus pr\u00e9cis de la tradition divinatoire europ\u00e9enne.</p>' +
         '<p>Ce qui rend le Belline unique, c\u2019est son lien direct avec <strong>l\u2019astrologie</strong>. Chaque carte est rattach\u00e9e \u00e0 une plan\u00e8te \u2014 Soleil, Lune, Mercure, V\u00e9nus, Mars, Jupiter, Saturne \u2014 ce qui permet une lecture riche et nuanc\u00e9e des \u00e9nergies \u00e0 l\u2019\u0153uvre dans votre vie.</p>' +
@@ -192,7 +192,7 @@
     cristaux: {
       category: '\u00c9nergies',
       title: 'Les cristaux et la voyance : alli\u00e9s de votre intuition',
-      date: '5 mars 2026',
+      date: '7 mars 2026',
       content: '<h2>Des alli\u00e9s millénaires</h2>' +
         '<p>Depuis l\u2019Antiquit\u00e9, les cristaux sont utilis\u00e9s pour leurs propri\u00e9t\u00e9s \u00e9nerg\u00e9tiques. En \u00c9gypte, en Inde, en Chine et dans les traditions am\u00e9rindiennes, les pierres \u00e9taient consid\u00e9r\u00e9es comme des ponts entre le monde visible et invisible. Aujourd\u2019hui encore, elles accompagnent de nombreuses pratiques spirituelles et intuitives.</p>' +
         '<h2>Comment les cristaux amplifient l\u2019intuition</h2>' +
@@ -216,7 +216,7 @@
     rituel: {
       category: 'D\u00e9veloppement personnel',
       title: 'Rituel du matin : se connecter \u00e0 soi avant de consulter',
-      date: '28 f\u00e9vrier 2026',
+      date: '3 mars 2026',
       content: '<h2>Pourquoi un rituel matinal ?</h2>' +
         '<p>La qualit\u00e9 d\u2019une consultation de voyance d\u00e9pend autant du praticien que de la disposition int\u00e9rieure du consultant. Arriver \u00e0 une s\u00e9ance avec un esprit agit\u00e9, plong\u00e9 dans le bruit du quotidien, peut brouiller la r\u00e9ception des messages.</p>' +
         '<p>Un rituel du matin \u2014 m\u00eame simple et court \u2014 permet de <strong>poser son intention</strong>, de calmer le flot des pens\u00e9es et de s\u2019ouvrir \u00e0 la guidance avec clart\u00e9.</p>' +
@@ -237,7 +237,7 @@
     'libre-arbitre': {
       category: 'Voyance',
       title: 'Voyance et libre arbitre : ce que les cartes peuvent (et ne peuvent pas) faire',
-      date: '20 f\u00e9vrier 2026',
+      date: '27 f\u00e9vrier 2026',
       content: '<h2>La question qui revient toujours</h2>' +
         '<p>\u00ab Si les cartes pr\u00e9disent l\u2019avenir, est-ce que tout est d\u00e9j\u00e0 \u00e9crit ? \u00bb C\u2019est sans doute la question que l\u2019on me pose le plus souvent. Et ma r\u00e9ponse est toujours la m\u00eame : <strong>non</strong>. Les cartes ne pr\u00e9disent pas un avenir fig\u00e9. Elles \u00e9clairent les \u00e9nergies en mouvement, les tendances, les possibilit\u00e9s. Mais c\u2019est vous qui d\u00e9cidez.</p>' +
         '<h2>Les cartes comme miroir</h2>' +
@@ -259,7 +259,7 @@
     'biologie-emotions': {
       category: 'Th\u00e9rapie',
       title: 'La Bio-Logique des \u00c9motions : quand le corps parle de nos blessures',
-      date: '16 mars 2026',
+      date: '14 mars 2026',
       content: '<h2>Qu\u2019est-ce que la Bio-Logique des \u00c9motions\u202f?</h2>' +
         '<p>La Bio-Logique des \u00c9motions est une approche d\u2019accompagnement qui s\u2019int\u00e9resse aux liens profonds entre les \u00e9motions v\u00e9cues, l\u2019histoire personnelle et les manifestations physiques. Son principe fondamental\u202f: certains d\u00e9s\u00e9quilibres corporels, douleurs ou troubles fonctionnels peuvent \u00eatre l\u2019expression d\u2019un stress \u00e9motionnel non r\u00e9solu, conscient ou inconscient.</p>' +
         '<h2>Le corps comme m\u00e9moire vivante</h2>' +
@@ -286,7 +286,7 @@
     'astrologie-lumiere-interieur': {
       category: 'Astrologie',
       title: 'Astrologie\u00a0: une boussole pour \u00e9clairer votre chemin int\u00e9rieur',
-      date: '28 mars 2026',
+      date: '21 mars 2026',
       content: '<h2>Un langage symbolique universel</h2>' +
         '<p>Loin des horoscopes de magazine, l\u2019astrologie est un <strong>langage symbolique</strong> qui relie le mouvement des astres \u00e0 notre vie int\u00e9rieure. Pratiqu\u00e9e depuis des mill\u00e9naires, elle offre une grille de lecture unique pour mieux se comprendre, identifier ses cycles de vie et \u00e9clairer ses choix.</p>' +
         '<p>Sur <strong>Lumi\u00e8re Int\u00e9rieure</strong>, l\u2019astrologie est envisag\u00e9e comme un art sacr\u00e9 de connaissance de soi, compl\u00e9mentaire \u00e0 la voyance et \u00e0 la cartomancie.</p>' +
@@ -306,7 +306,7 @@
     'vraie-spiritualite': {
       category: 'Spiritualit\u00e9',
       title: 'La v\u00e9ritable spiritualit\u00e9\u00a0: au-del\u00e0 des illusions du web',
-      date: '20 mars 2026',
+      date: '18 mars 2026',
       content: '<h2>Quand la spiritualit\u00e9 devient un produit de consommation</h2>' +
         '<p>Il suffit de quelques minutes sur les r\u00e9seaux sociaux pour \u00eatre submerg\u00e9 de contenus dits \u00ab\u00a0spirituels\u00a0\u00bb\u00a0: mantras en stories, tirages de tarot en direct, promesses d\u2019\u00e9veil en 7\u00a0jours, formules magiques pour attirer l\u2019abondance. La spiritualit\u00e9 est devenue un march\u00e9. Elle se vend, se consomme et se scrolle comme n\u2019importe quel autre contenu.</p>' +
         '<p>Derri\u00e8re les filtres dor\u00e9s et les phrases inspir\u00e9es se cache souvent une r\u00e9alit\u00e9 bien diff\u00e9rente\u00a0: des formations express sans fondement, des gourous 2.0 qui exploitent la vuln\u00e9rabilit\u00e9 de personnes en qu\u00eate de sens, et une course au contenu qui transforme le sacr\u00e9 en spectacle. Ce n\u2019est pas le propos ici de juger quiconque. Mais il est l\u00e9gitime de se demander\u00a0: <strong>o\u00f9 est pass\u00e9e la profondeur\u00a0?</strong></p>' +
@@ -352,7 +352,7 @@
     'numerologie-pythagoricienne': {
       category: 'Num\u00e9rologie',
       title: 'La num\u00e9rologie pythagoricienne : d\u00e9coder les chiffres de votre vie',
-      date: '28 mars 2026',
+      date: '20 mars 2026',
       content: '<h2>Pythagore et les chiffres sacr\u00e9s</h2>' +
         '<p>Bien avant que les chiffres ne deviennent de simples outils math\u00e9matiques, <strong>Pythagore</strong> \u2014 philosophe et math\u00e9maticien grec du VIe si\u00e8cle avant J.-C. \u2014 enseignait que chaque nombre poss\u00e8de une vibration propre, un sens profond qui va bien au-del\u00e0 de sa valeur num\u00e9rique. Pour lui, \u00ab tout est nombre \u00bb. Cette intuition fondatrice est \u00e0 l\u2019origine de ce que nous appelons aujourd\u2019hui la <strong>num\u00e9rologie pythagoricienne</strong>.</p>' +
         '<p>Contrairement \u00e0 d\u2019autres syst\u00e8mes divinatoires, la num\u00e9rologie ne s\u2019appuie pas sur des symboles externes. Elle puise ses informations dans ce que vous portez d\u00e9j\u00e0 : votre <strong>date de naissance</strong> et les lettres de votre <strong>pr\u00e9nom et nom</strong>. Elle part du principe que rien n\u2019est accidentel dans ces donn\u00e9es \u2014 qu\u2019elles contiennent une information pr\u00e9cieuse sur votre essence, votre mission de vie et vos cycles.</p>' +
@@ -390,7 +390,7 @@
     'vampires-energetiques': {
       category: 'Protection \u00e9nerg\u00e9tique',
       title: 'Vampires \u00e9nerg\u00e9tiques\u00a0: reconna\u00eetre les personnes toxiques et s\u2019en prot\u00e9ger',
-      date: '22 mars 2026',
+      date: '17 mars 2026',
       content: '<h2>Qu\u2019est-ce qu\u2019un vampire \u00e9nerg\u00e9tique\u202f?</h2>' +
         '<p>Vous est-il d\u00e9j\u00e0 arriv\u00e9 de quitter une conversation en vous sentant vid\u00e9(e), \u00e9puis\u00e9(e) ou inexplicablement triste, alors que tout allait bien avant\u202f? Ce ph\u00e9nom\u00e8ne, beaucoup d\u2019entre nous le connaissent sans savoir le nommer. En \u00e9nerg\u00e9tique, on parle de <strong>vampires \u00e9nerg\u00e9tiques</strong>\u00a0: des personnes qui, consciemment ou non, se nourrissent de l\u2019\u00e9nergie vitale de leur entourage.</p>' +
         '<p>Il ne s\u2019agit pas de diaboliser qui que ce soit. Un vampire \u00e9nerg\u00e9tique n\u2019est pas forc\u00e9ment une mauvaise personne. C\u2019est souvent quelqu\u2019un en souffrance, en manque, dont le vide int\u00e9rieur aspire l\u2019\u00e9nergie autour de lui comme une \u00e9ponge. Mais comprendre ce m\u00e9canisme est essentiel pour <strong>pr\u00e9server votre \u00e9quilibre</strong>.</p>' +
@@ -442,7 +442,7 @@
     'confiance-ressenti': {
       category: 'D\u00e9veloppement personnel',
       title: 'Faire confiance \u00e0 son ressenti quand les autres le minimisent',
-      date: '22 mars 2026',
+      date: '15 mars 2026',
       content: '<h2>\u00ab Tu te fais des id\u00e9es \u00bb</h2>' +
         '<p>Combien de fois avez-vous entendu cette phrase\u202f? Vous ressentez quelque chose de fort \u2014 un malaise face \u00e0 une personne, une intuition sur une situation, une \u00e9motion qui monte sans raison apparente \u2014 et quand vous osez en parler, on vous r\u00e9pond\u00a0: <strong>\u00ab tu exag\u00e8res \u00bb, \u00ab c\u2019est dans ta t\u00eate \u00bb, \u00ab arr\u00eate de tout analyser \u00bb</strong>.</p>' +
         '<p>\u00c0 force, vous finissez par douter. Peut-\u00eatre que c\u2019est vrai, peut-\u00eatre que vous \u00eates trop sensible, peut-\u00eatre que vous imaginez des choses. Et petit \u00e0 petit, vous \u00e9teignez cette voix int\u00e9rieure qui pourtant essayait de vous guider.</p>' +
@@ -489,7 +489,7 @@
     'lithotherapie': {
       category: 'Lithoth\u00e9rapie',
       title: 'La lithoth\u00e9rapie\u00a0: quand les pierres accompagnent votre chemin de vie',
-      date: '22 mars 2026',
+      date: '12 mars 2026',
       content: '<h2>Qu\u2019est-ce que la lithoth\u00e9rapie\u202f?</h2>' +
         '<p>La lithoth\u00e9rapie est une pratique ancestrale qui utilise les <strong>pierres et cristaux</strong> comme supports de mieux-\u00eatre. Son principe repose sur l\u2019id\u00e9e que chaque min\u00e9ral poss\u00e8de une vibration propre, une \u00e9nergie particuli\u00e8re li\u00e9e \u00e0 sa composition chimique, sa couleur et sa structure cristalline.</p>' +
         '<p>Utilis\u00e9e depuis la nuit des temps \u2014 en \u00c9gypte ancienne, en Inde, en Chine, dans les traditions am\u00e9rindiennes \u2014 la lithoth\u00e9rapie conna\u00eet aujourd\u2019hui un renouveau profond. De plus en plus de personnes se tournent vers les pierres pour accompagner un travail sur soi, compl\u00e9ter une d\u00e9marche de d\u00e9veloppement personnel ou simplement retrouver un sentiment d\u2019\u00e9quilibre au quotidien.</p>' +

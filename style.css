@@ -769,8 +769,28 @@ section {
   background: var(--color-surface);
   border-radius: var(--radius-xl);
   overflow: hidden;
+  border: 1px solid transparent;
+  transition:
+    transform 0.45s cubic-bezier(0.23, 1, 0.32, 1),
+    box-shadow 0.45s cubic-bezier(0.23, 1, 0.32, 1),
+    border-color 0.45s ease;
 }
+
+.service-card:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 12px 40px rgba(107, 127, 78, 0.10),
+    0 4px 12px rgba(0, 0, 0, 0.04);
+  border-color: oklch(from var(--color-primary) l c h / 0.18);
+}
+
 .service-card:nth-child(even) .service-card__image { order: -1; }
+
+/* Staggered entrance */
+.service-card:nth-child(1) { animation-delay: 0s; }
+.service-card:nth-child(2) { animation-delay: 0.12s; }
+.service-card:nth-child(3) { animation-delay: 0.24s; }
+.service-card:nth-child(4) { animation-delay: 0.36s; }
 
 .service-card__image {
   aspect-ratio: 4/3;
@@ -781,6 +801,10 @@ section {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+}
+.service-card:hover .service-card__image img {
+  transform: scale(1.06);
 }
 
 .service-card__content h3 {
@@ -788,7 +812,12 @@ section {
   font-size: var(--text-xl);
   font-weight: 400;
   margin-bottom: var(--space-4);
+  transition: color 0.3s ease;
 }
+.service-card:hover .service-card__content h3 {
+  color: var(--color-primary);
+}
+
 .service-card__content p {
   font-size: var(--text-base);
   color: var(--color-text-muted);
@@ -808,12 +837,21 @@ section {
   background: var(--color-surface-2);
   border-radius: var(--radius-full);
   color: var(--color-text-muted);
+  transition: background 0.3s ease, color 0.3s ease, transform 0.3s ease;
+}
+.service-card:hover .service-card__tag {
+  background: oklch(from var(--color-primary) l c h / 0.1);
+  color: var(--color-primary);
 }
 
 .service-card__price {
   font-family: var(--font-display);
   font-size: var(--text-lg);
   color: var(--color-accent);
+  transition: transform 0.3s ease;
+}
+.service-card:hover .service-card__price {
+  transform: scale(1.05);
 }
 
 .service-card__cta {
@@ -831,6 +869,10 @@ section {
     grid-template-columns: 1fr;
     padding: var(--space-4);
     gap: var(--space-4);
+  }
+  .service-card:hover {
+    transform: none;
+    box-shadow: none;
   }
   .service-card:nth-child(even) .service-card__image { order: 0; }
   .service-card__image {

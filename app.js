@@ -704,8 +704,37 @@
     // Trier par date d\u00e9croissante
     items.sort(function(a, b) { return b.dateObj - a.dateObj; });
 
-    // Limiter \u00e0 6 éléments max
-    var display = items.slice(0, 6);
+    // S\u00e9lection intelligente : garantir un mix de toutes les rubriques
+    var display = [];
+    var byType = {};
+    items.forEach(function(item) {
+      if (!byType[item.type]) byType[item.type] = [];
+      byType[item.type].push(item);
+    });
+
+    // 1. Prendre le plus r\u00e9cent de chaque type d'abord
+    var types = ['blog', 'service', 'therapie', 'boutique'];
+    types.forEach(function(t) {
+      if (byType[t] && byType[t].length > 0) {
+        display.push(byType[t][0]);
+        byType[t] = byType[t].slice(1);
+      }
+    });
+
+    // 2. Compl\u00e9ter jusqu'\u00e0 9 avec les plus r\u00e9cents restants (tous types)
+    var remaining = [];
+    types.forEach(function(t) {
+      if (byType[t]) remaining = remaining.concat(byType[t]);
+    });
+    remaining.sort(function(a, b) { return b.dateObj - a.dateObj; });
+    var i = 0;
+    while (display.length < 9 && i < remaining.length) {
+      display.push(remaining[i]);
+      i++;
+    }
+
+    // Retrier le display final par date
+    display.sort(function(a, b) { return b.dateObj - a.dateObj; });
 
     // G\u00e9n\u00e9rer les cartes
     display.forEach(function(item) {

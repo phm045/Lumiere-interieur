@@ -2975,6 +2975,179 @@ textarea.blog-comments__input {
   justify-content: center;
 }
 
+/* --- Modal close button --- */
+.modal-close {
+  position: absolute;
+  top: var(--space-3);
+  right: var(--space-3);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  background: none;
+  font-size: 1.5rem;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  border-radius: var(--radius-full);
+  transition: background 0.2s, color 0.2s;
+  line-height: 1;
+}
+.modal-close:hover {
+  background: oklch(from var(--color-text) l c h / 0.08);
+  color: var(--color-text);
+}
+
+/* --- Modal card positioning --- */
+.modal-card {
+  position: relative;
+}
+
+/* --- Wider modal variant --- */
+.modal-card--wide {
+  max-width: 520px;
+}
+
+/* --- Service name display --- */
+.modal-card__service {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  background: oklch(from var(--color-primary) l c h / 0.08);
+  border-radius: var(--radius-md);
+  display: inline-block;
+}
+.modal-card__service:empty {
+  display: none;
+}
+
+/* --- Icon color variants --- */
+.modal-card__icon--paypal {
+  background: oklch(0.55 0.1 250 / 0.1);
+  color: #003087;
+}
+[data-theme="dark"] .modal-card__icon--paypal {
+  background: oklch(0.55 0.1 250 / 0.15);
+  color: #4da6ff;
+}
+.modal-card__icon--stripe {
+  background: oklch(0.6 0.15 270 / 0.1);
+  color: #635bff;
+}
+[data-theme="dark"] .modal-card__icon--stripe {
+  background: oklch(0.6 0.15 270 / 0.15);
+  color: #a299ff;
+}
+.modal-card__icon--cal {
+  background: oklch(from var(--color-primary) l c h / 0.1);
+  color: var(--color-primary);
+}
+.modal-card__icon--reflexo {
+  background: oklch(from var(--color-primary) l c h / 0.1);
+  color: var(--color-primary);
+}
+.modal-card__icon--email {
+  background: oklch(from var(--color-primary) l c h / 0.1);
+  color: var(--color-primary);
+}
+.modal-card__icon--avis {
+  background: oklch(from var(--color-accent) l c h / 0.1);
+  color: var(--color-accent);
+}
+
+/* --- Legal preview inside modal --- */
+.modal-legal-preview {
+  text-align: left;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.7;
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  background: var(--color-bg);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-divider);
+}
+.modal-legal-preview p {
+  margin: 0 0 var(--space-2) 0;
+}
+.modal-legal-preview p:last-child {
+  margin-bottom: 0;
+}
+.modal-legal-preview strong {
+  color: var(--color-text);
+}
+
+/* --- Contact form inside modal --- */
+.modal-email-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  text-align: left;
+}
+.modal-textarea {
+  resize: vertical;
+  min-height: 100px;
+  font-family: inherit;
+}
+
+/* --- Star rating for avis --- */
+.avis-stars {
+  display: flex;
+  gap: var(--space-1);
+}
+.avis-star {
+  background: none;
+  border: none;
+  font-size: 1.75rem;
+  cursor: pointer;
+  color: var(--color-divider);
+  transition: color 0.15s, transform 0.15s;
+  padding: 0;
+  line-height: 1;
+}
+.avis-star:hover,
+.avis-star.active {
+  color: var(--color-accent);
+  transform: scale(1.15);
+}
+
+/* --- Testimonial add button alignment --- */
+.testimonial-add .btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/* --- Modal overlay hidden state --- */
+.modal-overlay[hidden] {
+  display: none !important;
+}
+
+/* --- Modal animation --- */
+.modal-overlay:not([hidden]) .modal-card {
+  animation: modal-card-in 0.25s ease;
+}
+@keyframes modal-card-in {
+  from { opacity: 0; transform: translateY(16px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* --- Mobile modal adjustments --- */
+@media (max-width: 768px) {
+  .modal-card, .modal-card--wide {
+    max-width: calc(100vw - 2rem);
+    padding: var(--space-6) var(--space-4);
+    max-height: 90vh;
+    overflow-y: auto;
+  }
+  .modal-card__actions {
+    flex-direction: column;
+  }
+}
+
 /* --- Indicateur paiement RDV --- */
 .rdv-paiement {
   display: inline-flex;

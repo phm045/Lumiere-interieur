@@ -1807,4 +1807,341 @@
     });
   });
 
+
+  // ========================================
+  // POP-UPS / MODALES — Système générique
+  // ========================================
+
+  // --- Utilitaires modale ---
+  function openModal(id) {
+    var modal = document.getElementById(id);
+    if (modal) {
+      modal.hidden = false;
+      document.body.style.overflow = 'hidden';
+      // Focus trap
+      setTimeout(function () {
+        var firstBtn = modal.querySelector('.btn, button, input, textarea, select');
+        if (firstBtn) firstBtn.focus();
+      }, 100);
+    }
+  }
+
+  function closeModal(id) {
+    var modal = document.getElementById(id);
+    if (modal) {
+      modal.hidden = true;
+      document.body.style.overflow = '';
+    }
+  }
+
+  function closeAllModals() {
+    document.querySelectorAll('.modal-overlay').forEach(function (m) {
+      m.hidden = true;
+    });
+    document.body.style.overflow = '';
+  }
+
+  // Fermer en cliquant sur le fond ou les boutons [data-modal-close]
+  document.addEventListener('click', function (e) {
+    if (e.target.classList.contains('modal-overlay')) {
+      closeAllModals();
+    }
+    if (e.target.hasAttribute('data-modal-close') || e.target.closest('[data-modal-close]')) {
+      closeAllModals();
+    }
+    // Navigation depuis les modales légales
+    if (e.target.hasAttribute('data-modal-nav') || e.target.closest('[data-modal-nav]')) {
+      closeAllModals();
+    }
+  });
+
+  // Fermer avec Escape
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeAllModals();
+  });
+
+  // --- Pop-ups PayPal ---
+  var pendingPaypalForm = null;
+  document.querySelectorAll('.btn--paypal').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var form = btn.closest('form.paypal-form');
+      pendingPaypalForm = form;
+      // Trouver le nom du service
+      var card = btn.closest('.service-card') || btn.closest('.voyance-mail');
+      var serviceName = '';
+      if (card) {
+        var h3 = card.querySelector('h3');
+        if (h3) serviceName = h3.textContent.trim();
+      }
+      if (!serviceName) {
+        var label = btn.getAttribute('aria-label') || '';
+        var match = label.match(/pour (.+)$/);
+        if (match) serviceName = match[1];
+      }
+      var serviceEl = document.getElementById('modal-paypal-service');
+      if (serviceEl) serviceEl.textContent = serviceName || '';
+      openModal('modal-paypal');
+    });
+  });
+
+  var btnPaypalConfirm = document.getElementById('modal-paypal-confirm');
+  if (btnPaypalConfirm) {
+    btnPaypalConfirm.addEventListener('click', function () {
+      closeAllModals();
+      if (pendingPaypalForm) {
+        pendingPaypalForm.submit();
+        pendingPaypalForm = null;
+      }
+    });
+  }
+
+  // --- Pop-ups Stripe / CB ---
+  var pendingStripeUrl = '';
+  document.querySelectorAll('.btn--stripe').forEach(function (btn) {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+      e.stopPropagation();
+      pendingStripeUrl = btn.getAttribute('href') || btn.closest('a').getAttribute('href');
+      var card = btn.closest('.service-card') || btn.closest('.voyance-mail');
+      var serviceName = '';
+      if (card) {
+        var h3 = card.querySelector('h3');
+        if (h3) serviceName = h3.textContent.trim();
+      }
+      if (!serviceName) {
+        var label = btn.getAttribute('aria-label') || '';
+        var match = label.match(/pour (.+)$/);
+        if (match) serviceName = match[1];
+      }
+      var serviceEl = document.getElementById('modal-stripe-service');
+      if (serviceEl) serviceEl.textContent = serviceName || '';
+      openModal('modal-stripe');
+    });
+  });
+
+  var btnStripeConfirm = document.getElementById('modal-stripe-confirm');
+  if (btnStripeConfirm) {
+    btnStripeConfirm.addEventListener('click', function () {
+      closeAllModals();
+      if (pendingStripeUrl) {
+        window.open(pendingStripeUrl, '_blank', 'noopener,noreferrer');
+        pendingStripeUrl = '';
+      }
+    });
+  }
+
+  // --- Pop-ups Réservation Cal.com ---
+  // Intercepter les boutons "Réserver maintenant" dans les services
+  document.querySelectorAll('[data-cal-service]').forEach(function (btn) {
+    var origClick = null;
+    btn.addEventListener('click', function (e) {
+      // On ne bloque pas Cal.com embed, on affiche juste la modal avant
+      var serviceName = btn.getAttribute('data-cal-service') || '';
+      var serviceEl = document.getElementById('modal-reservation-service');
+      if (serviceEl) serviceEl.textContent = serviceName;
+
+      // Stocker la référence au bouton Cal.com pour le déclencher après confirmation
+      var confirmBtn = document.getElementById('modal-reservation-confirm');
+      if (confirmBtn) {
+        confirmBtn.onclick = function () {
+          closeAllModals();
+          // Déclencher le clic Cal.com natif
+          btn.click();
+        };
+      }
+    });
+  });
+
+  // --- Pop-up Réflexologie ---
+  (function () {
+    // Trouver le bouton "Prendre rendez-vous" dans la carte réflexologie
+    var reflexoCards = document.querySelectorAll('.service-card');
+    reflexoCards.forEach(function (card) {
+      var h3 = card.querySelector('h3');
+      if (h3 && h3.textContent.trim().toLowerCase().indexOf('flexologie') !== -1) {
+        var link = card.querySelector('.btn--primary');
+        if (link && link.getAttribute('href') && link.getAttribute('href').indexOf('youpra') !== -1) {
+          var originalHref = link.getAttribute('href');
+          link.addEventListener('click', function (e) {
+            e.preventDefault();
+            var modalLink = document.getElementById('modal-reflexo-link');
+            if (modalLink) modalLink.href = originalHref;
+            openModal('modal-reflexo');
+          });
+        }
+      }
+    });
+  })();
+
+  // --- Pop-up Email / Contact ---
+  (function () {
+    var emailActions = document.querySelectorAll('.contact-action');
+    emailActions.forEach(function (action) {
+      var cta = action.querySelector('.contact-action__cta');
+      if (cta && cta.textContent.indexOf('Envoyer un email') !== -1) {
+        action.addEventListener('click', function (e) {
+          e.preventDefault();
+          openModal('modal-email');
+        });
+      }
+    });
+
+    var formContact = document.getElementById('form-contact-modal');
+    if (formContact) {
+      formContact.addEventListener('submit', function (e) {
+        e.preventDefault();
+        var nom = document.getElementById('contact-nom').value.trim();
+        var email = document.getElementById('contact-email').value.trim();
+        var sujet = document.getElementById('contact-sujet').value;
+        var message = document.getElementById('contact-message').value.trim();
+
+        if (!nom || !email || !message) return;
+
+        // Construire le mailto
+        var body = 'Bonjour,\n\nNom : ' + nom + '\nEmail : ' + email + '\nSujet : ' + sujet + '\n\n' + message + '\n\nCordialement,\n' + nom;
+        var mailtoUrl = 'mailto:philippe.medium45@gmail.com?subject=' + encodeURIComponent(sujet + ' — ' + nom) + '&body=' + encodeURIComponent(body);
+
+        // Afficher le message de succès
+        var msgEl = document.getElementById('contact-modal-message');
+        if (msgEl) {
+          msgEl.hidden = false;
+          msgEl.className = 'auth-form__message auth-form__message--succes';
+          msgEl.textContent = 'Votre client email va s\'ouvrir. Merci !';
+        }
+
+        // Ouvrir le mailto
+        window.location.href = mailtoUrl;
+
+        // Fermer après un délai
+        setTimeout(function () {
+          closeAllModals();
+          formContact.reset();
+          if (msgEl) msgEl.hidden = true;
+        }, 2000);
+      });
+    }
+  })();
+
+  // --- Pop-ups Légales (footer) ---
+  (function () {
+    var legalMap = {
+      'mentions-legales': 'modal-mentions',
+      'confidentialite': 'modal-confidentialite',
+      'cgv': 'modal-cgv'
+    };
+
+    // Intercepter les clics sur les liens du footer
+    document.querySelectorAll('.footer__col a[data-page]').forEach(function (link) {
+      var pageId = link.getAttribute('data-page');
+      if (legalMap[pageId]) {
+        link.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          openModal(legalMap[pageId]);
+        }, true);
+      }
+    });
+  })();
+
+  // --- Pop-up Ajouter un avis ---
+  var btnAjouterAvis = document.getElementById('btn-ajouter-avis');
+  if (btnAjouterAvis) {
+    btnAjouterAvis.addEventListener('click', function () {
+      openModal('modal-avis');
+    });
+  }
+
+  // Gestion des étoiles dans le formulaire d'avis
+  (function () {
+    var stars = document.querySelectorAll('.avis-star');
+    var noteInput = document.getElementById('avis-note');
+    stars.forEach(function (star) {
+      star.addEventListener('click', function () {
+        var val = parseInt(this.getAttribute('data-star'));
+        if (noteInput) noteInput.value = val;
+        stars.forEach(function (s) {
+          var sv = parseInt(s.getAttribute('data-star'));
+          if (sv <= val) {
+            s.classList.add('active');
+          } else {
+            s.classList.remove('active');
+          }
+        });
+      });
+    });
+
+    var formAvis = document.getElementById('form-avis-modal');
+    if (formAvis) {
+      formAvis.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        var nom = document.getElementById('avis-nom').value.trim();
+        var note = parseInt(document.getElementById('avis-note').value) || 5;
+        var texte = document.getElementById('avis-texte').value.trim();
+
+        if (!nom || !texte) return;
+
+        var msgEl = document.getElementById('avis-modal-message');
+
+        // Tenter de sauvegarder dans Supabase
+        try {
+          if (window.supabase) {
+            await supabase.from('temoignages').insert({
+              nom: nom,
+              note: note,
+              texte: texte
+            });
+          }
+        } catch (err) {
+          // Silencieux — fonctionne aussi sans backend
+        }
+
+        // Ajouter visuellement le témoignage à la grille
+        var grid = document.querySelector('.testimonials-grid');
+        if (grid) {
+          var initiales = nom.split(' ').map(function (n) { return n.charAt(0).toUpperCase(); }).join('').substring(0, 2);
+          var starsHtml = '';
+          for (var i = 0; i < note; i++) starsHtml += '\u2605';
+          for (var j = note; j < 5; j++) starsHtml += '\u2606';
+
+          var card = document.createElement('div');
+          card.className = 'testimonial-card fade-in';
+          card.innerHTML = '<div class="testimonial-card__stars">' + starsHtml + '</div>' +
+            '<p class="testimonial-card__text">\u00ab ' + texte.replace(/</g, '&lt;').replace(/>/g, '&gt;') + ' \u00bb</p>' +
+            '<div class="testimonial-card__author">' +
+              '<div class="testimonial-card__avatar">' + initiales + '</div>' +
+              '<div><p class="testimonial-card__name">' + nom.replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</p></div>' +
+            '</div>';
+
+          // Insérer en premier
+          grid.insertBefore(card, grid.firstChild);
+
+          // Déclencher l'animation
+          requestAnimationFrame(function () {
+            card.classList.add('visible');
+          });
+        }
+
+        // Message de succès
+        if (msgEl) {
+          msgEl.hidden = false;
+          msgEl.className = 'auth-form__message auth-form__message--succes';
+          msgEl.textContent = 'Merci pour votre t\u00e9moignage \u2764\ufe0f';
+        }
+
+        setTimeout(function () {
+          closeAllModals();
+          formAvis.reset();
+          if (msgEl) msgEl.hidden = true;
+          // Reset étoiles à 5
+          stars.forEach(function (s) { s.classList.add('active'); });
+          if (noteInput) noteInput.value = '5';
+        }, 2000);
+      });
+    }
+  })();
+
+
 })();

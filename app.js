@@ -590,6 +590,38 @@
         '<p>Ce qui me guide dans chaque consultation, c\u2019est le respect de votre libre arbitre. Les messages que je re\u00e7ois ne sont jamais des ordres. Ce sont des \u00e9clairages, des pistes, des confirmations. <strong>C\u2019est toujours vous qui d\u00e9cidez.</strong></p>' +
         '<p>Si vous ressentez un appel vers la m\u00e9diumnit\u00e9, que ce soit pour comprendre vos propres capacit\u00e9s ou pour recevoir des messages, sachez que cet espace est fait pour vous accueillir sans jugement.</p>' +
         '<div class="blog-article__cta"><p>Vous souhaitez explorer votre sensibilit\u00e9 m\u00e9diumnique ou recevoir des messages de guidance\u202f? R\u00e9servez une consultation, je serai honor\u00e9 de vous accompagner.</p></div>'
+    },
+    reflexologie: {
+      category: 'R\u00e9flexologie',
+      title: 'La r\u00e9flexologie plantaire\u00a0: quand vos pieds racontent votre corps',
+      date: '24 mars 2026',
+      content: '<h2>Une pratique mill\u00e9naire au service du bien-\u00eatre</h2>' +
+        '<p>La r\u00e9flexologie plantaire est une technique de soin naturelle qui repose sur un principe simple mais puissant\u00a0: <strong>chaque zone du pied correspond \u00e0 un organe, une glande ou une partie du corps</strong>. En stimulant ces zones par des pressions douces et pr\u00e9cises, le r\u00e9flexologue favorise la d\u00e9tente profonde et accompagne le processus naturel d\u2019auto-r\u00e9gulation du corps.</p>' +
+        '<p>Pratiqu\u00e9e depuis des mill\u00e9naires en Chine, en \u00c9gypte et dans les traditions am\u00e9rindiennes, la r\u00e9flexologie conna\u00eet aujourd\u2019hui un renouveau remarquable. Elle s\u2019inscrit dans une approche globale de la sant\u00e9, o\u00f9 le corps est consid\u00e9r\u00e9 comme un tout interconnect\u00e9.</p>' +
+        '<h2>Comment se d\u00e9roule une s\u00e9ance\u202f?</h2>' +
+        '<p>La s\u00e9ance commence par un temps d\u2019\u00e9change pour comprendre vos besoins et votre \u00e9tat g\u00e9n\u00e9ral. Ensuite, install\u00e9(e) confortablement, vous n\u2019avez qu\u2019\u00e0 vous laisser guider.</p>' +
+        '<p>Le r\u00e9flexologue travaille sur l\u2019ensemble de la vo\u00fbte plantaire, en insistant sur les zones qui pr\u00e9sentent des tensions ou des d\u00e9s\u00e9quilibres. Chaque pression est adapt\u00e9e \u00e0 votre sensibilit\u00e9. La s\u00e9ance dure g\u00e9n\u00e9ralement entre 45 minutes et 1 heure.</p>' +
+        '<h2>Les bienfaits de la r\u00e9flexologie</h2>' +
+        '<ul>' +
+        '<li><strong>R\u00e9duction du stress et de l\u2019anxi\u00e9t\u00e9\u00a0:</strong> la stimulation des zones r\u00e9flexes active le syst\u00e8me nerveux parasympathique, favorisant un \u00e9tat de relaxation profonde.</li>' +
+        '<li><strong>Soulagement des tensions musculaires\u00a0:</strong> les zones de crispation du corps se rel\u00e2chent progressivement au fil de la s\u00e9ance.</li>' +
+        '<li><strong>Am\u00e9lioration de la circulation sanguine\u00a0:</strong> les pressions r\u00e9p\u00e9t\u00e9es stimulent le flux sanguin et lymphatique.</li>' +
+        '<li><strong>Meilleur sommeil\u00a0:</strong> beaucoup de personnes rapportent un sommeil plus r\u00e9parateur apr\u00e8s une s\u00e9ance.</li>' +
+        '<li><strong>R\u00e9\u00e9quilibrage \u00e9nerg\u00e9tique\u00a0:</strong> en travaillant sur les m\u00e9ridiens, la r\u00e9flexologie aide \u00e0 r\u00e9harmoniser la circulation de l\u2019\u00e9nergie dans le corps.</li>' +
+        '</ul>' +
+        '<h2>R\u00e9flexologie et accompagnement spirituel</h2>' +
+        '<p>Dans ma pratique, je consid\u00e8re la r\u00e9flexologie comme un <strong>compl\u00e9ment naturel</strong> \u00e0 la guidance intuitive. Le corps porte en lui les traces de nos \u00e9motions, de nos blocages et de notre histoire. En lib\u00e9rant les tensions physiques, on cr\u00e9e un espace int\u00e9rieur plus clair, plus r\u00e9ceptif aux messages de l\u2019\u00e2me.</p>' +
+        '<p>C\u2019est pourquoi je propose cette approche en collaboration avec <strong>Christine Foucault</strong>, r\u00e9flexologue exp\u00e9riment\u00e9e \u00e0 proximit\u00e9 d\u2019Orl\u00e9ans. Son savoir-faire et sa douceur en font une alli\u00e9e pr\u00e9cieuse pour tous ceux qui cherchent \u00e0 prendre soin d\u2019eux en profondeur.</p>' +
+        '<h2>Pour qui\u202f?</h2>' +
+        '<p>La r\u00e9flexologie s\u2019adresse \u00e0 tous\u00a0: adultes, personnes \u00e2g\u00e9es, et m\u00eame les enfants. Elle est particuli\u00e8rement indiqu\u00e9e pour\u00a0:</p>' +
+        '<ul>' +
+        '<li>Les personnes stress\u00e9es ou surmen\u00e9es</li>' +
+        '<li>Celles qui souffrent de troubles du sommeil</li>' +
+        '<li>Les personnes en p\u00e9riode de transition ou de changement</li>' +
+        '<li>Tous ceux qui souhaitent simplement se reconnecter \u00e0 leur corps</li>' +
+        '</ul>' +
+        '<p>Il est important de noter que la r\u00e9flexologie ne se substitue pas \u00e0 un traitement m\u00e9dical. C\u2019est un accompagnement, un soutien qui s\u2019inscrit dans une d\u00e9marche globale de mieux-\u00eatre.</p>' +
+        '<div class="blog-article__cta"><p>Envie de d\u00e9couvrir la r\u00e9flexologie plantaire\u202f? Prenez rendez-vous avec Christine Foucault depuis la section Th\u00e9rapie de notre site.</p></div>'
     }
   };
 

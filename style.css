@@ -1757,6 +1757,10 @@ section {
   color: var(--color-text-faint) !important;
   margin-top: var(--space-3) !important;
   margin-bottom: 0 !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
 
 .contact-calendly {
@@ -3340,13 +3344,7 @@ textarea.blog-comments__input {
     padding-bottom: calc(5rem + env(safe-area-inset-bottom, 0px));
   }
 
-  /* Cal-note ("Paiement sécurisé") better alignment on mobile */
-  .cal-note {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 4px;
-  }
+
 
   /* Service cards: breathing room on mobile */
   .service-card__content p {

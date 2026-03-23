@@ -1809,6 +1809,39 @@
 
 
   // ========================================
+  // ENVOI EMAIL — via Brevo (Sendinblue) API
+  // ========================================
+  async function envoyerEmailBrevo(options) {
+    try {
+      var response = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+          'api-key': _bk
+        },
+        body: JSON.stringify({
+          sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
+          to: [{ email: options.destinataire, name: 'Philippe' }],
+          replyTo: options.replyTo ? { email: options.replyTo, name: options.replyName || '' } : undefined,
+          subject: options.sujet,
+          htmlContent: '<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px;color:#2c1f1a;">'
+            + '<div style="text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e8e2d5;">'
+            + '<strong style="color:#b5704a;font-size:18px;">Lumi\u00e8re Int\u00e9rieure</strong></div>'
+            + options.contenu
+            + '<hr style="border:none;border-top:1px solid #e8e2d5;margin:24px 0;">'
+            + '<p style="font-size:12px;color:#999;">Envoy\u00e9 depuis le site lumiere-interieure.com</p>'
+            + '</div>'
+        })
+      });
+      return response.ok || response.status === 201;
+    } catch (e) {
+      console.error('Erreur envoi email Brevo:', e);
+      return false;
+    }
+  }
+
+  // ========================================
   // POP-UPS / MODALES — Système générique
   // ========================================
 
@@ -1990,36 +2023,56 @@
 
     var formContact = document.getElementById('form-contact-modal');
     if (formContact) {
-      formContact.addEventListener('submit', function (e) {
+      formContact.addEventListener('submit', async function (e) {
         e.preventDefault();
         var nom = document.getElementById('contact-nom').value.trim();
         var email = document.getElementById('contact-email').value.trim();
         var sujet = document.getElementById('contact-sujet').value;
         var message = document.getElementById('contact-message').value.trim();
+        var msgEl = document.getElementById('contact-modal-message');
+        var submitBtn = formContact.querySelector('[type="submit"]');
 
         if (!nom || !email || !message) return;
 
-        // Construire le mailto
-        var body = 'Bonjour,\n\nNom : ' + nom + '\nEmail : ' + email + '\nSujet : ' + sujet + '\n\n' + message + '\n\nCordialement,\n' + nom;
-        var mailtoUrl = 'mailto:philippe.medium45@gmail.com?subject=' + encodeURIComponent(sujet + ' — ' + nom) + '&body=' + encodeURIComponent(body);
+        if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Envoi en cours\u2026'; }
 
-        // Afficher le message de succès
-        var msgEl = document.getElementById('contact-modal-message');
-        if (msgEl) {
-          msgEl.hidden = false;
-          msgEl.className = 'auth-form__message auth-form__message--succes';
-          msgEl.textContent = 'Votre client email va s\'ouvrir. Merci !';
+        try {
+          var ok = await envoyerEmailBrevo({
+            destinataire: 'philippe.medium45@gmail.com',
+            sujet: sujet + ' \u2014 ' + nom,
+            contenu: '<h2>Message depuis le formulaire de contact</h2>'
+              + '<p><strong>Nom :</strong> ' + nom + '</p>'
+              + '<p><strong>Email :</strong> ' + email + '</p>'
+              + '<p><strong>Sujet :</strong> ' + sujet + '</p>'
+              + '<p><strong>Message :</strong></p>'
+              + '<blockquote style="border-left:3px solid #6b7f4e;padding-left:12px;color:#333;">' + message.replace(/\n/g, '<br>') + '</blockquote>',
+            replyTo: email,
+            replyName: nom
+          });
+
+          if (ok) {
+            if (msgEl) {
+              msgEl.hidden = false;
+              msgEl.className = 'auth-form__message auth-form__message--succes';
+              msgEl.textContent = 'Message envoy\u00e9 avec succ\u00e8s\u00a0! Je vous r\u00e9pondrai sous 24h.';
+            }
+            formContact.reset();
+            setTimeout(function () { closeAllModals(); if (msgEl) msgEl.hidden = true; }, 3000);
+          } else {
+            throw new Error('Envoi \u00e9chou\u00e9');
+          }
+        } catch (err) {
+          if (msgEl) {
+            msgEl.hidden = false;
+            msgEl.className = 'auth-form__message auth-form__message--erreur';
+            msgEl.textContent = 'Erreur lors de l\u2019envoi. Veuillez r\u00e9essayer.';
+          }
         }
 
-        // Ouvrir le mailto
-        window.location.href = mailtoUrl;
-
-        // Fermer après un délai
-        setTimeout(function () {
-          closeAllModals();
-          formContact.reset();
-          if (msgEl) msgEl.hidden = true;
-        }, 2000);
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer';
+        }
       });
     }
   })();
@@ -2167,45 +2220,56 @@
   // Soumission du formulaire
   var formVoyanceMail = document.getElementById('form-voyance-mail');
   if (formVoyanceMail) {
-    formVoyanceMail.addEventListener('submit', function (e) {
+    formVoyanceMail.addEventListener('submit', async function (e) {
       e.preventDefault();
       var prenom = document.getElementById('vm-prenom').value.trim();
       var email = document.getElementById('vm-email').value.trim();
       var question = document.getElementById('vm-question').value.trim();
       var msgEl = document.getElementById('vm-message');
+      var submitBtn = formVoyanceMail.querySelector('[type="submit"]');
 
       if (!prenom || !email || !question) return;
 
-      // Construire le mailto pré-rempli
-      var subject = 'Voyance par mail \u2013 1 question \u2014 ' + prenom;
-      var body = 'Bonjour Philippe,\n\n'
-        + 'Je souhaite une voyance par mail (1 question).\n\n'
-        + 'Pr\u00e9nom : ' + prenom + '\n'
-        + 'Email : ' + email + '\n\n'
-        + 'Ma question :\n' + question + '\n\n'
-        + 'Merci,\n' + prenom;
+      // Désactiver le bouton pendant l'envoi
+      if (submitBtn) { submitBtn.disabled = true; submitBtn.textContent = 'Envoi en cours\u2026'; }
 
-      var mailtoUrl = 'mailto:philippe.medium45@gmail.com'
-        + '?subject=' + encodeURIComponent(subject)
-        + '&body=' + encodeURIComponent(body);
+      try {
+        var ok = await envoyerEmailBrevo({
+          destinataire: 'philippe.medium45@gmail.com',
+          sujet: 'Voyance par mail \u2013 1 question \u2014 ' + prenom,
+          contenu: '<h2>Voyance par mail \u2013 1 question</h2>'
+            + '<p><strong>Pr\u00e9nom :</strong> ' + prenom + '</p>'
+            + '<p><strong>Email :</strong> ' + email + '</p>'
+            + '<p><strong>Question :</strong></p>'
+            + '<blockquote style="border-left:3px solid #b5704a;padding-left:12px;color:#333;">' + question.replace(/\n/g, '<br>') + '</blockquote>',
+          replyTo: email,
+          replyName: prenom
+        });
 
-      // Message de confirmation
-      if (msgEl) {
-        msgEl.hidden = false;
-        msgEl.className = 'auth-form__message auth-form__message--succes';
-        msgEl.textContent = 'Votre client email va s\'ouvrir avec votre question pr\u00e9-remplie.';
+        if (ok) {
+          if (msgEl) {
+            msgEl.hidden = false;
+            msgEl.className = 'auth-form__message auth-form__message--succes';
+            msgEl.textContent = 'Question envoy\u00e9e avec succ\u00e8s\u00a0! Vous recevrez votre r\u00e9ponse sous 48h.';
+          }
+          formVoyanceMail.reset();
+          if (vmCount) vmCount.textContent = '0';
+          setTimeout(function () { closeAllModals(); if (msgEl) msgEl.hidden = true; }, 3000);
+        } else {
+          throw new Error('Envoi \u00e9chou\u00e9');
+        }
+      } catch (err) {
+        if (msgEl) {
+          msgEl.hidden = false;
+          msgEl.className = 'auth-form__message auth-form__message--erreur';
+          msgEl.textContent = 'Erreur lors de l\u2019envoi. Veuillez r\u00e9essayer.';
+        }
       }
 
-      // Ouvrir le mailto
-      window.location.href = mailtoUrl;
-
-      // Fermer après un délai
-      setTimeout(function () {
-        closeAllModals();
-        formVoyanceMail.reset();
-        if (vmCount) vmCount.textContent = '0';
-        if (msgEl) msgEl.hidden = true;
-      }, 2500);
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg> Envoyer ma question';
+      }
     });
   }
 

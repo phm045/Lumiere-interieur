@@ -3856,47 +3856,51 @@ textarea.blog-comments__input {
 }
 
 
+
 /* ==========================================
    SECTION DERNIÈRES NOUVEAUTÉS (Accueil)
+   Optimisée desktop + mobile
    ========================================== */
 
 .nouveautes-section {
-  padding: 4rem 0 3rem;
+  padding: 3.5rem 0 2.5rem;
 }
 
 .nouveautes-header {
   text-align: center;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 .nouveautes-header__desc {
   color: var(--color-text-muted);
-  font-size: 1rem;
-  max-width: 520px;
-  margin: 0.75rem auto 0;
+  font-size: 0.95rem;
+  max-width: 480px;
+  margin: 0.6rem auto 0;
   line-height: 1.6;
 }
 
-/* Filtres */
+/* --- Filtres --- */
 .nouveautes-filters {
   display: flex;
   justify-content: center;
-  gap: 0.5rem;
-  margin-bottom: 2rem;
+  gap: 0.4rem;
+  margin-bottom: 1.75rem;
   flex-wrap: wrap;
+  padding: 0 1rem;
 }
 
 .nouveautes-filter {
   background: transparent;
   border: 1px solid var(--color-border);
   color: var(--color-text-muted);
-  padding: 0.45rem 1rem;
+  padding: 0.4rem 0.9rem;
   border-radius: 20px;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.25s ease;
   font-family: inherit;
+  white-space: nowrap;
 }
 
 .nouveautes-filter:hover {
@@ -3910,26 +3914,25 @@ textarea.blog-comments__input {
   color: #fff;
 }
 
-/* Grille */
+/* --- Grille --- */
 .nouveautes-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-/* Carte */
+/* --- Carte --- */
 .nouveautes-card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card, 12px);
   overflow: hidden;
   cursor: pointer;
-  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
   text-decoration: none;
   color: inherit;
   display: flex;
   flex-direction: column;
-  opacity: 1;
 }
 
 .nouveautes-card.hidden {
@@ -3937,15 +3940,16 @@ textarea.blog-comments__input {
 }
 
 .nouveautes-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
   border-color: var(--color-accent);
 }
 
+/* Image */
 .nouveautes-card__image {
   position: relative;
   overflow: hidden;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 16 / 9;
 }
 
 .nouveautes-card__image img {
@@ -3956,65 +3960,76 @@ textarea.blog-comments__input {
 }
 
 .nouveautes-card:hover .nouveautes-card__image img {
-  transform: scale(1.05);
+  transform: scale(1.04);
 }
 
-/* Badge type */
+/* Badge */
 .nouveautes-card__badge {
   position: absolute;
-  top: 0.75rem;
-  left: 0.75rem;
+  top: 0.6rem;
+  left: 0.6rem;
   color: #fff;
-  font-size: 0.68rem;
+  font-size: 0.65rem;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
-  padding: 0.25rem 0.65rem;
+  padding: 0.2rem 0.55rem;
   border-radius: 4px;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.3rem;
+  gap: 0.25rem;
+  max-width: calc(100% - 1.2rem);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .nouveautes-card__badge svg {
-  width: 12px;
-  height: 12px;
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
 }
 
 .nouveautes-card__badge--blog { background: var(--color-accent); }
 .nouveautes-card__badge--service { background: var(--color-primary); }
-.nouveautes-card__badge--therapie { background: #7b68ae; }
-.nouveautes-card__badge--boutique { background: #c07a4e; }
+.nouveautes-card__badge--therapie { background: #8b6eae; }
+.nouveautes-card__badge--boutique { background: #b87a4e; }
 
 /* Corps */
 .nouveautes-card__body {
-  padding: 1.15rem 1.25rem;
+  padding: 1rem 1.1rem;
   flex: 1;
   display: flex;
   flex-direction: column;
 }
 
 .nouveautes-card__category {
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   color: var(--color-accent);
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.3rem;
 }
 
 .nouveautes-card__title {
-  font-size: 1.02rem;
+  font-size: 0.95rem;
   font-weight: 600;
-  line-height: 1.35;
+  line-height: 1.3;
   color: var(--color-text);
-  margin-bottom: 0.45rem;
+  margin-bottom: 0.4rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.6em;
 }
 
 .nouveautes-card__excerpt {
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--color-text-muted);
-  line-height: 1.5;
+  line-height: 1.45;
+  letter-spacing: 0;
   flex: 1;
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -4026,39 +4041,154 @@ textarea.blog-comments__input {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   color: var(--color-text-faint);
-  margin-top: 0.75rem;
-  padding-top: 0.7rem;
+  margin-top: 0.6rem;
+  padding-top: 0.6rem;
   border-top: 1px solid var(--color-border);
 }
 
 .nouveautes-card__price {
   font-weight: 700;
   color: var(--color-accent);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
+/* CTAs */
 .nouveautes-cta {
   text-align: center;
-  margin-top: 2rem;
+  margin-top: 1.75rem;
   display: flex;
   justify-content: center;
   gap: 0.75rem;
   flex-wrap: wrap;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
+/* ==========================================
+   RESPONSIVE — Tablette
+   ========================================== */
+@media (min-width: 769px) and (max-width: 1024px) {
   .nouveautes-grid {
-    grid-template-columns: 1fr;
-    gap: 1.25rem;
+    grid-template-columns: repeat(2, 1fr);
   }
-  .nouveautes-section { padding: 3rem 0 2rem; }
-  .nouveautes-filters { gap: 0.35rem; }
-  .nouveautes-filter { font-size: 0.78rem; padding: 0.4rem 0.8rem; }
 }
 
-@media (min-width: 769px) and (max-width: 1024px) {
-  .nouveautes-grid { grid-template-columns: repeat(2, 1fr); }
+/* ==========================================
+   RESPONSIVE — Mobile (≤768px)
+   ========================================== */
+@media (max-width: 768px) {
+  .nouveautes-section {
+    padding: 2.5rem 0 2rem;
+  }
+
+  .nouveautes-header__desc {
+    font-size: 0.88rem;
+    padding: 0 0.5rem;
+  }
+
+  /* Filtres mobile : scroll horizontal, pas de wrap */
+  .nouveautes-filters {
+    justify-content: flex-start;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    gap: 0.35rem;
+    padding: 0 1rem 0.5rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .nouveautes-filters::-webkit-scrollbar {
+    display: none;
+  }
+
+  .nouveautes-filter {
+    font-size: 0.78rem;
+    padding: 0.38rem 0.85rem;
+    flex-shrink: 0;
+  }
+
+  /* Grille mobile : 1 colonne */
+  .nouveautes-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  /* Carte mobile : layout horizontal (image à gauche, texte à droite) */
+  .nouveautes-card {
+    flex-direction: row;
+    min-height: 0;
+  }
+
+  .nouveautes-card__image {
+    width: 120px;
+    min-width: 120px;
+    aspect-ratio: auto;
+    height: auto;
+  }
+
+  .nouveautes-card__image img {
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .nouveautes-card__badge {
+    font-size: 0.55rem;
+    padding: 0.15rem 0.35rem;
+    top: 0.35rem;
+    left: 0.35rem;
+    gap: 0.15rem;
+  }
+
+  .nouveautes-card__badge svg {
+    width: 8px;
+    height: 8px;
+  }
+
+  .nouveautes-card__body {
+    padding: 0.75rem 0.85rem;
+  }
+
+  .nouveautes-card__category {
+    font-size: 0.62rem;
+    margin-bottom: 0.15rem;
+  }
+
+  .nouveautes-card__title {
+    font-size: 0.85rem;
+    min-height: 0;
+    -webkit-line-clamp: 2;
+    margin-bottom: 0.25rem;
+  }
+
+  .nouveautes-card__excerpt {
+    font-size: 0.76rem;
+    -webkit-line-clamp: 2;
+    line-height: 1.4;
+    letter-spacing: 0;
+  }
+
+  .nouveautes-card__meta {
+    margin-top: 0.4rem;
+    padding-top: 0.4rem;
+    font-size: 0.7rem;
+  }
+
+  .nouveautes-card__price {
+    font-size: 0.82rem;
+  }
+
+  /* CTAs mobile : empilés */
+  .nouveautes-cta {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0 1rem;
+    gap: 0.5rem;
+    margin-top: 1.25rem;
+  }
+
+  .nouveautes-cta .btn {
+    text-align: center;
+    width: 100%;
+  }
 }

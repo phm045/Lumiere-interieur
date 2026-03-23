@@ -85,6 +85,13 @@
 
     // Close blog overlay if navigating away
     closeBlogOverlay();
+
+    // Newsletter flottant : visible uniquement sur blog, boutique et services
+    var nlFloat = document.getElementById('nl-float');
+    if (nlFloat) {
+      var nlPages = ['blog', 'boutique', 'services'];
+      nlFloat.style.display = nlPages.indexOf(pageId) !== -1 ? '' : 'none';
+    }
   }
 
   // Nav link clicks
@@ -1297,11 +1304,19 @@
       chargerPaiements();
       chargerCoupons();
     }
-    // Newsletter banner : visible uniquement sur blog, boutique et services
-    var nlBanner = document.querySelector('.newsletter-banner');
-    if (nlBanner) {
+    // Newsletter flottant : visible uniquement sur blog, boutique et services
+    var nlFloat = document.getElementById('nl-float');
+    if (nlFloat) {
       var nlPages = ['blog', 'boutique', 'services'];
-      nlBanner.style.display = nlPages.indexOf(pageId) !== -1 ? '' : 'none';
+      nlFloat.style.display = nlPages.indexOf(pageId) !== -1 ? '' : 'none';
+      // Fermer la card si on change de page
+      var nlCard = document.getElementById('nl-float-card');
+      if (nlCard) nlCard.hidden = true;
+      nlFloat.classList.remove('nl-float--open');
+      var iconMail = nlFloat.querySelector('.nl-float__icon--mail');
+      var iconClose = nlFloat.querySelector('.nl-float__icon--close');
+      if (iconMail) iconMail.style.display = '';
+      if (iconClose) iconClose.style.display = 'none';
     }
   };
 
@@ -2289,6 +2304,37 @@
     });
   }
 
+
+  // ========================================
+  // NEWSLETTER FLOTTANT — Toggle card
+  // ========================================
+  (function initNlFloat() {
+    var container = document.getElementById('nl-float');
+    var btn = document.getElementById('nl-float-toggle');
+    var card = document.getElementById('nl-float-card');
+    if (!btn || !card || !container) return;
+
+    var iconMail  = btn.querySelector('.nl-float__icon--mail');
+    var iconClose = btn.querySelector('.nl-float__icon--close');
+    var isOpen = false;
+
+    function toggle() {
+      isOpen = !isOpen;
+      card.hidden = !isOpen;
+      container.classList.toggle('nl-float--open', isOpen);
+      if (iconMail)  iconMail.style.display  = isOpen ? 'none' : '';
+      if (iconClose) iconClose.style.display = isOpen ? '' : 'none';
+    }
+
+    btn.addEventListener('click', toggle);
+
+    // Fermer si clic en dehors
+    document.addEventListener('click', function(e) {
+      if (isOpen && !container.contains(e.target)) {
+        toggle();
+      }
+    });
+  })();
 
   // ========================================
   // SONS DE GUÉRISON — Bol Chantant (fond sonore)

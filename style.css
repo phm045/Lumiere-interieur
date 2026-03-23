@@ -3299,6 +3299,213 @@ textarea.blog-comments__input {
 }
 
 /* ========================================
+   NEWSLETTER FLOTTANT
+   ======================================== */
+.nl-float {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 1.5rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.nl-float__btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: var(--radius-full);
+  border: 1.5px solid var(--color-primary);
+  background: var(--color-surface);
+  color: var(--color-primary);
+  cursor: pointer;
+  transition: all 320ms var(--ease-out);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+.nl-float__btn:hover {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  transform: scale(1.08);
+  box-shadow: 0 6px 28px rgba(107, 127, 78, 0.25);
+}
+
+.nl-float__btn:active {
+  transform: scale(0.96);
+}
+
+/* Badge notification */
+.nl-float__badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+  transition: transform 300ms var(--ease-out);
+}
+
+.nl-float--open .nl-float__badge {
+  transform: scale(0);
+}
+
+.nl-float__label {
+  font-family: var(--font-body);
+  font-size: 0.65rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-faint);
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: all 300ms var(--ease-out);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.nl-float:hover .nl-float__label {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.nl-float--open .nl-float__btn {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  border-color: var(--color-primary);
+}
+
+/* Card popup */
+.nl-float__card {
+  position: absolute;
+  bottom: calc(100% + 0.75rem);
+  left: 0;
+  width: 300px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-divider);
+  border-radius: var(--radius-xl);
+  padding: var(--space-5);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+  animation: nl-card-in 300ms var(--ease-out);
+}
+
+@keyframes nl-card-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.nl-float__card-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+  color: var(--color-primary);
+}
+
+.nl-float__card-header h3 {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.nl-float__card-desc {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  line-height: 1.5;
+  margin-bottom: var(--space-4);
+}
+
+.nl-float__form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.nl-float__form .newsletter-form__input {
+  width: 100%;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+}
+
+.nl-float__submit {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  font-size: var(--text-sm);
+}
+
+.nl-float__note {
+  font-size: 0.7rem;
+  color: var(--color-text-faint);
+  text-align: center;
+  margin-top: var(--space-1);
+}
+
+.nl-float__success[hidden] {
+  display: none;
+}
+
+.nl-float__success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  text-align: center;
+  padding: var(--space-4) 0;
+  color: var(--color-primary);
+}
+
+.nl-float__success p {
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+@media (max-width: 640px) {
+  .nl-float {
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    left: 1rem;
+  }
+  .nl-float__btn {
+    width: 46px;
+    height: 46px;
+  }
+  .nl-float__btn svg {
+    width: 20px;
+    height: 20px;
+  }
+  .nl-float__card {
+    width: calc(100vw - 2rem);
+    left: 0;
+  }
+}
+
+/* ========================================
    SONS DE GUÉRISON — Bouton flottant
    ======================================== */
 .sound-healer {

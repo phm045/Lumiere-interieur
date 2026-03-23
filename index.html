@@ -1750,38 +1750,44 @@
 </main>
 
 <!-- ========================================
-     NEWSLETTER BANNER
+     NEWSLETTER FLOTTANT (services, blog, boutique)
      ======================================== -->
-<section class="newsletter-banner" style="display:none">
-  <div class="container">
-    <div class="newsletter-banner__inner">
-      <div class="newsletter-banner__content">
-        <div class="newsletter-banner__icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-        </div>
-        <div>
-          <h2 class="newsletter-banner__title">Restez informé</h2>
-          <p class="newsletter-banner__desc">Recevez les nouveautés boutique, les offres spéciales et les actualités de Lumière Intérieure directement dans votre boîte mail.</p>
-        </div>
-      </div>
-      <form class="newsletter-form newsletter-form--banner" data-newsletter>
-        <div class="newsletter-form__row">
-          <input type="text" name="prenom" placeholder="Prénom" required class="newsletter-form__input" maxlength="40">
-          <input type="email" name="email" placeholder="Adresse email" required class="newsletter-form__input newsletter-form__input--email">
-          <button type="submit" class="btn btn--primary newsletter-form__btn">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            S'inscrire
-          </button>
-        </div>
-        <p class="newsletter-form__note">Gratuit · Sans spam · Désinscription en un clic</p>
-      </form>
-      <div class="newsletter-success" hidden>
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        <p>Inscription enregistrée. À très bientôt dans votre boîte mail.</p>
-      </div>
+<div id="nl-float" class="nl-float" style="display:none">
+  <button id="nl-float-toggle" class="nl-float__btn" aria-label="S'inscrire à la newsletter" title="Newsletter">
+    <svg class="nl-float__icon nl-float__icon--mail" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+      <polyline points="22,6 12,13 2,6"/>
+    </svg>
+    <svg class="nl-float__icon nl-float__icon--close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+      <line x1="18" y1="6" x2="6" y2="18"/>
+      <line x1="6" y1="6" x2="18" y2="18"/>
+    </svg>
+    <span class="nl-float__badge">1</span>
+  </button>
+  <span class="nl-float__label">Newsletter</span>
+
+  <!-- Card popup -->
+  <div id="nl-float-card" class="nl-float__card" hidden>
+    <div class="nl-float__card-header">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+      <h3>Restez informé</h3>
+    </div>
+    <p class="nl-float__card-desc">Nouveautés, offres et actualités de Lumière Intérieure dans votre boîte mail.</p>
+    <form class="newsletter-form nl-float__form" data-newsletter>
+      <input type="text" name="prenom" placeholder="Prénom" required class="newsletter-form__input" maxlength="40">
+      <input type="email" name="email" placeholder="Adresse email" required class="newsletter-form__input newsletter-form__input--email">
+      <button type="submit" class="btn btn--primary nl-float__submit">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        S'inscrire
+      </button>
+      <p class="nl-float__note">Gratuit · Sans spam · Désinscription en un clic</p>
+    </form>
+    <div class="nl-float__success" hidden>
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+      <p>Inscription enregistrée. À très bientôt !</p>
     </div>
   </div>
-</section>
+</div>
 
 <!-- ========================================
      FOOTER

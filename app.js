@@ -1297,6 +1297,12 @@
       chargerPaiements();
       chargerCoupons();
     }
+    // Newsletter banner : visible uniquement sur blog, boutique et services
+    var nlBanner = document.querySelector('.newsletter-banner');
+    if (nlBanner) {
+      var nlPages = ['blog', 'boutique', 'services'];
+      nlBanner.style.display = nlPages.indexOf(pageId) !== -1 ? '' : 'none';
+    }
   };
 
   // Vérifier le statut auth au chargement

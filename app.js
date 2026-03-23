@@ -894,11 +894,27 @@
       navCompte.hidden = false;
       navCompte.textContent = client.prenom || 'Mon compte';
     }
+    // Afficher/masquer les vues guest/auth
+    var guestEl = document.getElementById('compte-guest');
+    var authEl = document.getElementById('compte-auth');
+    if (guestEl) guestEl.hidden = true;
+    if (authEl) authEl.hidden = false;
+    // Mettre à jour l'avatar avec les initiales
+    var avatar = document.getElementById('compte-avatar');
+    if (avatar) {
+      var initiales = ((client.prenom || '').charAt(0) + (client.nom || '').charAt(0)).toUpperCase();
+      avatar.textContent = initiales || '?';
+    }
   }
 
   function afficherEtatDeconnecte() {
     if (navConnexion) navConnexion.hidden = false;
     if (navCompte) navCompte.hidden = true;
+    // Afficher/masquer les vues guest/auth
+    var guestEl = document.getElementById('compte-guest');
+    var authEl = document.getElementById('compte-auth');
+    if (guestEl) guestEl.hidden = false;
+    if (authEl) authEl.hidden = true;
   }
 
   // Afficher un message dans un formulaire d'auth
@@ -1058,12 +1074,96 @@
         if (el) el.textContent = u.email;
         el = document.getElementById('compte-telephone');
         if (el) el.textContent = meta.telephone || 'Non renseigné';
+        // Mettre à jour l'avatar
+        var avatar = document.getElementById('compte-avatar');
+        if (avatar) {
+          var initiales = ((meta.prenom || '').charAt(0) + (meta.nom || '').charAt(0)).toUpperCase();
+          avatar.textContent = initiales || '?';
+        }
         el = document.getElementById('compte-date');
         if (el) el.textContent = new Date(u.created_at).toLocaleDateString('fr-FR', {
           year: 'numeric', month: 'long', day: 'numeric'
         });
       }
     } catch (e) {}
+  }
+
+  // --- Modification du profil ---
+  var btnModifierProfil = document.getElementById('btn-modifier-profil');
+  var compteEditForm = document.getElementById('compte-edit-form');
+  var btnAnnulerEdit = document.getElementById('btn-annuler-edit');
+  var btnSauvegarderProfil = document.getElementById('btn-sauvegarder-profil');
+
+  if (btnModifierProfil && compteEditForm) {
+    btnModifierProfil.addEventListener('click', async function () {
+      // Pré-remplir les champs avec les données actuelles
+      try {
+        var { data: { session } } = await supabase.auth.getSession();
+        if (session && session.user) {
+          var meta = session.user.user_metadata || {};
+          var editPrenom = document.getElementById('edit-prenom');
+          var editNom = document.getElementById('edit-nom');
+          var editTel = document.getElementById('edit-telephone');
+          if (editPrenom) editPrenom.value = meta.prenom || '';
+          if (editNom) editNom.value = meta.nom || '';
+          if (editTel) editTel.value = meta.telephone || '';
+        }
+      } catch (e) {}
+      btnModifierProfil.hidden = true;
+      compteEditForm.hidden = false;
+      cacherMessage('edit-profil-message');
+    });
+  }
+
+  if (btnAnnulerEdit) {
+    btnAnnulerEdit.addEventListener('click', function () {
+      compteEditForm.hidden = true;
+      btnModifierProfil.hidden = false;
+      cacherMessage('edit-profil-message');
+    });
+  }
+
+  if (btnSauvegarderProfil) {
+    btnSauvegarderProfil.addEventListener('click', async function () {
+      var editPrenom = document.getElementById('edit-prenom');
+      var editNom = document.getElementById('edit-nom');
+      var editTel = document.getElementById('edit-telephone');
+      var prenom = editPrenom ? editPrenom.value.trim() : '';
+      var nom = editNom ? editNom.value.trim() : '';
+      var telephone = editTel ? editTel.value.trim() : '';
+
+      if (!prenom || !nom) {
+        afficherMessage('edit-profil-message', 'Le prénom et le nom sont obligatoires.', 'erreur');
+        return;
+      }
+
+      btnSauvegarderProfil.disabled = true;
+      btnSauvegarderProfil.textContent = 'Enregistrement…';
+
+      try {
+        var { error } = await supabase.auth.updateUser({
+          data: { prenom: prenom, nom: nom, telephone: telephone }
+        });
+
+        if (error) {
+          afficherMessage('edit-profil-message', 'Erreur lors de la mise à jour.', 'erreur');
+        } else {
+          afficherMessage('edit-profil-message', 'Profil mis à jour avec succès.', 'succes');
+          afficherEtatConnecte({ prenom: prenom, nom: nom });
+          chargerProfil();
+          setTimeout(function () {
+            compteEditForm.hidden = true;
+            btnModifierProfil.hidden = false;
+            cacherMessage('edit-profil-message');
+          }, 1500);
+        }
+      } catch (err) {
+        afficherMessage('edit-profil-message', 'Erreur de connexion. Veuillez réessayer.', 'erreur');
+      }
+
+      btnSauvegarderProfil.disabled = false;
+      btnSauvegarderProfil.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Enregistrer';
+    });
   }
 
   // --- Déconnexion ---

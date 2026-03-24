@@ -626,11 +626,12 @@
   };
 
   // --- Dernières nouveautés (Accueil) — Toutes rubriques ---
-  window.__populateNouveautes = function populateNouveautes() {
+  window.__populateNouveautes = async function populateNouveautes() {
     var grid = document.getElementById('nouveautes-grid');
     if (!grid) return;
 
-    var pinnedItems = JSON.parse(localStorage.getItem('pinned_items') || '[]');
+    var pinnedItems = window.__pinnedItems || await loadPinsFromSupabase();
+    var isAdmin = window.__isAdmin || false;
     function isItemPinned(slug) { return pinnedItems.indexOf(slug) !== -1; }
 
     var items = [];
@@ -802,7 +803,7 @@
       card.innerHTML =
         '<div class="nouveautes-card__image" style="position:relative">' +
           '<span class="nouveautes-card__badge nouveautes-card__badge--' + item.type + '">' + icons[item.type] + ' ' + item.category + '</span>' +
-          '<button class="pin-toggle-btn' + (item.pinned ? ' pin-toggle-btn--active' : '') + '" data-pin-slug="' + item.slug + '" data-pin-section="' + item.navTarget + '" title="\u00c9pingler">\ud83d\udccc</button>' +
+          (isAdmin ? '<button class="pin-toggle-btn' + (item.pinned ? ' pin-toggle-btn--active' : '') + '" data-pin-slug="' + item.slug + '" data-pin-section="' + item.navTarget + '" title="\u00c9pingler">\ud83d\udccc</button>' : '') +
           (item.pinned ? '<span class="pinned-badge">\ud83d\udccc \u00c9pingl\u00e9</span>' : '') +
           '<img src="' + item.img + '" alt="' + item.imgAlt + '" width="640" height="400" loading="lazy">' +
         '</div>' +
@@ -834,23 +835,26 @@
       grid.appendChild(card);
     });
 
-    // Pin toggle listeners for feed cards
-    grid.querySelectorAll('.pin-toggle-btn').forEach(function(btn) {
-      btn.addEventListener('click', function(e) {
-        e.stopPropagation();
-        var slug = btn.getAttribute('data-pin-slug');
-        var pinnedItems = JSON.parse(localStorage.getItem('pinned_items') || '[]');
-        var index = pinnedItems.indexOf(slug);
-        if (index > -1) {
-          pinnedItems.splice(index, 1);
-        } else {
-          pinnedItems.push(slug);
-        }
-        localStorage.setItem('pinned_items', JSON.stringify(pinnedItems));
-        // Refresh the feed
-        if (window.__populateNouveautes) window.__populateNouveautes();
+    // Pin toggle listeners for feed cards (admin only — buttons only exist if admin)
+    if (isAdmin) {
+      grid.querySelectorAll('.pin-toggle-btn').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          var slug = btn.getAttribute('data-pin-slug');
+          var index = pinnedItems.indexOf(slug);
+          if (index > -1) {
+            pinnedItems.splice(index, 1);
+            removePinFromSupabase(slug);
+          } else {
+            pinnedItems.push(slug);
+            addPinToSupabase(slug);
+          }
+          window.__pinnedItems = pinnedItems;
+          // Refresh the feed
+          if (window.__populateNouveautes) window.__populateNouveautes();
+        });
       });
-    });
+    }
 
     // Filtres (attach once only)
     if (!window.__nouveautesFiltersInit) {
@@ -2762,9 +2766,56 @@
     } catch(e) {}
   })();
 
-  // ─── Interactive pin/unpin system with localStorage persistence ───
-  (function initPinnedSystem() {
-    var pinnedItems = JSON.parse(localStorage.getItem('pinned_items') || '[]');
+  // ─── Interactive pin/unpin system — admin-only buttons, Supabase persistence ───
+  var ADMIN_EMAIL = 'philippe.medium45@gmail.com';
+  window.__isAdmin = false;
+
+  // Check if current user is the admin
+  async function checkAdmin() {
+    try {
+      var result = await supabase.auth.getSession();
+      var session = result.data.session;
+      return !!(session && session.user && session.user.email === ADMIN_EMAIL);
+    } catch(e) { return false; }
+  }
+
+  // Load pinned slugs from Supabase (for all visitors)
+  async function loadPinsFromSupabase() {
+    try {
+      var result = await supabase.from('site_pins').select('slug');
+      if (result.error) throw result.error;
+      return result.data.map(function(r) { return r.slug; });
+    } catch(e) {
+      // Fallback to localStorage if table doesn't exist yet
+      return JSON.parse(localStorage.getItem('pinned_items') || '[]');
+    }
+  }
+
+  // Save a pin to Supabase + localStorage (admin only)
+  async function addPinToSupabase(slug) {
+    try {
+      await supabase.from('site_pins').upsert({ slug: slug, pinned_at: new Date().toISOString() });
+    } catch(e) {}
+    var items = JSON.parse(localStorage.getItem('pinned_items') || '[]');
+    if (items.indexOf(slug) === -1) items.push(slug);
+    localStorage.setItem('pinned_items', JSON.stringify(items));
+  }
+
+  // Remove a pin from Supabase + localStorage (admin only)
+  async function removePinFromSupabase(slug) {
+    try {
+      await supabase.from('site_pins').delete().eq('slug', slug);
+    } catch(e) {}
+    var items = JSON.parse(localStorage.getItem('pinned_items') || '[]');
+    var idx = items.indexOf(slug);
+    if (idx > -1) items.splice(idx, 1);
+    localStorage.setItem('pinned_items', JSON.stringify(items));
+  }
+
+  (async function initPinnedSystem() {
+    var isAdmin = await checkAdmin();
+    window.__isAdmin = isAdmin;
+    var pinnedItems = await loadPinsFromSupabase();
 
     function slugify(text) {
       return (text || '').toLowerCase()
@@ -2783,11 +2834,15 @@
       return pinnedItems.indexOf(slug) !== -1;
     }
 
-    function togglePin(slug) {
+    async function togglePin(slug) {
       var idx = pinnedItems.indexOf(slug);
-      if (idx === -1) { pinnedItems.push(slug); }
-      else { pinnedItems.splice(idx, 1); }
-      localStorage.setItem('pinned_items', JSON.stringify(pinnedItems));
+      if (idx === -1) {
+        pinnedItems.push(slug);
+        await addPinToSupabase(slug);
+      } else {
+        pinnedItems.splice(idx, 1);
+        await removePinFromSupabase(slug);
+      }
     }
 
     function createPinButton(slug) {
@@ -2844,26 +2899,26 @@
         var imgDiv = card.querySelector('.blog-card__image') || card.querySelector('.service-card__image');
         if (!imgDiv) return;
 
-        // Add pin toggle button
-        if (!imgDiv.querySelector('.pin-toggle-btn')) {
+        // Add pin toggle button ONLY for admin
+        if (isAdmin && !imgDiv.querySelector('.pin-toggle-btn')) {
           var btn = createPinButton(slug);
           btn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            togglePin(slug);
-            updateCardVisual(card, slug);
-            reorderCards(grid, grid.querySelectorAll(cardSelector), section);
-            // Refresh nouveautes feed
-            refreshNouveautes();
+            togglePin(slug).then(function() {
+              updateCardVisual(card, slug);
+              reorderCards(grid, grid.querySelectorAll(cardSelector), section);
+              refreshNouveautes();
+            });
           });
           imgDiv.appendChild(btn);
         }
 
-        // Set initial visual state
+        // Set initial visual state (badges visible to everyone)
         updateCardVisual(card, slug);
       });
 
-      // Initial reorder
+      // Initial reorder (visible to everyone)
       reorderCards(grid, cards, section);
     }
 
@@ -2888,6 +2943,9 @@
         }
       }
     }
+
+    // Re-render feed with correct Supabase pins and admin status
+    refreshNouveautes();
   })();
 
 })();

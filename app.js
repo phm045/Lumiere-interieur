@@ -2735,6 +2735,49 @@
     });
   }
 
+  // ─── Masque de saisie date de naissance (JJ/MM/AAAA) ───
+  (function () {
+    var dobField = document.getElementById('vm-dob');
+    if (!dobField) return;
+
+    dobField.addEventListener('input', function (e) {
+      var val = dobField.value.replace(/\D/g, '');
+      if (val.length > 8) val = val.substring(0, 8);
+      var formatted = '';
+      if (val.length > 4) {
+        formatted = val.substring(0, 2) + '/' + val.substring(2, 4) + '/' + val.substring(4);
+      } else if (val.length > 2) {
+        formatted = val.substring(0, 2) + '/' + val.substring(2);
+      } else {
+        formatted = val;
+      }
+      dobField.value = formatted;
+    });
+
+    // Validation visuelle au blur
+    dobField.addEventListener('blur', function () {
+      var val = dobField.value.trim();
+      if (!val) return;
+      var parts = val.split('/');
+      if (parts.length === 3) {
+        var day = parseInt(parts[0], 10);
+        var month = parseInt(parts[1], 10);
+        var year = parseInt(parts[2], 10);
+        if (day >= 1 && day <= 31 && month >= 1 && month <= 12 && year >= 1900 && year <= new Date().getFullYear()) {
+          dobField.setCustomValidity('');
+          return;
+        }
+      }
+      dobField.setCustomValidity('Veuillez entrer une date valide au format JJ/MM/AAAA');
+      dobField.reportValidity();
+    });
+
+    // Reset la validité quand on tape
+    dobField.addEventListener('input', function () {
+      dobField.setCustomValidity('');
+    });
+  })();
+
   // Soumission du formulaire
   var formVoyanceMail = document.getElementById('form-voyance-mail');
   if (formVoyanceMail) {
@@ -2750,11 +2793,16 @@
 
       if (!prenom || !dob || !email || !question) return;
 
-      // Formater la date en français
+      // Formater la date en français (entrée au format JJ/MM/AAAA)
       var dobFormatted = dob;
       try {
-        var d = new Date(dob + 'T00:00:00');
-        dobFormatted = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+        var dobParts = dob.split('/');
+        if (dobParts.length === 3) {
+          var d = new Date(parseInt(dobParts[2], 10), parseInt(dobParts[1], 10) - 1, parseInt(dobParts[0], 10));
+          if (!isNaN(d.getTime())) {
+            dobFormatted = d.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+          }
+        }
       } catch (e) {}
 
       // Désactiver le bouton pendant l'envoi

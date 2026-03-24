@@ -2225,7 +2225,7 @@
       </div>
       <div class="auth-form__group">
         <label for="vm-dob" class="auth-form__label">Date de naissance</label>
-        <input type="date" id="vm-dob" class="auth-form__input" required>
+        <input type="text" id="vm-dob" class="auth-form__input" placeholder="JJ/MM/AAAA" inputmode="numeric" pattern="\d{2}/\d{2}/\d{4}" maxlength="10" autocomplete="bday" required>
       </div>
       <div class="auth-form__group">
         <label for="vm-email" class="auth-form__label">Adresse email (pour recevoir la réponse)</label>

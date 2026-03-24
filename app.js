@@ -3716,7 +3716,10 @@
       el = document.getElementById('stat-rdv');
       if (el) el.textContent = (s.nb_rdv != null) ? s.nb_rdv : '0';
       el = document.getElementById('stat-articles');
-      if (el) el.textContent = (s.nb_articles != null) ? s.nb_articles : '0';
+      // Articles = Supabase (dynamiques) + HTML statiques
+      var nbStaticArticles = document.querySelectorAll('.blog-card[data-article]:not([data-dynamic])').length;
+      var nbDynArticles = (s.nb_articles != null) ? s.nb_articles : 0;
+      if (el) el.textContent = nbStaticArticles + nbDynArticles;
       el = document.getElementById('stat-produits');
       if (el) el.textContent = (s.nb_produits != null) ? s.nb_produits : '0';
       el = document.getElementById('stat-coupons');
@@ -3740,7 +3743,9 @@
     try {
       var blogRes = await supabase.from('blog_articles').select('id', { count: 'exact', head: true });
       var el = document.getElementById('stat-articles');
-      if (el) el.textContent = (blogRes.count != null) ? blogRes.count : '0';
+      var nbStaticBlog = document.querySelectorAll('.blog-card[data-article]:not([data-dynamic])').length;
+      var nbDynBlog = (blogRes.count != null) ? blogRes.count : 0;
+      if (el) el.textContent = nbStaticBlog + nbDynBlog;
     } catch(e) {}
     try {
       var prodRes = await supabase.from('boutique_products').select('id', { count: 'exact', head: true });

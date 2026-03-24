@@ -2264,6 +2264,82 @@
   }
 
   // ========================================
+  // NEWSLETTER AUTO — Envoi aux abonnés via campagne Brevo
+  // ========================================
+  async function envoyerNewsletterAbonnes(type, titre, lien) {
+    try {
+      var sectionLabels = { 'blog': 'Nouveau sur le blog', 'boutique': 'Nouveaut\u00e9 boutique', 'service': 'Mise \u00e0 jour des services' };
+      var sectionLabel = sectionLabels[type] || 'Nouveaut\u00e9';
+      var sujet = sectionLabel + ' : ' + titre;
+      var siteUrl = 'https://phm045.github.io/Lumiere-interieur';
+      var sectionUrl = siteUrl + '/#' + (type === 'blog' ? 'blog' : 'boutique');
+
+      var htmlContent = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>'
+        + '<body style="margin:0;padding:0;background-color:#faf8f5;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;">'
+        + '<div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">'
+        + '<div style="background:linear-gradient(135deg,#1a1a2e 0%,#2d1b4e 100%);padding:40px 30px;text-align:center;">'
+        + '<h1 style="color:#d4a574;font-size:24px;margin:0;font-weight:300;letter-spacing:2px;">Lumi\u00e8re Int\u00e9rieure</h1>'
+        + '<p style="color:#c0b0a0;font-size:14px;margin-top:8px;">Voyance &amp; Guidance</p>'
+        + '</div>'
+        + '<div style="padding:30px;">'
+        + '<p style="font-size:16px;color:#333;line-height:1.6;">Bonjour {{ contact.PRENOM | default: "cher(e) abonn\u00e9(e)" }},</p>'
+        + '<p style="font-size:16px;color:#333;line-height:1.6;">De nouvelles mises \u00e0 jour vous attendent sur <strong>Lumi\u00e8re Int\u00e9rieure</strong> :</p>'
+        + '<h2 style="color:#8b5e3c;margin-top:30px;">' + sectionLabel + '</h2>'
+        + '<p style="font-size:16px;color:#333;">' + titre + '</p>'
+        + '<div style="text-align:center;margin:35px 0;">'
+        + '<a href="' + sectionUrl + '" style="display:inline-block;background:linear-gradient(135deg,#8b5e3c,#d4a574);color:#ffffff;text-decoration:none;padding:14px 35px;border-radius:8px;font-size:16px;font-weight:600;">D\u00e9couvrir</a>'
+        + '</div>'
+        + '<p style="font-size:14px;color:#888;line-height:1.5;">\u00c0 tr\u00e8s bient\u00f4t,<br><em>Philippe \u2014 Lumi\u00e8re Int\u00e9rieure</em></p>'
+        + '</div>'
+        + '<div style="background:#f5f0eb;padding:20px 30px;text-align:center;border-top:1px solid #e8e0d8;">'
+        + '<p style="font-size:12px;color:#999;margin:0;">Vous recevez cet email car vous \u00eates inscrit(e) \u00e0 la newsletter.<br><a href="{{ unsubscribe }}" style="color:#8b5e3c;">Se d\u00e9sinscrire</a></p>'
+        + '</div></div></body></html>';
+
+      var now = new Date();
+      var campaignName = 'Auto \u2014 ' + now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
+
+      // 1. Creer la campagne
+      var createResp = await fetch('https://api.brevo.com/v3/emailCampaigns', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'api-key': _bk },
+        body: JSON.stringify({
+          sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
+          name: campaignName,
+          subject: sujet,
+          htmlContent: htmlContent,
+          recipients: { listIds: [3] },
+          inlineImageActivation: false
+        })
+      });
+
+      if (!createResp.ok) {
+        console.warn('Erreur creation campagne Brevo:', await createResp.text());
+        return false;
+      }
+
+      var campaign = await createResp.json();
+      var campaignId = campaign.id;
+
+      // 2. Envoyer immediatement
+      var sendResp = await fetch('https://api.brevo.com/v3/emailCampaigns/' + campaignId + '/sendNow', {
+        method: 'POST',
+        headers: { 'Accept': 'application/json', 'api-key': _bk }
+      });
+
+      if (sendResp.ok || sendResp.status === 204) {
+        console.log('Newsletter envoyee aux abonnes pour: ' + titre);
+        return true;
+      } else {
+        console.warn('Erreur envoi campagne:', await sendResp.text());
+        return false;
+      }
+    } catch(e) {
+      console.warn('Erreur newsletter:', e);
+      return false;
+    }
+  }
+
+  // ========================================
   // POP-UPS / MODALES — Système générique
   // ========================================
 
@@ -3390,7 +3466,9 @@
       if (feedGrid) { feedGrid.innerHTML = ''; }
       if (typeof window.__populateNouveautes === 'function') window.__populateNouveautes();
 
-      showAdminMsg('admin-blog-msg', 'Article publié avec succès !', false);
+      showAdminMsg('admin-blog-msg', 'Article publi\u00e9 avec succ\u00e8s !', false);
+      // Envoyer newsletter aux abonnes
+      envoyerNewsletterAbonnes('blog', data.title);
       setTimeout(function() { closeModal('admin-modal-blog'); }, 1500);
     });
   }
@@ -3452,7 +3530,9 @@
       if (feedGrid) { feedGrid.innerHTML = ''; }
       if (typeof window.__populateNouveautes === 'function') window.__populateNouveautes();
 
-      showAdminMsg('admin-boutique-msg', 'Produit publié avec succès !', false);
+      showAdminMsg('admin-boutique-msg', 'Produit publi\u00e9 avec succ\u00e8s !', false);
+      // Envoyer newsletter aux abonnes
+      envoyerNewsletterAbonnes('boutique', data.name);
       setTimeout(function() { closeModal('admin-modal-boutique'); }, 1500);
     });
   }

@@ -657,6 +657,7 @@
       if (title && date) {
         items.push({
           type: 'blog', slug: slug,
+          pinned: card.hasAttribute('data-pinned'),
           img: img ? img.getAttribute('src') : '',
           imgAlt: img ? img.getAttribute('alt') : '',
           category: cat ? cat.textContent : 'Blog',
@@ -679,6 +680,7 @@
       if (h3) {
         items.push({
           type: 'service', slug: 'svc-' + (h3.textContent || '').toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          pinned: card.hasAttribute('data-pinned'),
           img: img ? img.getAttribute('src') : 'services-tarot.png',
           imgAlt: h3.textContent,
           category: 'Consultation',
@@ -700,6 +702,7 @@
       if (h3) {
         items.push({
           type: 'therapie', slug: 'thp-' + (h3.textContent || '').toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          pinned: card.hasAttribute('data-pinned'),
           img: img ? img.getAttribute('src') : 'crystals-nature.png',
           imgAlt: h3.textContent,
           category: 'Th\u00e9rapie',
@@ -720,6 +723,7 @@
       if (boutiqueComing) {
         items.push({
           type: 'boutique', slug: 'boutique-coming',
+          pinned: false,
           img: 'crystals-nature.png',
           imgAlt: 'Boutique Lumi\u00e8re Int\u00e9rieure',
           category: 'Boutique',
@@ -734,7 +738,11 @@
     }
 
     // Trier par date d\u00e9croissante
-    items.sort(function(a, b) { return b.dateObj - a.dateObj; });
+    items.sort(function(a, b) {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return b.dateObj - a.dateObj;
+    });
 
     // S\u00e9lection intelligente : garantir un mix de toutes les rubriques
     var display = [];
@@ -758,15 +766,23 @@
     types.forEach(function(t) {
       if (byType[t]) remaining = remaining.concat(byType[t]);
     });
-    remaining.sort(function(a, b) { return b.dateObj - a.dateObj; });
+    remaining.sort(function(a, b) {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return b.dateObj - a.dateObj;
+    });
     var i = 0;
     while (display.length < 9 && i < remaining.length) {
       display.push(remaining[i]);
       i++;
     }
 
-    // Retrier le display final par date
-    display.sort(function(a, b) { return b.dateObj - a.dateObj; });
+    // Retrier le display final : épinglés d'abord, puis par date
+    display.sort(function(a, b) {
+      if (a.pinned && !b.pinned) return -1;
+      if (!a.pinned && b.pinned) return 1;
+      return b.dateObj - a.dateObj;
+    });
 
     // G\u00e9n\u00e9rer les cartes
     display.forEach(function(item) {
@@ -781,6 +797,7 @@
       card.innerHTML =
         '<div class="nouveautes-card__image">' +
           '<span class="nouveautes-card__badge nouveautes-card__badge--' + item.type + '">' + icons[item.type] + ' ' + item.category + '</span>' +
+          (item.pinned ? '<span class="nouveautes-card__pin">\ud83d\udccc</span>' : '') +
           '<img src="' + item.img + '" alt="' + item.imgAlt + '" width="640" height="400" loading="lazy">' +
         '</div>' +
         '<div class="nouveautes-card__body">' +

@@ -4855,6 +4855,51 @@ textarea.blog-comments__input {
   grid-template-columns: 1fr 1fr 120px 80px;
 }
 
+/* Column resize handles */
+.col-resize-handle {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  width: 8px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 10;
+  background: transparent;
+  transition: background 0.15s ease;
+}
+
+.col-resize-handle::after {
+  content: '';
+  position: absolute;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 2px;
+  height: 60%;
+  border-radius: 1px;
+  background: rgba(212, 165, 116, 0.2);
+  transition: background 0.15s ease, height 0.15s ease;
+}
+
+.col-resize-handle:hover::after,
+.col-resize-handle--active::after {
+  background: rgba(212, 165, 116, 0.7);
+  height: 80%;
+  top: 10%;
+}
+
+.col-resize-handle--active {
+  background: rgba(212, 165, 116, 0.05);
+}
+
+/* Allow horizontal scroll when columns are resized beyond container */
+.admin-dash-table--rdv,
+.admin-dash-table--clients,
+.admin-dash-table--newsletter {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 /* Table cell styles */
 .admin-dash-table__cell {
   font-size: 0.85rem;

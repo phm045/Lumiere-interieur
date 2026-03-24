@@ -4326,6 +4326,7 @@
       }
       html += '</div>';
       container.innerHTML = html;
+      initResizableColumns(container.querySelector('.admin-dash-table--rdv'));
       // Attach status change handlers
       var statusBtns = container.querySelectorAll('[data-rdv-status]');
       for (var s = 0; s < statusBtns.length; s++) {
@@ -4399,6 +4400,7 @@
       }
       html += '</div>';
       container.innerHTML = html;
+      initResizableColumns(container.querySelector('.admin-dash-table--clients'));
     } catch(e) {
       container.innerHTML = '<p class="admin-dash-empty">Erreur de chargement des clients.</p>';
     }
@@ -4491,6 +4493,7 @@
       }
       html += '</div>';
       container.innerHTML = html;
+      initResizableColumns(container.querySelector('.admin-dash-table--newsletter'));
     } catch(e) {
       container.innerHTML = '<p class="admin-dash-empty">Impossible de charger les contacts Brevo. V\u00e9rifiez la cl\u00e9 API.</p>';
     }
@@ -5157,6 +5160,101 @@
     setColor('benef-boutique', benefBoutique);
     setVal('benef-total', benefTotal.toFixed(2) + ' \u20ac');
     setColor('benef-total', benefTotal);
+  }
+
+  // ─── RESIZABLE TABLE COLUMNS (RDV / Clients / Newsletter) ───
+  function initResizableColumns(tableEl) {
+    if (!tableEl || tableEl.dataset.resizable === 'true') return;
+    tableEl.dataset.resizable = 'true';
+
+    var headerRow = tableEl.querySelector('.admin-dash-table__row--header');
+    if (!headerRow) return;
+
+    var cells = headerRow.querySelectorAll('.admin-dash-table__cell');
+    var colCount = cells.length;
+    if (colCount < 2) return;
+
+    // Get current computed widths for each column
+    var tableWidth = tableEl.offsetWidth;
+    var colWidths = [];
+    for (var i = 0; i < colCount; i++) {
+      colWidths.push(cells[i].offsetWidth);
+    }
+
+    // Switch from CSS grid-template-columns to explicit pixel widths
+    function applyWidths() {
+      var template = colWidths.map(function(w) { return w + 'px'; }).join(' ');
+      var rows = tableEl.querySelectorAll('.admin-dash-table__row');
+      for (var r = 0; r < rows.length; r++) {
+        rows[r].style.gridTemplateColumns = template;
+      }
+    }
+    applyWidths();
+
+    // Make header cells position:relative for handles
+    for (var c = 0; c < colCount; c++) {
+      cells[c].style.position = 'relative';
+      cells[c].style.overflow = 'visible';
+    }
+
+    // Create drag handles between columns (on each cell except the last)
+    for (var h = 0; h < colCount - 1; h++) {
+      (function(colIndex) {
+        var handle = document.createElement('div');
+        handle.className = 'col-resize-handle';
+        handle.setAttribute('aria-hidden', 'true');
+        cells[colIndex].appendChild(handle);
+
+        var startX = 0;
+        var startWidthLeft = 0;
+        var startWidthRight = 0;
+
+        function onPointerDown(e) {
+          e.preventDefault();
+          e.stopPropagation();
+          startX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+          startWidthLeft = colWidths[colIndex];
+          startWidthRight = colWidths[colIndex + 1];
+          handle.classList.add('col-resize-handle--active');
+          document.body.style.cursor = 'col-resize';
+          document.body.style.userSelect = 'none';
+          document.addEventListener('mousemove', onPointerMove);
+          document.addEventListener('mouseup', onPointerUp);
+          document.addEventListener('touchmove', onPointerMove, { passive: false });
+          document.addEventListener('touchend', onPointerUp);
+        }
+
+        function onPointerMove(e) {
+          var clientX = e.clientX || (e.touches && e.touches[0].clientX) || 0;
+          var delta = clientX - startX;
+          var minW = 50;
+          var newLeft = Math.max(minW, startWidthLeft + delta);
+          var newRight = Math.max(minW, startWidthRight - delta);
+
+          // Ensure total stays constant
+          if (newLeft < minW) { newLeft = minW; newRight = startWidthLeft + startWidthRight - minW; }
+          if (newRight < minW) { newRight = minW; newLeft = startWidthLeft + startWidthRight - minW; }
+
+          colWidths[colIndex] = newLeft;
+          colWidths[colIndex + 1] = newRight;
+          applyWidths();
+          if (e.cancelable) e.preventDefault();
+        }
+
+        function onPointerUp() {
+          handle.classList.remove('col-resize-handle--active');
+          document.body.style.cursor = '';
+          document.body.style.userSelect = '';
+          document.removeEventListener('mousemove', onPointerMove);
+          document.removeEventListener('mouseup', onPointerUp);
+          document.removeEventListener('touchmove', onPointerMove);
+          document.removeEventListener('touchend', onPointerUp);
+        }
+
+        handle.addEventListener('mousedown', onPointerDown);
+        handle.addEventListener('touchstart', onPointerDown, { passive: false });
+      })(h);
+    }
   }
 
 

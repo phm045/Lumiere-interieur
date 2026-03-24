@@ -4282,29 +4282,89 @@
   }
 
   // ─── 6. RDV / RESERVATIONS MANAGEMENT ───
+  // ─── Charger les bookings depuis Cal.eu API v2 ───
+  async function fetchCalBookings() {
+    var allBookings = [];
+    var statuses = ['upcoming', 'past', 'cancelled'];
+    for (var si = 0; si < statuses.length; si++) {
+      try {
+        var resp = await fetch(CAL_API + '/bookings?status=' + statuses[si] + '&take=100', {
+          headers: {
+            'Authorization': 'Bearer ' + _calKey,
+            'cal-api-version': '2024-08-13'
+          }
+        });
+        if (resp.ok) {
+          var json = await resp.json();
+          if (json.data) allBookings = allBookings.concat(json.data);
+        }
+      } catch (e) { /* silencieux */ }
+    }
+    return allBookings;
+  }
+
+  // Convertir un booking Cal.eu en format unifié pour l'affichage
+  function calBookingToRow(b) {
+    var att = b.attendees && b.attendees[0];
+    var clientName = att ? att.name : '—';
+    var clientEmail = att ? (att.email || '') : '';
+    // Nettoyer les emails SMS Cal.com (33xxx@sms.cal.com)
+    if (clientEmail.indexOf('@sms.cal.com') !== -1 && att && att.phoneNumber) {
+      clientEmail = att.phoneNumber;
+    }
+    var statut = 'à venir';
+    if (b.status === 'cancelled') statut = 'annulé';
+    else if (b.status === 'accepted' && new Date(b.end) < new Date()) statut = 'terminé';
+    else if (b.status === 'accepted') statut = 'à venir';
+    else if (b.status === 'pending') statut = 'en attente';
+
+    return {
+      id: 'cal_' + b.uid,
+      uid: b.uid,
+      user_prenom: clientName,
+      user_email: clientEmail,
+      service: b.title || 'Consultation',
+      date_rdv: b.start,
+      statut: statut,
+      source: 'cal'
+    };
+  }
+
   async function chargerAdminRDV(filter) {
     var container = document.getElementById('admin-rdv-table');
     if (!container) return;
+    container.innerHTML = '<p class="admin-dash-loading">Chargement des rendez-vous Cal.eu\u2026</p>';
+
     try {
-      var result = await supabase.rpc('get_admin_reservations');
-      var data;
-      if (result.error || !result.data) {
-        var fallback = await supabase.from('reservations').select('*').order('date_rdv', { ascending: false });
-        data = fallback.data || [];
-      } else {
-        data = result.data || [];
-      }
+      // Source principale : Cal.eu API
+      var calBookings = await fetchCalBookings();
+      var data = calBookings.map(calBookingToRow);
+
+      // Trier par date (les plus récents en premier)
+      data.sort(function(a, b) {
+        return new Date(b.date_rdv) - new Date(a.date_rdv);
+      });
+
+      // Filtre recherche
       if (filter) {
+        var f = filter.toLowerCase();
         data = data.filter(function(r) {
-          return (r.user_email || '').toLowerCase().indexOf(filter) !== -1 ||
-                 (r.service || '').toLowerCase().indexOf(filter) !== -1 ||
-                 (r.statut || '').toLowerCase().indexOf(filter) !== -1;
+          return (r.user_email || '').toLowerCase().indexOf(f) !== -1 ||
+                 (r.user_prenom || '').toLowerCase().indexOf(f) !== -1 ||
+                 (r.service || '').toLowerCase().indexOf(f) !== -1 ||
+                 (r.statut || '').toLowerCase().indexOf(f) !== -1;
         });
       }
+
+      // Mettre à jour le compteur stat RDV
+      var statRdv = document.getElementById('stat-rdv');
+      if (statRdv) statRdv.textContent = data.filter(function(r) { return r.statut !== 'annulé'; }).length;
+
       if (data.length === 0) {
-        container.innerHTML = '<p class="admin-dash-empty">Aucun rendez-vous trouv\u00e9.</p>';
+        container.innerHTML = '<p class="admin-dash-empty">Aucun rendez-vous trouvé.</p>';
         return;
       }
+
       var html = '<div class="admin-dash-table--rdv">';
       html += '<div class="admin-dash-table__row admin-dash-table__row--header">' +
         '<div class="admin-dash-table__cell">Client</div>' +
@@ -4313,46 +4373,58 @@
         '<div class="admin-dash-table__cell">Statut</div>' +
         '<div class="admin-dash-table__cell">Actions</div>' +
         '</div>';
+
       for (var i = 0; i < data.length; i++) {
         var r = data[i];
-        var email = r.user_email || '(inconnu)';
-        var statusClass = (r.statut === 'termin\u00e9') ? 'success' : ((r.statut === 'annul\u00e9') ? 'danger' : 'warning');
-        // Extraire l'UID Cal.eu depuis notes (format "cal:<uid>")
-        var calUid = '';
-        if (r.notes && r.notes.indexOf('cal:') === 0) {
-          calUid = r.notes.substring(4);
+        var statusClass = (r.statut === 'terminé') ? 'success' : ((r.statut === 'annulé') ? 'danger' : 'warning');
+
+        // Formater la date avec heure
+        var dateDisplay = formatDateFR(r.date_rdv);
+        try {
+          var dt = new Date(r.date_rdv);
+          dateDisplay = dt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' })
+            + ' à ' + dt.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        } catch(e) {}
+
+        // Simplifier le titre du service
+        var serviceDisplay = r.service || '—';
+        if (serviceDisplay.indexOf('entre ') !== -1) {
+          serviceDisplay = serviceDisplay.substring(0, serviceDisplay.indexOf('entre ')).trim();
         }
+        serviceDisplay = serviceDisplay.replace(/^(SERVICES?\s+)?LUMIERE\s+INTERIEUR\s*\/?\s*/i, '').trim() || serviceDisplay;
+
         html += '<div class="admin-dash-table__row">' +
-          '<div class="admin-dash-table__cell admin-dash-table__cell--email" data-label="Client">' + escHtml(r.user_prenom || '') + '<br><span style="font-size:0.75rem">' + escHtml(email) + '</span></div>' +
-          '<div class="admin-dash-table__cell" data-label="Service">' + escHtml(r.service || '—') + (calUid ? '<br><span style="font-size:0.68rem;color:#999;opacity:0.6">Cal: ' + escHtml(calUid.substring(0, 8)) + '…</span>' : '') + '</div>' +
-          '<div class="admin-dash-table__cell" data-label="Date RDV">' + formatDateFR(r.date_rdv) + '</div>' +
-          '<div class="admin-dash-table__cell" data-label="Statut"><span class="admin-dash-badge admin-dash-badge--' + statusClass + '">' + escHtml(r.statut || '\u00e0 venir') + '</span></div>' +
+          '<div class="admin-dash-table__cell admin-dash-table__cell--email" data-label="Client">' + escHtml(r.user_prenom) + '<br><span style="font-size:0.75rem">' + escHtml(r.user_email) + '</span></div>' +
+          '<div class="admin-dash-table__cell" data-label="Service">' + escHtml(serviceDisplay) + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="Date RDV">' + dateDisplay + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="Statut"><span class="admin-dash-badge admin-dash-badge--' + statusClass + '">' + escHtml(r.statut) + '</span></div>' +
           '<div class="admin-dash-table__cell" data-label="Actions"><div class="admin-dash-btn-group">' +
-            '<button class="admin-dash-btn-sm admin-dash-btn-sm--success" data-rdv-status="' + r.id + '" data-rdv-val="termin\u00e9" data-cal-uid="' + escHtml(calUid) + '">Termin\u00e9</button>' +
-            '<button class="admin-dash-btn-sm admin-dash-btn-sm--delete" data-rdv-status="' + r.id + '" data-rdv-val="annul\u00e9" data-cal-uid="' + escHtml(calUid) + '">Annul\u00e9</button>' +
+            (r.statut !== 'terminé' && r.statut !== 'annulé' ?
+              '<button class="admin-dash-btn-sm admin-dash-btn-sm--success" data-rdv-action="termine" data-cal-uid="' + escHtml(r.uid) + '">Terminé</button>' +
+              '<button class="admin-dash-btn-sm admin-dash-btn-sm--delete" data-rdv-action="annule" data-cal-uid="' + escHtml(r.uid) + '">Annulé</button>'
+            : '<span style="font-size:0.75rem;opacity:0.5">' + escHtml(r.statut) + '</span>') +
           '</div></div>' +
           '</div>';
       }
       html += '</div>';
       container.innerHTML = html;
       initResizableColumns(container.querySelector('.admin-dash-table--rdv'));
+
       // Attach status change handlers (synced with Cal.eu)
-      var statusBtns = container.querySelectorAll('[data-rdv-status]');
-      for (var s = 0; s < statusBtns.length; s++) {
-        statusBtns[s].addEventListener('click', async function() {
+      var actionBtns = container.querySelectorAll('[data-rdv-action]');
+      for (var s = 0; s < actionBtns.length; s++) {
+        actionBtns[s].addEventListener('click', async function() {
           var btn = this;
-          var rdvId = btn.getAttribute('data-rdv-status');
-          var newStatus = btn.getAttribute('data-rdv-val');
+          var action = btn.getAttribute('data-rdv-action');
           var calUid = btn.getAttribute('data-cal-uid');
 
           // Désactiver les boutons pendant le traitement
           var btnGroup = btn.closest('.admin-dash-btn-group');
           if (btnGroup) btnGroup.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
-          btn.textContent = '…';
+          btn.textContent = '\u2026';
 
           try {
-            // --- Sync avec Cal.eu ---
-            if (calUid && newStatus === 'annul\u00e9') {
+            if (action === 'annule' && calUid) {
               // Annuler le booking sur Cal.eu
               var calResp = await fetch(CAL_API + '/bookings/' + calUid + '/cancel', {
                 method: 'POST',
@@ -4361,7 +4433,7 @@
                   'cal-api-version': '2024-08-13',
                   'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ cancellationReason: 'Annul\u00e9 depuis le panneau admin' })
+                body: JSON.stringify({ cancellationReason: 'Annulé depuis le panneau admin' })
               });
               var calData = await calResp.json();
               if (calData.status === 'error' && calData.error && calData.error.message && calData.error.message.indexOf('cancelled already') === -1) {
@@ -4369,19 +4441,12 @@
               }
             }
 
-            if (calUid && newStatus === 'termin\u00e9') {
-              // Marquer le RDV comme terminé : signaler la présence (no-show = false)
-              // Cal.eu v2 : PATCH /bookings/{uid}/mark-absent (marquer absent si besoin)
-              // Pour "terminé", on ne fait rien côté Cal.eu car le booking reste "accepted"
-              // Le statut "terminé" est géré uniquement côté Supabase
+            // Aussi mettre à jour Supabase si le booking y existe
+            if (calUid) {
+              var newStatut = action === 'annule' ? 'annulé' : 'terminé';
+              await supabase.from('reservations').update({ statut: newStatut }).eq('notes', 'cal:' + calUid);
             }
 
-            // --- Mise à jour Supabase ---
-            var res = await supabase.from('reservations').update({ statut: newStatus }).eq('id', rdvId);
-            if (res.error) {
-              alert('Erreur Supabase : ' + res.error.message);
-              return;
-            }
             chargerAdminRDV();
           } catch (err) {
             alert('Erreur : ' + (err.message || err));
@@ -4390,9 +4455,10 @@
         });
       }
     } catch(e) {
-      container.innerHTML = '<p class="admin-dash-empty">Erreur de chargement des RDV.</p>';
+      container.innerHTML = '<p class="admin-dash-empty">Erreur de chargement des RDV. Vérifiez la connexion Cal.eu.</p>';
     }
   }
+
 
   // ─── 7. CLIENTS MANAGEMENT ───
   async function chargerAdminClients(filter) {

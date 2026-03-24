@@ -2733,5 +2733,58 @@
     } catch(e) {}
   })();
 
+  // ─── Pinned badge + reorder for section pages ───
+  (function initPinnedSections() {
+    // Blog section: .blog-grid > .blog-card
+    var blogGrid = document.querySelector('.blog-grid');
+    if (blogGrid) {
+      var pinnedBlogs = blogGrid.querySelectorAll('.blog-card[data-pinned="true"]');
+      pinnedBlogs.forEach(function(card) {
+        var imgDiv = card.querySelector('.blog-card__image');
+        if (imgDiv && !imgDiv.querySelector('.pinned-badge')) {
+          var badge = document.createElement('span');
+          badge.className = 'pinned-badge';
+          badge.textContent = '\ud83d\udccc \u00c9pingl\u00e9';
+          imgDiv.appendChild(badge);
+        }
+        blogGrid.insertBefore(card, blogGrid.firstChild);
+      });
+    }
+
+    // Thérapie section: #therapie .services-grid > .service-card
+    var therapieGrid = document.querySelector('#therapie .services-grid');
+    if (therapieGrid) {
+      var pinnedTherapie = therapieGrid.querySelectorAll('.service-card[data-pinned="true"]');
+      pinnedTherapie.forEach(function(card) {
+        var imgDiv = card.querySelector('.service-card__image');
+        if (imgDiv && !imgDiv.querySelector('.pinned-badge')) {
+          var badge = document.createElement('span');
+          badge.className = 'pinned-badge';
+          badge.textContent = '\ud83d\udccc \u00c9pingl\u00e9';
+          imgDiv.appendChild(badge);
+        }
+        therapieGrid.insertBefore(card, therapieGrid.firstChild);
+      });
+    }
+
+    // Boutique section
+    var boutiqueSection = document.getElementById('boutique');
+    if (boutiqueSection) {
+      var boutiqueGrid = boutiqueSection.querySelector('.services-grid') || boutiqueSection.querySelector('.boutique-grid');
+      if (boutiqueGrid) {
+        var pinnedBoutique = boutiqueGrid.querySelectorAll('[data-pinned="true"]');
+        pinnedBoutique.forEach(function(card) {
+          var imgDiv = card.querySelector('.service-card__image') || card.querySelector('[class*="__image"]');
+          if (imgDiv && !imgDiv.querySelector('.pinned-badge')) {
+            var badge = document.createElement('span');
+            badge.className = 'pinned-badge';
+            badge.textContent = '\ud83d\udccc \u00c9pingl\u00e9';
+            imgDiv.appendChild(badge);
+          }
+          boutiqueGrid.insertBefore(card, boutiqueGrid.firstChild);
+        });
+      }
+    }
+  })();
 
 })();

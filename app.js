@@ -3014,6 +3014,11 @@
       if (form) form.reset();
       var msg = modal.querySelector('.admin-modal__message');
       if (msg) msg.hidden = true;
+      // Reset file inputs and hide previews
+      var fileInput = modal.querySelector('input[type="file"]');
+      if (fileInput) fileInput.value = '';
+      var preview = modal.querySelector('[id$="-image-preview"]');
+      if (preview) preview.style.display = 'none';
     }
   }
 
@@ -3197,6 +3202,65 @@
     if (typeof window.__populateNouveautes === 'function') window.__populateNouveautes();
   }
 
+  // --- Upload image to Supabase Storage ---
+  // NOTE: The 'images' bucket must be created in Supabase Dashboard (Storage section)
+  // with public access enabled. If the bucket doesn't exist, upload will fail gracefully
+  // and the dropdown image will be used as fallback.
+  async function uploadImage(file, bucket, path) {
+    var { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: true
+      });
+    if (error) throw error;
+    var { data: urlData } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(path);
+    return urlData.publicUrl;
+  }
+
+  // --- Image preview handlers ---
+  var boutiqueFileInput = document.getElementById('admin-boutique-image-file');
+  if (boutiqueFileInput) {
+    boutiqueFileInput.addEventListener('change', function() {
+      var file = this.files[0];
+      var preview = document.getElementById('admin-boutique-image-preview');
+      var previewImg = document.getElementById('admin-boutique-preview-img');
+      if (file && preview && previewImg) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          previewImg.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+        // Clear the dropdown selection when a file is chosen
+        var select = document.querySelector('#admin-boutique-form select[name="image_url"]');
+        if (select) select.value = '';
+      }
+    });
+  }
+
+  var blogFileInput = document.getElementById('admin-blog-image-file');
+  if (blogFileInput) {
+    blogFileInput.addEventListener('change', function() {
+      var file = this.files[0];
+      var preview = document.getElementById('admin-blog-image-preview');
+      var previewImg = document.getElementById('admin-blog-preview-img');
+      if (file && preview && previewImg) {
+        var reader = new FileReader();
+        reader.onload = function(e) {
+          previewImg.src = e.target.result;
+          preview.style.display = 'block';
+        };
+        reader.readAsDataURL(file);
+        // Clear the dropdown selection when a file is chosen
+        var select = document.querySelector('#admin-blog-form select[name="image_url"]');
+        if (select) select.value = '';
+      }
+    });
+  }
+
   // --- Blog form submit ---
   var blogForm = document.getElementById('admin-blog-form');
   if (blogForm) {
@@ -3205,13 +3269,29 @@
       var fd = new FormData(blogForm);
       var title = fd.get('title').trim();
       var slug = adminSlugify(title);
+      var imageUrl = fd.get('image_url');
+      var blogImageFile = document.getElementById('admin-blog-image-file');
+      if (blogImageFile && blogImageFile.files[0]) {
+        var file = blogImageFile.files[0];
+        var ext = file.name.split('.').pop();
+        var path = 'blog/' + slug + '-' + Date.now() + '.' + ext;
+        try {
+          imageUrl = await uploadImage(file, 'images', path);
+        } catch(e) {
+          console.warn('Upload failed, using dropdown image:', e);
+          if (!imageUrl) imageUrl = 'blog-journal.png';
+        }
+      } else if (!imageUrl) {
+        imageUrl = 'blog-journal.png';
+      }
+
       var data = {
         slug: slug,
         category: fd.get('category').trim(),
         title: title,
         excerpt: fd.get('excerpt').trim(),
         content: fd.get('content').trim(),
-        image_url: fd.get('image_url'),
+        image_url: imageUrl,
         date_publication: fd.get('date_publication').trim()
       };
 
@@ -3266,13 +3346,29 @@
       var fd = new FormData(boutiqueForm);
       var name = fd.get('name').trim();
       var slug = adminSlugify(name);
+      var imageUrl = fd.get('image_url');
+      var boutiqueImageFile = document.getElementById('admin-boutique-image-file');
+      if (boutiqueImageFile && boutiqueImageFile.files[0]) {
+        var file = boutiqueImageFile.files[0];
+        var ext = file.name.split('.').pop();
+        var path = 'boutique/' + slug + '-' + Date.now() + '.' + ext;
+        try {
+          imageUrl = await uploadImage(file, 'images', path);
+        } catch(e) {
+          console.warn('Upload failed, using dropdown image:', e);
+          if (!imageUrl) imageUrl = 'crystals-nature.png';
+        }
+      } else if (!imageUrl) {
+        imageUrl = 'crystals-nature.png';
+      }
+
       var data = {
         slug: slug,
         name: name,
         description: fd.get('description').trim(),
         price: parseFloat(fd.get('price')),
         category: fd.get('category').trim(),
-        image_url: fd.get('image_url')
+        image_url: imageUrl
       };
 
       var result = await supabase.from('boutique_products').insert([data]);

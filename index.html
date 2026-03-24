@@ -2243,6 +2243,12 @@ Cal("init", "consultations", { origin: "https://app.cal.eu" });
           <option value="confiance-ressenti.png">confiance-ressenti.png</option>
           <option value="vampires-energetiques.png">vampires-energetiques.png</option>
         </select>
+        <p style="text-align:center;color:#999;margin:0.3rem 0;font-size:0.85rem">— ou —</p>
+        <label class="admin-modal__label">Importer une image</label>
+        <input type="file" id="admin-blog-image-file" accept="image/*" class="admin-modal__input">
+        <div id="admin-blog-image-preview" style="margin-top:0.5rem;display:none">
+          <img id="admin-blog-preview-img" style="max-width:200px;max-height:150px;border-radius:8px;object-fit:cover" alt="Aperçu">
+        </div>
       </div>
       <div class="admin-modal__group">
         <label class="admin-modal__label">Date de publication</label>
@@ -2289,6 +2295,12 @@ Cal("init", "consultations", { origin: "https://app.cal.eu" });
           <option value="numerologie.png">numerologie.png</option>
           <option value="lithotherapie.png">lithotherapie.png</option>
         </select>
+        <p style="text-align:center;color:#999;margin:0.3rem 0;font-size:0.85rem">— ou —</p>
+        <label class="admin-modal__label">Importer une image</label>
+        <input type="file" id="admin-boutique-image-file" accept="image/*" class="admin-modal__input">
+        <div id="admin-boutique-image-preview" style="margin-top:0.5rem;display:none">
+          <img id="admin-boutique-preview-img" style="max-width:200px;max-height:150px;border-radius:8px;object-fit:cover" alt="Aperçu">
+        </div>
       </div>
       <div class="admin-modal__message" id="admin-boutique-msg" hidden></div>
       <button type="submit" class="btn btn--primary admin-modal__submit">Publier le produit</button>

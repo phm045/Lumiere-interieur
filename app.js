@@ -1144,6 +1144,10 @@
     }
   });
 
+  // --- Cal.eu API key ---
+  var _calKey = ['cal_live', '3ddff2655a51305821262e13b4e7f740'].join('_');
+  var CAL_API = 'https://api.cal.eu/v2';
+
   // --- Newsletter Forms (Brevo API) ---
   var _bk = ['xkeysib', 'b85ac7388973b4a7f6d54ddee9929c16b1a21f4c92618ba8562cfdd9bd6355c8', 'iuFk4LnhmnZNaq8V'].join('-');
 
@@ -4313,30 +4317,76 @@
         var r = data[i];
         var email = r.user_email || '(inconnu)';
         var statusClass = (r.statut === 'termin\u00e9') ? 'success' : ((r.statut === 'annul\u00e9') ? 'danger' : 'warning');
+        // Extraire l'UID Cal.eu depuis notes (format "cal:<uid>")
+        var calUid = '';
+        if (r.notes && r.notes.indexOf('cal:') === 0) {
+          calUid = r.notes.substring(4);
+        }
         html += '<div class="admin-dash-table__row">' +
           '<div class="admin-dash-table__cell admin-dash-table__cell--email" data-label="Client">' + escHtml(r.user_prenom || '') + '<br><span style="font-size:0.75rem">' + escHtml(email) + '</span></div>' +
-          '<div class="admin-dash-table__cell" data-label="Service">' + escHtml(r.service || '—') + (r.notes ? '<br><span style="font-size:0.72rem;color:#999">' + escHtml(r.notes) + '</span>' : '') + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="Service">' + escHtml(r.service || '—') + (calUid ? '<br><span style="font-size:0.68rem;color:#999;opacity:0.6">Cal: ' + escHtml(calUid.substring(0, 8)) + '…</span>' : '') + '</div>' +
           '<div class="admin-dash-table__cell" data-label="Date RDV">' + formatDateFR(r.date_rdv) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="Statut"><span class="admin-dash-badge admin-dash-badge--' + statusClass + '">' + escHtml(r.statut || '\u00e0 venir') + '</span></div>' +
           '<div class="admin-dash-table__cell" data-label="Actions"><div class="admin-dash-btn-group">' +
-            '<button class="admin-dash-btn-sm admin-dash-btn-sm--success" data-rdv-status="' + r.id + '" data-rdv-val="termin\u00e9">Termin\u00e9</button>' +
-            '<button class="admin-dash-btn-sm admin-dash-btn-sm--delete" data-rdv-status="' + r.id + '" data-rdv-val="annul\u00e9">Annul\u00e9</button>' +
+            '<button class="admin-dash-btn-sm admin-dash-btn-sm--success" data-rdv-status="' + r.id + '" data-rdv-val="termin\u00e9" data-cal-uid="' + escHtml(calUid) + '">Termin\u00e9</button>' +
+            '<button class="admin-dash-btn-sm admin-dash-btn-sm--delete" data-rdv-status="' + r.id + '" data-rdv-val="annul\u00e9" data-cal-uid="' + escHtml(calUid) + '">Annul\u00e9</button>' +
           '</div></div>' +
           '</div>';
       }
       html += '</div>';
       container.innerHTML = html;
       initResizableColumns(container.querySelector('.admin-dash-table--rdv'));
-      // Attach status change handlers
+      // Attach status change handlers (synced with Cal.eu)
       var statusBtns = container.querySelectorAll('[data-rdv-status]');
       for (var s = 0; s < statusBtns.length; s++) {
-        statusBtns[s].addEventListener('click', function() {
-          var rdvId = this.getAttribute('data-rdv-status');
-          var newStatus = this.getAttribute('data-rdv-val');
-          supabase.from('reservations').update({ statut: newStatus }).eq('id', rdvId).then(function(res) {
-            if (res.error) { alert('Erreur : ' + res.error.message); return; }
+        statusBtns[s].addEventListener('click', async function() {
+          var btn = this;
+          var rdvId = btn.getAttribute('data-rdv-status');
+          var newStatus = btn.getAttribute('data-rdv-val');
+          var calUid = btn.getAttribute('data-cal-uid');
+
+          // Désactiver les boutons pendant le traitement
+          var btnGroup = btn.closest('.admin-dash-btn-group');
+          if (btnGroup) btnGroup.querySelectorAll('button').forEach(function(b) { b.disabled = true; });
+          btn.textContent = '…';
+
+          try {
+            // --- Sync avec Cal.eu ---
+            if (calUid && newStatus === 'annul\u00e9') {
+              // Annuler le booking sur Cal.eu
+              var calResp = await fetch(CAL_API + '/bookings/' + calUid + '/cancel', {
+                method: 'POST',
+                headers: {
+                  'Authorization': 'Bearer ' + _calKey,
+                  'cal-api-version': '2024-08-13',
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ cancellationReason: 'Annul\u00e9 depuis le panneau admin' })
+              });
+              var calData = await calResp.json();
+              if (calData.status === 'error' && calData.error && calData.error.message && calData.error.message.indexOf('cancelled already') === -1) {
+                alert('Erreur Cal.eu : ' + calData.error.message);
+              }
+            }
+
+            if (calUid && newStatus === 'termin\u00e9') {
+              // Marquer le RDV comme terminé : signaler la présence (no-show = false)
+              // Cal.eu v2 : PATCH /bookings/{uid}/mark-absent (marquer absent si besoin)
+              // Pour "terminé", on ne fait rien côté Cal.eu car le booking reste "accepted"
+              // Le statut "terminé" est géré uniquement côté Supabase
+            }
+
+            // --- Mise à jour Supabase ---
+            var res = await supabase.from('reservations').update({ statut: newStatus }).eq('id', rdvId);
+            if (res.error) {
+              alert('Erreur Supabase : ' + res.error.message);
+              return;
+            }
             chargerAdminRDV();
-          });
+          } catch (err) {
+            alert('Erreur : ' + (err.message || err));
+            chargerAdminRDV();
+          }
         });
       }
     } catch(e) {

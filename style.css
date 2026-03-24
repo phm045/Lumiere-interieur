@@ -5048,3 +5048,115 @@ textarea.blog-comments__input {
 #mon-compte .container--narrow:has(.admin-dashboard:not([hidden])) {
   max-width: 1200px;
 }
+
+/* ─── Admin CA Section ─── */
+.admin-ca-section {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+}
+.admin-ca-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.admin-ca-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  margin: 0;
+}
+.admin-ca-period {
+  font-size: 0.85rem;
+  color: #999;
+  margin: 0.2rem 0 0;
+}
+.admin-ca-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  padding: 0.5rem 1rem;
+}
+.admin-ca-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+}
+.admin-ca-card {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 1rem;
+  text-align: center;
+}
+.admin-ca-card--urssaf {
+  border-color: rgba(231, 76, 60, 0.3);
+  background: rgba(231, 76, 60, 0.05);
+}
+.admin-ca-card--net {
+  border-color: rgba(39, 174, 96, 0.3);
+  background: rgba(39, 174, 96, 0.05);
+}
+.admin-ca-card__label {
+  font-size: 0.78rem;
+  color: #999;
+  margin: 0 0 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+.admin-ca-card__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  margin: 0;
+}
+.admin-ca-card--urssaf .admin-ca-card__value { color: #e74c3c; }
+.admin-ca-card--net .admin-ca-card__value { color: #27ae60; }
+.admin-ca-info {
+  font-size: 0.78rem;
+  color: #666;
+  margin: 1rem 0 0;
+  text-align: center;
+}
+#admin-ca-archives {
+  margin-top: 1rem;
+}
+.admin-ca-archive-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 0.8rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px;
+  margin-bottom: 0.4rem;
+}
+.admin-ca-archive-item__info {
+  font-size: 0.85rem;
+  color: #bbb;
+}
+.admin-ca-archive-item__btn {
+  background: none;
+  border: 1px solid rgba(212,165,116,0.4);
+  color: var(--accent, #d4a574);
+  padding: 0.25rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+.admin-ca-archive-item__btn:hover {
+  background: rgba(212,165,116,0.1);
+}
+@media (max-width: 768px) {
+  .admin-ca-grid { grid-template-columns: repeat(2, 1fr); }
+  .admin-ca-header { flex-direction: column; align-items: flex-start; }
+}
+@media (max-width: 480px) {
+  .admin-ca-grid { grid-template-columns: 1fr; }
+}

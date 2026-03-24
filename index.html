@@ -31,6 +31,9 @@
 
 <!-- Supabase Auth -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<!-- jsPDF pour generation des rapports -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
 <link rel="stylesheet" href="./style.css">
 </head>
 <body>
@@ -1914,6 +1917,40 @@
                 <p class="admin-dash-stat-card__value" id="stat-newsletter">--</p>
                 <p class="admin-dash-stat-card__label">Abonnés newsletter</p>
               </div>
+            </div>
+
+            <!-- Section CA mensuel + PDF -->
+            <div class="admin-ca-section" id="admin-ca-section">
+              <div class="admin-ca-header">
+                <div>
+                  <h3 class="admin-ca-title">Chiffre d'affaires du mois</h3>
+                  <p class="admin-ca-period" id="admin-ca-period">--</p>
+                </div>
+                <button class="btn btn--primary admin-ca-btn" id="btn-telecharger-ca">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Télécharger le rapport PDF
+                </button>
+              </div>
+              <div class="admin-ca-grid">
+                <div class="admin-ca-card">
+                  <p class="admin-ca-card__label">CA brut du mois</p>
+                  <p class="admin-ca-card__value" id="ca-mois-brut">--</p>
+                </div>
+                <div class="admin-ca-card admin-ca-card--urssaf">
+                  <p class="admin-ca-card__label">Cotisations URSSAF (25,60%)</p>
+                  <p class="admin-ca-card__value" id="ca-mois-urssaf">--</p>
+                </div>
+                <div class="admin-ca-card admin-ca-card--net">
+                  <p class="admin-ca-card__label">CA net (après URSSAF)</p>
+                  <p class="admin-ca-card__value" id="ca-mois-net">--</p>
+                </div>
+                <div class="admin-ca-card">
+                  <p class="admin-ca-card__label">Commandes du mois</p>
+                  <p class="admin-ca-card__value" id="ca-mois-nb">--</p>
+                </div>
+              </div>
+              <p class="admin-ca-info">Le rapport est archivé et le CA remis à zéro automatiquement le 30 de chaque mois. Les anciens rapports restent téléchargeables.</p>
+              <div id="admin-ca-archives"></div>
             </div>
           </div>
 

@@ -3611,7 +3611,7 @@
       var target = document.getElementById('admin-tab-' + tabId);
       if (target) target.classList.add('admin-tab-content--active');
       // Load data for the tab
-      if (tabId === 'dashboard') chargerAdminStats();
+      if (tabId === 'dashboard') { chargerAdminStats(); chargerCAMensuel(); }
       if (tabId === 'blog') chargerAdminBlog();
       if (tabId === 'boutique') chargerAdminBoutique();
       if (tabId === 'coupons') chargerAdminCouponsTab();
@@ -3654,6 +3654,8 @@
   function chargerDashboardAdmin() {
     if (!window.__isAdmin) return;
     chargerAdminStats();
+    chargerCAMensuel();
+    verifierArchivageAuto();
     // Initialize search listeners once
     if (!_adminDashInitialized) {
       _adminDashInitialized = true;
@@ -4488,6 +4490,338 @@
       observer2.observe(boutiqueModal, { attributes: true });
     }
   })();
+
+
+
+  // ─── CA MENSUEL + PDF + ARCHIVAGE + URSSAF ───
+
+  var TAUX_URSSAF = 0.256; // 25,60%
+  var MOIS_FR = ['janvier','f\u00e9vrier','mars','avril','mai','juin','juillet','ao\u00fbt','septembre','octobre','novembre','d\u00e9cembre'];
+
+  function getMoisCourant() {
+    var now = new Date();
+    return { mois: now.getMonth(), annee: now.getFullYear() };
+  }
+
+  function getMoisLabel(mois, annee) {
+    return MOIS_FR[mois] + ' ' + annee;
+  }
+
+  function getDebutFinMois(mois, annee) {
+    var debut = new Date(annee, mois, 1);
+    var fin = new Date(annee, mois + 1, 0, 23, 59, 59, 999);
+    return { debut: debut.toISOString(), fin: fin.toISOString() };
+  }
+
+  // Charger le CA du mois courant et afficher dans le dashboard
+  async function chargerCAMensuel() {
+    var mc = getMoisCourant();
+    var periode = getDebutFinMois(mc.mois, mc.annee);
+    var labelPeriode = getMoisLabel(mc.mois, mc.annee);
+
+    var periodeEl = document.getElementById('admin-ca-period');
+    if (periodeEl) periodeEl.textContent = 'P\u00e9riode : 1er au 30 ' + labelPeriode;
+
+    try {
+      // Fetch commandes du mois courant via RPC (admin voit tout)
+      var result = await supabase.rpc('get_admin_commandes');
+      var allCommandes = [];
+      if (!result.error && result.data) {
+        allCommandes = result.data;
+      } else {
+        // Fallback: direct query
+        var fallback = await supabase.from('commandes').select('*').gte('date_creation', periode.debut).lte('date_creation', periode.fin);
+        allCommandes = (fallback.data || []);
+      }
+
+      // Filtrer les commandes du mois courant
+      var commandesMois = allCommandes.filter(function(c) {
+        var d = new Date(c.date_creation);
+        return d.getMonth() === mc.mois && d.getFullYear() === mc.annee && c.statut === 'pay\u00e9';
+      });
+
+      var caBrut = 0;
+      for (var i = 0; i < commandesMois.length; i++) {
+        caBrut += parseFloat(commandesMois[i].montant) || 0;
+      }
+
+      var urssaf = caBrut * TAUX_URSSAF;
+      var caNet = caBrut - urssaf;
+
+      var elBrut = document.getElementById('ca-mois-brut');
+      if (elBrut) elBrut.textContent = caBrut.toFixed(2) + ' \u20ac';
+      var elUrssaf = document.getElementById('ca-mois-urssaf');
+      if (elUrssaf) elUrssaf.textContent = '-' + urssaf.toFixed(2) + ' \u20ac';
+      var elNet = document.getElementById('ca-mois-net');
+      if (elNet) elNet.textContent = caNet.toFixed(2) + ' \u20ac';
+      var elNb = document.getElementById('ca-mois-nb');
+      if (elNb) elNb.textContent = commandesMois.length;
+
+      // Stocker pour la generation PDF
+      window.__caData = {
+        mois: mc.mois,
+        annee: mc.annee,
+        label: labelPeriode,
+        commandes: commandesMois,
+        caBrut: caBrut,
+        urssaf: urssaf,
+        caNet: caNet
+      };
+
+    } catch(e) {
+      console.warn('Erreur chargement CA:', e);
+    }
+
+    // Charger les archives
+    chargerArchivesCA();
+  }
+
+  // Generer le PDF du rapport CA
+  function genererPDFRapport(data) {
+    if (!data) data = window.__caData;
+    if (!data) { alert('Aucune donn\u00e9e de CA disponible.'); return; }
+
+    var jsPDF = window.jspdf.jsPDF;
+    var doc = new jsPDF();
+
+    var pageWidth = doc.internal.pageSize.getWidth();
+
+    // En-tete
+    doc.setFontSize(20);
+    doc.setFont('helvetica', 'bold');
+    doc.text('Lumi\u00e8re Int\u00e9rieure', pageWidth / 2, 25, { align: 'center' });
+    doc.setFontSize(11);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Rapport de chiffre d\'affaires', pageWidth / 2, 33, { align: 'center' });
+
+    // Periode
+    doc.setFontSize(13);
+    doc.setFont('helvetica', 'bold');
+    var moisCapitalized = data.label.charAt(0).toUpperCase() + data.label.slice(1);
+    doc.text('P\u00e9riode : ' + moisCapitalized, pageWidth / 2, 45, { align: 'center' });
+
+    // Date de generation
+    doc.setFontSize(9);
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(120);
+    doc.text('G\u00e9n\u00e9r\u00e9 le ' + new Date().toLocaleDateString('fr-FR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' }), pageWidth / 2, 52, { align: 'center' });
+    doc.setTextColor(0);
+
+    // Ligne separatrice
+    doc.setDrawColor(200);
+    doc.line(20, 56, pageWidth - 20, 56);
+
+    // Resume financier
+    var y = 66;
+    doc.setFontSize(12);
+    doc.setFont('helvetica', 'bold');
+    doc.text('R\u00e9sum\u00e9 financier', 20, y);
+    y += 10;
+
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+
+    // CA Brut
+    doc.text('Chiffre d\'affaires brut :', 25, y);
+    doc.setFont('helvetica', 'bold');
+    doc.text(data.caBrut.toFixed(2) + ' \u20ac', pageWidth - 25, y, { align: 'right' });
+    y += 8;
+
+    // URSSAF
+    doc.setFont('helvetica', 'normal');
+    doc.setTextColor(200, 50, 50);
+    doc.text('Cotisations URSSAF (25,60%) :', 25, y);
+    doc.setFont('helvetica', 'bold');
+    doc.text('-' + data.urssaf.toFixed(2) + ' \u20ac', pageWidth - 25, y, { align: 'right' });
+    y += 2;
+    doc.setDrawColor(200, 200, 200);
+    doc.line(25, y + 3, pageWidth - 25, y + 3);
+    y += 10;
+
+    // CA Net
+    doc.setTextColor(39, 174, 96);
+    doc.setFontSize(12);
+    doc.text('Revenu net apr\u00e8s URSSAF :', 25, y);
+    doc.text(data.caNet.toFixed(2) + ' \u20ac', pageWidth - 25, y, { align: 'right' });
+    doc.setTextColor(0);
+    y += 6;
+    doc.setDrawColor(200);
+    doc.line(20, y + 3, pageWidth - 20, y + 3);
+    y += 14;
+
+    // Nombre de commandes
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text('Nombre de commandes : ' + data.commandes.length, 25, y);
+    y += 12;
+
+    // Tableau des commandes
+    if (data.commandes.length > 0) {
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text('D\u00e9tail des commandes', 20, y);
+      y += 4;
+
+      var tableData = [];
+      for (var i = 0; i < data.commandes.length; i++) {
+        var c = data.commandes[i];
+        var dateStr = new Date(c.date_creation).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        var clientInfo = (c.user_email || c.user_prenom || 'Client');
+        tableData.push([
+          (i + 1).toString(),
+          dateStr,
+          clientInfo,
+          c.service || '---',
+          c.methode_paiement || 'stripe',
+          (parseFloat(c.montant) || 0).toFixed(2) + ' \u20ac'
+        ]);
+      }
+
+      doc.autoTable({
+        startY: y,
+        head: [['#', 'Date', 'Client', 'Service', 'Paiement', 'Montant']],
+        body: tableData,
+        styles: { fontSize: 8, cellPadding: 3 },
+        headStyles: { fillColor: [60, 60, 60], textColor: [255, 255, 255], fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [245, 245, 245] },
+        columnStyles: {
+          0: { cellWidth: 10 },
+          5: { halign: 'right', fontStyle: 'bold' }
+        },
+        margin: { left: 20, right: 20 }
+      });
+
+      y = doc.lastAutoTable.finalY + 10;
+    }
+
+    // Pied de page
+    doc.setFontSize(8);
+    doc.setTextColor(150);
+    doc.text('Lumi\u00e8re Int\u00e9rieure \u2014 Micro-entreprise \u2014 TVA non applicable, article 293 B du CGI', pageWidth / 2, 285, { align: 'center' });
+
+    // Telecharger
+    var filename = 'CA-Lumiere-Interieure-' + (data.mois + 1).toString().padStart(2, '0') + '-' + data.annee + '.pdf';
+    doc.save(filename);
+  }
+
+  // Archiver le CA du mois dans Supabase (table ca_archives)
+  async function archiverCAMois(data) {
+    if (!data) return;
+    try {
+      await supabase.from('ca_archives').upsert({
+        mois: data.mois + 1,
+        annee: data.annee,
+        label: data.label,
+        ca_brut: data.caBrut,
+        urssaf: data.urssaf,
+        ca_net: data.caNet,
+        nb_commandes: data.commandes.length,
+        archived_at: new Date().toISOString()
+      }, { onConflict: 'mois,annee' });
+    } catch(e) {
+      console.warn('Archivage CA:', e);
+    }
+  }
+
+  // Charger les archives precedentes
+  async function chargerArchivesCA() {
+    var container = document.getElementById('admin-ca-archives');
+    if (!container) return;
+    try {
+      var result = await supabase.from('ca_archives').select('*').order('annee', { ascending: false }).order('mois', { ascending: false });
+      if (result.error || !result.data || result.data.length === 0) {
+        container.innerHTML = '';
+        return;
+      }
+      var html = '<p style="font-size:0.85rem;color:#999;margin-bottom:0.5rem;font-weight:600">Archives pr\u00e9c\u00e9dentes</p>';
+      for (var i = 0; i < result.data.length; i++) {
+        var a = result.data[i];
+        var labelArchive = MOIS_FR[a.mois - 1] + ' ' + a.annee;
+        labelArchive = labelArchive.charAt(0).toUpperCase() + labelArchive.slice(1);
+        html += '<div class="admin-ca-archive-item">' +
+          '<span class="admin-ca-archive-item__info">' + labelArchive + ' \u2014 CA brut : ' + parseFloat(a.ca_brut).toFixed(2) + ' \u20ac | Net : ' + parseFloat(a.ca_net).toFixed(2) + ' \u20ac | ' + a.nb_commandes + ' commandes</span>' +
+          '<button class="admin-ca-archive-item__btn" data-archive-mois="' + a.mois + '" data-archive-annee="' + a.annee + '">T\u00e9l\u00e9charger PDF</button>' +
+          '</div>';
+      }
+      container.innerHTML = html;
+
+      // Attach download handlers
+      container.querySelectorAll('.admin-ca-archive-item__btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var m = parseInt(this.getAttribute('data-archive-mois'), 10);
+          var y = parseInt(this.getAttribute('data-archive-annee'), 10);
+          telechargerArchivePDF(m, y);
+        });
+      });
+    } catch(e) {
+      // Table might not exist yet
+      container.innerHTML = '';
+    }
+  }
+
+  // Telecharger un PDF d'archive (mois passe)
+  async function telechargerArchivePDF(mois, annee) {
+    try {
+      // Fetch archive data
+      var archResult = await supabase.from('ca_archives').select('*').eq('mois', mois).eq('annee', annee).maybeSingle();
+      if (!archResult.data) { alert('Archive non trouv\u00e9e.'); return; }
+      var arch = archResult.data;
+
+      // Fetch commandes de ce mois
+      var periode = getDebutFinMois(mois - 1, annee);
+      var cmdResult = await supabase.rpc('get_admin_commandes');
+      var commandes = [];
+      if (!cmdResult.error && cmdResult.data) {
+        commandes = cmdResult.data.filter(function(c) {
+          var d = new Date(c.date_creation);
+          return (d.getMonth() + 1) === mois && d.getFullYear() === annee && c.statut === 'pay\u00e9';
+        });
+      }
+
+      genererPDFRapport({
+        mois: mois - 1,
+        annee: annee,
+        label: MOIS_FR[mois - 1] + ' ' + annee,
+        commandes: commandes,
+        caBrut: parseFloat(arch.ca_brut) || 0,
+        urssaf: parseFloat(arch.urssaf) || 0,
+        caNet: parseFloat(arch.ca_net) || 0
+      });
+    } catch(e) {
+      alert('Erreur lors du t\u00e9l\u00e9chargement de l\'archive.');
+    }
+  }
+
+  // Verifier si on doit archiver (le 30 du mois ou apres)
+  async function verifierArchivageAuto() {
+    var now = new Date();
+    var jour = now.getDate();
+    var mois = now.getMonth();
+    var annee = now.getFullYear();
+
+    // Si on est le 30 ou apres, verifier si le mois courant est deja archive
+    if (jour >= 30) {
+      try {
+        var existResult = await supabase.from('ca_archives').select('id').eq('mois', mois + 1).eq('annee', annee).maybeSingle();
+        if (!existResult.data) {
+          // Pas encore archive -> archiver
+          if (window.__caData && window.__caData.mois === mois && window.__caData.annee === annee) {
+            await archiverCAMois(window.__caData);
+          }
+        }
+      } catch(e) {}
+    }
+  }
+
+  // Bouton telecharger PDF
+  var btnCA = document.getElementById('btn-telecharger-ca');
+  if (btnCA) {
+    btnCA.addEventListener('click', function() {
+      genererPDFRapport(window.__caData);
+      // Archiver aussi au passage
+      if (window.__caData) archiverCAMois(window.__caData);
+    });
+  }
 
 
 })();

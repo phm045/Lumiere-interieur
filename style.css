@@ -5160,3 +5160,110 @@ textarea.blog-comments__input {
 @media (max-width: 480px) {
   .admin-ca-grid { grid-template-columns: 1fr; }
 }
+
+/* ─── Revenus split consultations / boutique ─── */
+.admin-revenus-split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.admin-revenus-col {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  overflow: hidden;
+}
+.admin-revenus-col__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+}
+.admin-revenus-col__header--consult {
+  background: rgba(155, 89, 182, 0.15);
+  border-bottom: 1px solid rgba(155, 89, 182, 0.2);
+}
+.admin-revenus-col__header--boutique {
+  background: rgba(212, 165, 116, 0.15);
+  border-bottom: 1px solid rgba(212, 165, 116, 0.2);
+}
+.admin-revenus-col__body {
+  padding: 0.75rem 1rem;
+}
+.admin-revenus-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0;
+  font-size: 0.85rem;
+  color: #bbb;
+}
+.admin-revenus-line strong {
+  color: #fff;
+}
+.admin-revenus-neg {
+  color: #e74c3c;
+}
+.admin-revenus-line--total {
+  border-top: 1px solid rgba(255,255,255,0.1);
+  margin-top: 0.3rem;
+  padding-top: 0.5rem;
+}
+.admin-revenus-line--total strong {
+  color: #27ae60;
+  font-size: 0.95rem;
+}
+.admin-revenus-line--count {
+  font-size: 0.78rem;
+  color: #777;
+}
+/* Depenses liste */
+.admin-depense-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.7rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 6px;
+  margin-bottom: 0.3rem;
+  font-size: 0.82rem;
+}
+.admin-depense-item__info {
+  color: #bbb;
+}
+.admin-depense-item__info strong {
+  color: #e74c3c;
+  margin-left: 0.3rem;
+}
+.admin-depense-item__cat {
+  font-size: 0.7rem;
+  color: #888;
+  background: rgba(255,255,255,0.05);
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+  margin-left: 0.5rem;
+}
+.admin-depense-item__del {
+  background: none;
+  border: none;
+  color: #e74c3c;
+  cursor: pointer;
+  font-size: 0.9rem;
+  padding: 0.2rem;
+  opacity: 0.6;
+}
+.admin-depense-item__del:hover { opacity: 1; }
+/* Benefices section */
+.admin-benef-section {
+  background: rgba(39, 174, 96, 0.03);
+  border-color: rgba(39, 174, 96, 0.15);
+}
+@media (max-width: 640px) {
+  .admin-revenus-split { grid-template-columns: 1fr; }
+  #form-depense > div { grid-template-columns: 1fr !important; }
+}

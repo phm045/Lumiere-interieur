@@ -4557,6 +4557,36 @@
       var elNb = document.getElementById('ca-mois-nb');
       if (elNb) elNb.textContent = commandesMois.length;
 
+      // --- Ventilation consultations vs boutique ---
+      var SERVICES_CONSULTATION = ['Focus Intuitif', 'R\u00e9v\u00e9lations Intuitives', 'Panorama Intuitif', 'Voyance par mail', 'Voyance par mail \u2014 1 question'];
+      var caConsult = 0, caBoutique = 0, nbConsult = 0, nbBoutique = 0;
+      for (var j = 0; j < commandesMois.length; j++) {
+        var cmd = commandesMois[j];
+        var montant = parseFloat(cmd.montant) || 0;
+        var isConsult = false;
+        for (var k = 0; k < SERVICES_CONSULTATION.length; k++) {
+          if ((cmd.service || '').indexOf(SERVICES_CONSULTATION[k]) !== -1) { isConsult = true; break; }
+        }
+        if (isConsult) { caConsult += montant; nbConsult++; }
+        else { caBoutique += montant; nbBoutique++; }
+      }
+
+      var urssafConsult = caConsult * TAUX_URSSAF;
+      var urssafBoutique = caBoutique * TAUX_URSSAF;
+      var netConsult = caConsult - urssafConsult;
+      var netBoutique = caBoutique - urssafBoutique;
+
+      // Afficher ventilation
+      var setVal = function(id, txt) { var e = document.getElementById(id); if (e) e.textContent = txt; };
+      setVal('rev-consult-brut', caConsult.toFixed(2) + ' \u20ac');
+      setVal('rev-consult-urssaf', '-' + urssafConsult.toFixed(2) + ' \u20ac');
+      setVal('rev-consult-net', netConsult.toFixed(2) + ' \u20ac');
+      setVal('rev-consult-nb', nbConsult);
+      setVal('rev-boutique-brut', caBoutique.toFixed(2) + ' \u20ac');
+      setVal('rev-boutique-urssaf', '-' + urssafBoutique.toFixed(2) + ' \u20ac');
+      setVal('rev-boutique-net', netBoutique.toFixed(2) + ' \u20ac');
+      setVal('rev-boutique-nb', nbBoutique);
+
       // Stocker pour la generation PDF
       window.__caData = {
         mois: mc.mois,
@@ -4565,15 +4595,23 @@
         commandes: commandesMois,
         caBrut: caBrut,
         urssaf: urssaf,
-        caNet: caNet
+        caNet: caNet,
+        caConsult: caConsult,
+        caBoutique: caBoutique,
+        netConsult: netConsult,
+        netBoutique: netBoutique,
+        nbConsult: nbConsult,
+        nbBoutique: nbBoutique
       };
 
     } catch(e) {
       console.warn('Erreur chargement CA:', e);
     }
 
-    // Charger les archives
+    // Charger les archives et depenses
     chargerArchivesCA();
+    chargerDepensesMois();
+    calculerBenefices();
   }
 
   // Generer le PDF du rapport CA
@@ -4821,6 +4859,154 @@
       // Archiver aussi au passage
       if (window.__caData) archiverCAMois(window.__caData);
     });
+  }
+
+
+
+  // ─── DEPENSES + BENEFICES ───
+
+  var _depensesMois = [];
+
+  // Toggle formulaire depense
+  var btnAjouterDep = document.getElementById('btn-ajouter-depense');
+  if (btnAjouterDep) {
+    btnAjouterDep.addEventListener('click', function() {
+      var form = document.getElementById('form-depense');
+      if (form) form.hidden = !form.hidden;
+    });
+  }
+
+  // Valider une depense
+  var btnValiderDep = document.getElementById('btn-valider-depense');
+  if (btnValiderDep) {
+    btnValiderDep.addEventListener('click', async function() {
+      var libelle = document.getElementById('depense-libelle');
+      var categorie = document.getElementById('depense-categorie');
+      var montant = document.getElementById('depense-montant');
+      if (!libelle || !categorie || !montant) return;
+      if (!libelle.value.trim() || !montant.value) return;
+
+      var mc = getMoisCourant();
+      var data = {
+        libelle: libelle.value.trim(),
+        categorie: categorie.value,
+        montant: parseFloat(montant.value),
+        mois: mc.mois + 1,
+        annee: mc.annee
+      };
+
+      try {
+        var result = await supabase.from('depenses').insert([data]);
+        if (result.error) {
+          alert('Erreur : ' + result.error.message);
+          return;
+        }
+        libelle.value = '';
+        montant.value = '';
+        document.getElementById('form-depense').hidden = true;
+        chargerDepensesMois();
+        calculerBenefices();
+      } catch(e) {
+        alert('Erreur de connexion.');
+      }
+    });
+  }
+
+  // Charger les depenses du mois
+  async function chargerDepensesMois() {
+    var container = document.getElementById('admin-depenses-liste');
+    if (!container) return;
+
+    var mc = getMoisCourant();
+    try {
+      var result = await supabase.from('depenses').select('*')
+        .eq('mois', mc.mois + 1).eq('annee', mc.annee)
+        .order('created_at', { ascending: false });
+
+      _depensesMois = (result.error || !result.data) ? [] : result.data;
+
+      if (_depensesMois.length === 0) {
+        container.innerHTML = '<p style="color:#666;font-size:0.82rem;text-align:center;padding:0.5rem">Aucune d\u00e9pense enregistr\u00e9e ce mois-ci.</p>';
+      } else {
+        var catLabels = { 'site': 'Site / Outils', 'boutique': 'Boutique / Stock', 'marketing': 'Marketing', 'autre': 'Autre' };
+        var html = '';
+        for (var i = 0; i < _depensesMois.length; i++) {
+          var d = _depensesMois[i];
+          html += '<div class="admin-depense-item">' +
+            '<span class="admin-depense-item__info">' + escHtml(d.libelle) +
+            '<span class="admin-depense-item__cat">' + (catLabels[d.categorie] || d.categorie) + '</span>' +
+            '<strong>' + parseFloat(d.montant).toFixed(2) + ' \u20ac</strong></span>' +
+            '<button class="admin-depense-item__del" data-depense-id="' + d.id + '" title="Supprimer">\u2715</button>' +
+            '</div>';
+        }
+        container.innerHTML = html;
+
+        // Delete handlers
+        container.querySelectorAll('.admin-depense-item__del').forEach(function(btn) {
+          btn.addEventListener('click', async function() {
+            if (!confirm('Supprimer cette d\u00e9pense ?')) return;
+            var depId = this.getAttribute('data-depense-id');
+            await supabase.from('depenses').delete().eq('id', depId);
+            chargerDepensesMois();
+            calculerBenefices();
+          });
+        });
+      }
+
+      // Calculer totaux par categorie
+      var totSite = 0, totBoutique = 0, totAutre = 0;
+      for (var j = 0; j < _depensesMois.length; j++) {
+        var dep = _depensesMois[j];
+        var m = parseFloat(dep.montant) || 0;
+        if (dep.categorie === 'site' || dep.categorie === 'marketing') totSite += m;
+        else if (dep.categorie === 'boutique') totBoutique += m;
+        else totAutre += m;
+      }
+      // Site/outils inclut marketing et autre (depenses generales)
+      totSite += totAutre;
+
+      var setVal = function(id, txt) { var e = document.getElementById(id); if (e) e.textContent = txt; };
+      setVal('dep-total-site', totSite.toFixed(2) + ' \u20ac');
+      setVal('dep-total-boutique', totBoutique.toFixed(2) + ' \u20ac');
+      setVal('dep-total-global', (totSite + totBoutique).toFixed(2) + ' \u20ac');
+
+      // Stocker pour benefices
+      window.__depensesData = {
+        site: totSite,
+        boutique: totBoutique,
+        total: totSite + totBoutique
+      };
+
+    } catch(e) {
+      container.innerHTML = '<p style="color:#666;font-size:0.82rem;text-align:center">Table d\u00e9penses non disponible. Ex\u00e9cutez la migration SQL.</p>';
+      window.__depensesData = { site: 0, boutique: 0, total: 0 };
+    }
+  }
+
+  // Calculer et afficher les benefices
+  function calculerBenefices() {
+    var ca = window.__caData || {};
+    var dep = window.__depensesData || { site: 0, boutique: 0, total: 0 };
+
+    var netConsult = ca.netConsult || 0;
+    var netBoutique = ca.netBoutique || 0;
+
+    var benefConsult = netConsult - dep.site;
+    var benefBoutique = netBoutique - dep.boutique;
+    var benefTotal = benefConsult + benefBoutique;
+
+    var setVal = function(id, txt) { var e = document.getElementById(id); if (e) e.textContent = txt; };
+    var setColor = function(id, val) {
+      var e = document.getElementById(id);
+      if (e) e.style.color = val >= 0 ? '#27ae60' : '#e74c3c';
+    };
+
+    setVal('benef-consult', benefConsult.toFixed(2) + ' \u20ac');
+    setColor('benef-consult', benefConsult);
+    setVal('benef-boutique', benefBoutique.toFixed(2) + ' \u20ac');
+    setColor('benef-boutique', benefBoutique);
+    setVal('benef-total', benefTotal.toFixed(2) + ' \u20ac');
+    setColor('benef-total', benefTotal);
   }
 
 

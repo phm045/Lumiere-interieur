@@ -1952,6 +1952,111 @@
               <p class="admin-ca-info">Le rapport est archivé et le CA remis à zéro automatiquement le 30 de chaque mois. Les anciens rapports restent téléchargeables.</p>
               <div id="admin-ca-archives"></div>
             </div>
+
+            <!-- Bloc : Revenus détaillés (consultations vs boutique) -->
+            <div class="admin-ca-section" style="margin-top:1.5rem">
+              <h3 class="admin-ca-title">Revenus détaillés du mois</h3>
+              <div class="admin-revenus-split">
+                <div class="admin-revenus-col">
+                  <div class="admin-revenus-col__header admin-revenus-col__header--consult">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    Consultations
+                  </div>
+                  <div class="admin-revenus-col__body">
+                    <div class="admin-revenus-line"><span>CA brut</span><strong id="rev-consult-brut">--</strong></div>
+                    <div class="admin-revenus-line"><span>URSSAF (25,60%)</span><span class="admin-revenus-neg" id="rev-consult-urssaf">--</span></div>
+                    <div class="admin-revenus-line admin-revenus-line--total"><span>Net consultations</span><strong id="rev-consult-net">--</strong></div>
+                    <div class="admin-revenus-line admin-revenus-line--count"><span>Nombre</span><span id="rev-consult-nb">--</span></div>
+                  </div>
+                </div>
+                <div class="admin-revenus-col">
+                  <div class="admin-revenus-col__header admin-revenus-col__header--boutique">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+                    Boutique
+                  </div>
+                  <div class="admin-revenus-col__body">
+                    <div class="admin-revenus-line"><span>CA brut</span><strong id="rev-boutique-brut">--</strong></div>
+                    <div class="admin-revenus-line"><span>URSSAF (25,60%)</span><span class="admin-revenus-neg" id="rev-boutique-urssaf">--</span></div>
+                    <div class="admin-revenus-line admin-revenus-line--total"><span>Net boutique</span><strong id="rev-boutique-net">--</strong></div>
+                    <div class="admin-revenus-line admin-revenus-line--count"><span>Nombre</span><span id="rev-boutique-nb">--</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bloc : Mes dépenses -->
+            <div class="admin-ca-section" style="margin-top:1.5rem">
+              <div class="admin-ca-header">
+                <h3 class="admin-ca-title">Mes dépenses du mois</h3>
+                <button class="btn btn--outline admin-ca-btn" id="btn-ajouter-depense" style="font-size:0.8rem">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Ajouter une dépense
+                </button>
+              </div>
+              <!-- Formulaire ajout depense (hidden) -->
+              <div id="form-depense" hidden style="margin-bottom:1rem">
+                <div style="display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:0.5rem;align-items:end">
+                  <div>
+                    <label class="admin-modal__label" style="font-size:0.75rem">Libellé</label>
+                    <input type="text" class="admin-modal__input" id="depense-libelle" placeholder="Ex : Hébergement, Brevo, stock..." required>
+                  </div>
+                  <div>
+                    <label class="admin-modal__label" style="font-size:0.75rem">Catégorie</label>
+                    <select class="admin-modal__select" id="depense-categorie">
+                      <option value="site">Site web / Outils</option>
+                      <option value="boutique">Boutique / Stock</option>
+                      <option value="marketing">Marketing / Pub</option>
+                      <option value="autre">Autre</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="admin-modal__label" style="font-size:0.75rem">Montant (€)</label>
+                    <input type="number" class="admin-modal__input" id="depense-montant" placeholder="0.00" step="0.01" min="0" required>
+                  </div>
+                  <button class="btn btn--primary" id="btn-valider-depense" style="padding:0.5rem 0.8rem;font-size:0.8rem">Valider</button>
+                </div>
+              </div>
+              <!-- Liste des depenses -->
+              <div id="admin-depenses-liste"></div>
+              <!-- Totaux depenses -->
+              <div class="admin-ca-grid" style="margin-top:0.75rem;grid-template-columns:repeat(3,1fr)">
+                <div class="admin-ca-card admin-ca-card--urssaf">
+                  <p class="admin-ca-card__label">Dépenses site / outils</p>
+                  <p class="admin-ca-card__value" id="dep-total-site">0 €</p>
+                </div>
+                <div class="admin-ca-card admin-ca-card--urssaf">
+                  <p class="admin-ca-card__label">Dépenses boutique / stock</p>
+                  <p class="admin-ca-card__value" id="dep-total-boutique">0 €</p>
+                </div>
+                <div class="admin-ca-card admin-ca-card--urssaf">
+                  <p class="admin-ca-card__label">Total dépenses du mois</p>
+                  <p class="admin-ca-card__value" id="dep-total-global">0 €</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bloc : Mes bénéfices -->
+            <div class="admin-ca-section admin-benef-section" style="margin-top:1.5rem">
+              <h3 class="admin-ca-title">Ce que je mets en poche</h3>
+              <p style="font-size:0.8rem;color:#888;margin:0.25rem 0 1rem">CA net après URSSAF, moins toutes les dépenses</p>
+              <div class="admin-ca-grid" style="grid-template-columns:repeat(3,1fr)">
+                <div class="admin-ca-card">
+                  <p class="admin-ca-card__label">Bénéfice consultations</p>
+                  <p class="admin-ca-card__value" id="benef-consult" style="color:#27ae60">--</p>
+                  <p class="admin-ca-card__sublabel" style="font-size:0.7rem;color:#666;margin:0.2rem 0 0">Net consult. - dépenses site</p>
+                </div>
+                <div class="admin-ca-card">
+                  <p class="admin-ca-card__label">Bénéfice boutique</p>
+                  <p class="admin-ca-card__value" id="benef-boutique" style="color:#27ae60">--</p>
+                  <p class="admin-ca-card__sublabel" style="font-size:0.7rem;color:#666;margin:0.2rem 0 0">Net boutique - dépenses stock</p>
+                </div>
+                <div class="admin-ca-card admin-ca-card--net" style="border-width:2px">
+                  <p class="admin-ca-card__label">Bénéfice total du mois</p>
+                  <p class="admin-ca-card__value" id="benef-total">--</p>
+                  <p class="admin-ca-card__sublabel" style="font-size:0.7rem;color:#666;margin:0.2rem 0 0">Ce qui reste dans ma poche</p>
+                </div>
+              </div>
+            </div>
           </div>
 
           <!-- TAB: Blog -->

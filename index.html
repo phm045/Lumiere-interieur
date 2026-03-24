@@ -645,6 +645,7 @@
 
     <section>
       <div class="container">
+        <div class="boutique-products-grid" id="boutique-products-grid"></div>
         <div class="boutique-coming">
           <div class="boutique-coming__icon fade-in">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -2202,6 +2203,99 @@
 })(window, "https://app.cal.eu/embed/embed.js", "init");
 Cal("init", "consultations", { origin: "https://app.cal.eu" });
 </script>
+<!-- Admin: Blog article creation modal -->
+<div id="admin-modal-blog" class="admin-modal" hidden>
+  <div class="admin-modal__backdrop"></div>
+  <div class="admin-modal__content">
+    <button class="admin-modal__close" aria-label="Fermer">&times;</button>
+    <h2 class="admin-modal__title">Nouvel article</h2>
+    <form class="admin-modal__form" id="admin-blog-form">
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Catégorie</label>
+        <input type="text" class="admin-modal__input" name="category" placeholder="Ex : Voyance, Énergies, Développement personnel" required>
+      </div>
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Titre</label>
+        <input type="text" class="admin-modal__input" name="title" placeholder="Titre de l'article" required>
+      </div>
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Extrait</label>
+        <textarea class="admin-modal__textarea" name="excerpt" placeholder="Courte description affichée sur la carte" rows="2" required></textarea>
+      </div>
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Contenu (HTML ou texte)</label>
+        <textarea class="admin-modal__textarea" name="content" placeholder="Contenu complet de l'article..." rows="8" required></textarea>
+      </div>
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Image</label>
+        <select class="admin-modal__select" name="image_url">
+          <option value="hero-voyance.png">hero-voyance.png</option>
+          <option value="services-tarot.png">services-tarot.png</option>
+          <option value="crystals-nature.png">crystals-nature.png</option>
+          <option value="blog-journal.png">blog-journal.png</option>
+          <option value="astro.png">astro.png</option>
+          <option value="spirit-blog.jpg">spirit-blog.jpg</option>
+          <option value="numerologie.png">numerologie.png</option>
+          <option value="mediumnite.png">mediumnite.png</option>
+          <option value="reflexo.png">reflexo.png</option>
+          <option value="lithotherapie.png">lithotherapie.png</option>
+          <option value="bio-emotion.jpg">bio-emotion.jpg</option>
+          <option value="confiance-ressenti.png">confiance-ressenti.png</option>
+          <option value="vampires-energetiques.png">vampires-energetiques.png</option>
+        </select>
+      </div>
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Date de publication</label>
+        <input type="text" class="admin-modal__input" name="date_publication" id="admin-blog-date" required>
+      </div>
+      <div class="admin-modal__message" id="admin-blog-msg" hidden></div>
+      <button type="submit" class="btn btn--primary admin-modal__submit">Publier l'article</button>
+    </form>
+  </div>
+</div>
+
+<!-- Admin: Boutique product creation modal -->
+<div id="admin-modal-boutique" class="admin-modal" hidden>
+  <div class="admin-modal__backdrop"></div>
+  <div class="admin-modal__content">
+    <button class="admin-modal__close" aria-label="Fermer">&times;</button>
+    <h2 class="admin-modal__title">Nouveau produit</h2>
+    <form class="admin-modal__form" id="admin-boutique-form">
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Nom du produit</label>
+        <input type="text" class="admin-modal__input" name="name" placeholder="Nom du produit" required>
+      </div>
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Description</label>
+        <textarea class="admin-modal__textarea" name="description" placeholder="Description du produit" rows="4" required></textarea>
+      </div>
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Prix (€)</label>
+        <input type="number" class="admin-modal__input" name="price" placeholder="19.90" step="0.01" min="0" required>
+      </div>
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Catégorie</label>
+        <input type="text" class="admin-modal__input" name="category" placeholder="Ex : Cristaux, Encens, Méditation" required>
+      </div>
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Image</label>
+        <select class="admin-modal__select" name="image_url">
+          <option value="crystals-nature.png">crystals-nature.png</option>
+          <option value="hero-voyance.png">hero-voyance.png</option>
+          <option value="services-tarot.png">services-tarot.png</option>
+          <option value="blog-journal.png">blog-journal.png</option>
+          <option value="astro.png">astro.png</option>
+          <option value="spirit-blog.jpg">spirit-blog.jpg</option>
+          <option value="numerologie.png">numerologie.png</option>
+          <option value="lithotherapie.png">lithotherapie.png</option>
+        </select>
+      </div>
+      <div class="admin-modal__message" id="admin-boutique-msg" hidden></div>
+      <button type="submit" class="btn btn--primary admin-modal__submit">Publier le produit</button>
+    </form>
+  </div>
+</div>
+
 <script src="./app.js" defer></script>
 <script data-pplx-inline-edit>
 (function(){

@@ -722,24 +722,51 @@
       }
     });
 
-    // 4. BOUTIQUE (produits \u00e0 venir)
-    var boutiquePage = document.getElementById('boutique');
-    if (boutiquePage) {
-      var boutiqueComing = boutiquePage.querySelector('.boutique-coming__title');
-      if (boutiqueComing) {
-        items.push({
-          type: 'boutique', slug: 'boutique-coming',
-          pinned: isItemPinned('boutique-coming'),
-          img: 'crystals-nature.png',
-          imgAlt: 'Boutique Lumi\u00e8re Int\u00e9rieure',
-          category: 'Boutique',
-          title: 'Boutique bient\u00f4t disponible',
-          excerpt: 'Cristaux, encens naturels, supports de m\u00e9ditation\u2026 Inscrivez-vous pour \u00eatre pr\u00e9venu(e) d\u00e8s l\u2019ouverture.',
-          dateStr: 'Bient\u00f4t',
-          dateObj: new Date(2026, 2, 15),
-          price: null,
-          navTarget: 'boutique'
-        });
+    // 4. BOUTIQUE — dynamic products from Supabase + fallback
+    var boutiqueProductCards = document.querySelectorAll('.boutique-product-card[data-product-slug]');
+    if (boutiqueProductCards.length > 0) {
+      boutiqueProductCards.forEach(function(card) {
+        var pslug = card.getAttribute('data-product-slug');
+        var pimg = card.querySelector('.boutique-product-card__image img');
+        var pcat = card.querySelector('.boutique-product-card__category');
+        var pname = card.querySelector('.boutique-product-card__name');
+        var pdesc = card.querySelector('.boutique-product-card__desc');
+        var pprice = card.querySelector('.boutique-product-card__price');
+        if (pname) {
+          items.push({
+            type: 'boutique', slug: 'btq-' + pslug,
+            pinned: isItemPinned('btq-' + pslug),
+            img: pimg ? pimg.getAttribute('src') : 'crystals-nature.png',
+            imgAlt: pimg ? pimg.getAttribute('alt') : '',
+            category: pcat ? pcat.textContent : 'Boutique',
+            title: pname.textContent,
+            excerpt: pdesc ? pdesc.textContent.substring(0, 120) : '',
+            dateStr: pprice ? pprice.textContent.trim() : '',
+            dateObj: new Date(),
+            price: pprice ? pprice.textContent.trim() : null,
+            navTarget: 'boutique'
+          });
+        }
+      });
+    } else {
+      var boutiquePage = document.getElementById('boutique');
+      if (boutiquePage) {
+        var boutiqueComing = boutiquePage.querySelector('.boutique-coming__title');
+        if (boutiqueComing) {
+          items.push({
+            type: 'boutique', slug: 'boutique-coming',
+            pinned: isItemPinned('boutique-coming'),
+            img: 'crystals-nature.png',
+            imgAlt: 'Boutique Lumi\u00e8re Int\u00e9rieure',
+            category: 'Boutique',
+            title: 'Boutique bient\u00f4t disponible',
+            excerpt: 'Cristaux, encens naturels, supports de m\u00e9ditation\u2026 Inscrivez-vous pour \u00eatre pr\u00e9venu(e) d\u00e8s l\u2019ouverture.',
+            dateStr: 'Bient\u00f4t',
+            dateObj: new Date(2026, 2, 15),
+            price: null,
+            navTarget: 'boutique'
+          });
+        }
       }
     }
 
@@ -2946,6 +2973,335 @@
 
     // Re-render feed with correct Supabase pins and admin status
     refreshNouveautes();
+
+    // ─── Dynamic content from Supabase: blog_articles & boutique_products ───
+    initDynamicContent(isAdmin);
   })();
+
+  // ─── Admin content creation system ───
+
+  function adminSlugify(text) {
+    return (text || '').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+
+  function todayFrench() {
+    var d = new Date();
+    var mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    return d.getDate() + ' ' + mois[d.getMonth()] + ' ' + d.getFullYear();
+  }
+
+  function showAdminMsg(id, text, isError) {
+    var el = document.getElementById(id);
+    if (!el) return;
+    el.textContent = text;
+    el.className = 'admin-modal__message admin-modal__message--' + (isError ? 'error' : 'success');
+    el.hidden = false;
+    if (!isError) setTimeout(function() { el.hidden = true; }, 3000);
+  }
+
+  function openModal(id) {
+    var modal = document.getElementById(id);
+    if (modal) modal.hidden = false;
+  }
+
+  function closeModal(id) {
+    var modal = document.getElementById(id);
+    if (modal) {
+      modal.hidden = true;
+      var form = modal.querySelector('form');
+      if (form) form.reset();
+      var msg = modal.querySelector('.admin-modal__message');
+      if (msg) msg.hidden = true;
+    }
+  }
+
+  // Close modals on backdrop click / close button
+  document.querySelectorAll('.admin-modal__backdrop').forEach(function(bd) {
+    bd.addEventListener('click', function() {
+      var modal = bd.closest('.admin-modal');
+      if (modal) modal.hidden = true;
+    });
+  });
+  document.querySelectorAll('.admin-modal__close').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var modal = btn.closest('.admin-modal');
+      if (modal) modal.hidden = true;
+    });
+  });
+
+  // Set default date in blog form
+  var blogDateField = document.getElementById('admin-blog-date');
+  if (blogDateField) blogDateField.value = todayFrench();
+
+  // --- Create a blog card DOM element from data ---
+  function createBlogCardElement(data, isAdmin) {
+    var card = document.createElement('article');
+    card.className = 'blog-card fade-in';
+    card.setAttribute('data-article', data.slug);
+    card.setAttribute('data-dynamic', 'true');
+    card.innerHTML =
+      '<div class="blog-card__image">' +
+        (isAdmin ? '<button class="admin-delete-btn" data-delete-type="blog" data-delete-slug="' + data.slug + '" title="Supprimer">\ud83d\uddd1\ufe0f</button>' : '') +
+        '<img src="' + (data.image_url || 'hero-voyance.png') + '" alt="' + data.title + '" width="640" height="400" loading="lazy">' +
+      '</div>' +
+      '<div class="blog-card__content">' +
+        '<p class="blog-card__category">' + data.category + '</p>' +
+        '<h2 class="blog-card__title">' + data.title + '</h2>' +
+        '<p class="blog-card__excerpt">' + data.excerpt + '</p>' +
+        '<p class="blog-card__date">' + data.date_publication + '</p>' +
+        '<div class="blog-card__stats">' +
+          '<span class="blog-card__views"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <span class="view-count">0</span></span>' +
+          '<button class="blog-card__heart" aria-label="Aimer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg> <span class="heart-count">0</span></button>' +
+        '</div>' +
+      '</div>';
+    return card;
+  }
+
+  // --- Create a boutique product card DOM element from data ---
+  function createProductCardElement(data, isAdmin) {
+    var card = document.createElement('div');
+    card.className = 'boutique-product-card fade-in';
+    card.setAttribute('data-product-slug', data.slug);
+    card.setAttribute('data-dynamic', 'true');
+    card.innerHTML =
+      '<div class="boutique-product-card__image">' +
+        (isAdmin ? '<button class="admin-delete-btn" data-delete-type="boutique" data-delete-slug="' + data.slug + '" title="Supprimer">\ud83d\uddd1\ufe0f</button>' : '') +
+        '<img src="' + (data.image_url || 'crystals-nature.png') + '" alt="' + data.name + '" width="640" height="400" loading="lazy">' +
+      '</div>' +
+      '<div class="boutique-product-card__content">' +
+        '<p class="boutique-product-card__category">' + data.category + '</p>' +
+        '<h3 class="boutique-product-card__name">' + data.name + '</h3>' +
+        '<p class="boutique-product-card__desc">' + data.description + '</p>' +
+        '<p class="boutique-product-card__price">' + parseFloat(data.price).toFixed(2) + ' €</p>' +
+      '</div>';
+    return card;
+  }
+
+  // --- Attach delete handler ---
+  function attachDeleteHandler(btn) {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      var type = btn.getAttribute('data-delete-type');
+      var slug = btn.getAttribute('data-delete-slug');
+      var label = type === 'blog' ? 'cet article' : 'ce produit';
+      if (!confirm('Supprimer ' + label + ' ?')) return;
+
+      var table = type === 'blog' ? 'blog_articles' : 'boutique_products';
+      supabase.from(table).delete().eq('slug', slug).then(function(result) {
+        if (result.error) {
+          alert('Erreur : ' + result.error.message);
+          return;
+        }
+        // Remove from DOM
+        if (type === 'blog') {
+          var card = document.querySelector('.blog-card[data-article="' + slug + '"][data-dynamic]');
+          if (card) card.remove();
+          delete blogArticles[slug];
+        } else {
+          var pcard = document.querySelector('.boutique-product-card[data-product-slug="' + slug + '"]');
+          if (pcard) pcard.remove();
+          // Show "coming soon" if no more products
+          var grid = document.getElementById('boutique-products-grid');
+          if (grid && grid.children.length === 0) {
+            var coming = document.querySelector('.boutique-coming');
+            if (coming) coming.style.display = '';
+          }
+        }
+        // Refresh feed
+        var feedGrid = document.getElementById('nouveautes-grid');
+        if (feedGrid) { feedGrid.innerHTML = ''; }
+        if (typeof window.__populateNouveautes === 'function') window.__populateNouveautes();
+      });
+    });
+  }
+
+  // --- Load dynamic content from Supabase on page load ---
+  async function initDynamicContent(isAdmin) {
+    // Load blog articles
+    try {
+      var blogResult = await supabase.from('blog_articles').select('*').order('created_at', { ascending: false });
+      if (!blogResult.error && blogResult.data) {
+        var blogGrid = document.querySelector('.blog-grid');
+        blogResult.data.forEach(function(article) {
+          // Add to blogArticles JS object for overlay
+          blogArticles[article.slug] = {
+            category: article.category,
+            title: article.title,
+            date: article.date_publication,
+            content: article.content
+          };
+          // Create card and append
+          if (blogGrid) {
+            var card = createBlogCardElement(article, isAdmin);
+            blogGrid.appendChild(card);
+            // Attach click to open overlay
+            card.addEventListener('click', function(e) {
+              if (e.target.closest('.admin-delete-btn') || e.target.closest('.blog-card__heart')) return;
+              openBlogArticle(article.slug);
+            });
+            // Attach delete handler
+            var delBtn = card.querySelector('.admin-delete-btn');
+            if (delBtn) attachDeleteHandler(delBtn);
+          }
+        });
+      }
+    } catch(e) { /* table may not exist yet */ }
+
+    // Load boutique products
+    try {
+      var prodResult = await supabase.from('boutique_products').select('*').order('created_at', { ascending: false });
+      if (!prodResult.error && prodResult.data && prodResult.data.length > 0) {
+        var prodGrid = document.getElementById('boutique-products-grid');
+        var coming = document.querySelector('.boutique-coming');
+        if (coming) coming.style.display = 'none';
+        prodResult.data.forEach(function(product) {
+          if (prodGrid) {
+            var card = createProductCardElement(product, isAdmin);
+            prodGrid.appendChild(card);
+            var delBtn = card.querySelector('.admin-delete-btn');
+            if (delBtn) attachDeleteHandler(delBtn);
+          }
+        });
+      }
+    } catch(e) { /* table may not exist yet */ }
+
+    // Add admin "+" buttons (admin only)
+    if (isAdmin) {
+      // Blog add button - prepend to blog-grid
+      var blogGrid = document.querySelector('.blog-grid');
+      if (blogGrid) {
+        var addBlogBtn = document.createElement('div');
+        addBlogBtn.className = 'admin-add-btn';
+        addBlogBtn.innerHTML = '<span class="admin-add-btn__icon">+</span><span>Nouvel article</span>';
+        addBlogBtn.addEventListener('click', function() { openModal('admin-modal-blog'); });
+        blogGrid.insertBefore(addBlogBtn, blogGrid.firstChild);
+      }
+
+      // Boutique add button - prepend to boutique container
+      var prodGrid = document.getElementById('boutique-products-grid');
+      if (prodGrid) {
+        var addProdBtn = document.createElement('div');
+        addProdBtn.className = 'admin-add-btn admin-add-btn--boutique';
+        addProdBtn.innerHTML = '<span class="admin-add-btn__icon">+</span><span>Nouveau produit</span>';
+        addProdBtn.addEventListener('click', function() { openModal('admin-modal-boutique'); });
+        prodGrid.parentNode.insertBefore(addProdBtn, prodGrid);
+      }
+    }
+
+    // Refresh feed to include dynamic items
+    var feedGrid = document.getElementById('nouveautes-grid');
+    if (feedGrid) { feedGrid.innerHTML = ''; }
+    if (typeof window.__populateNouveautes === 'function') window.__populateNouveautes();
+  }
+
+  // --- Blog form submit ---
+  var blogForm = document.getElementById('admin-blog-form');
+  if (blogForm) {
+    blogForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var fd = new FormData(blogForm);
+      var title = fd.get('title').trim();
+      var slug = adminSlugify(title);
+      var data = {
+        slug: slug,
+        category: fd.get('category').trim(),
+        title: title,
+        excerpt: fd.get('excerpt').trim(),
+        content: fd.get('content').trim(),
+        image_url: fd.get('image_url'),
+        date_publication: fd.get('date_publication').trim()
+      };
+
+      var result = await supabase.from('blog_articles').insert([data]);
+      if (result.error) {
+        showAdminMsg('admin-blog-msg', 'Erreur : ' + result.error.message, true);
+        return;
+      }
+
+      // Add to blogArticles JS object
+      blogArticles[slug] = {
+        category: data.category,
+        title: data.title,
+        date: data.date_publication,
+        content: data.content
+      };
+
+      // Add card to grid
+      var blogGrid = document.querySelector('.blog-grid');
+      if (blogGrid) {
+        var card = createBlogCardElement(data, true);
+        // Insert after the "+" button (first child)
+        var addBtn = blogGrid.querySelector('.admin-add-btn');
+        if (addBtn && addBtn.nextSibling) {
+          blogGrid.insertBefore(card, addBtn.nextSibling);
+        } else {
+          blogGrid.appendChild(card);
+        }
+        card.addEventListener('click', function(ev) {
+          if (ev.target.closest('.admin-delete-btn') || ev.target.closest('.blog-card__heart')) return;
+          openBlogArticle(slug);
+        });
+        var delBtn = card.querySelector('.admin-delete-btn');
+        if (delBtn) attachDeleteHandler(delBtn);
+      }
+
+      // Refresh feed
+      var feedGrid = document.getElementById('nouveautes-grid');
+      if (feedGrid) { feedGrid.innerHTML = ''; }
+      if (typeof window.__populateNouveautes === 'function') window.__populateNouveautes();
+
+      showAdminMsg('admin-blog-msg', 'Article publié avec succès !', false);
+      setTimeout(function() { closeModal('admin-modal-blog'); }, 1500);
+    });
+  }
+
+  // --- Boutique form submit ---
+  var boutiqueForm = document.getElementById('admin-boutique-form');
+  if (boutiqueForm) {
+    boutiqueForm.addEventListener('submit', async function(e) {
+      e.preventDefault();
+      var fd = new FormData(boutiqueForm);
+      var name = fd.get('name').trim();
+      var slug = adminSlugify(name);
+      var data = {
+        slug: slug,
+        name: name,
+        description: fd.get('description').trim(),
+        price: parseFloat(fd.get('price')),
+        category: fd.get('category').trim(),
+        image_url: fd.get('image_url')
+      };
+
+      var result = await supabase.from('boutique_products').insert([data]);
+      if (result.error) {
+        showAdminMsg('admin-boutique-msg', 'Erreur : ' + result.error.message, true);
+        return;
+      }
+
+      // Add product card
+      var prodGrid = document.getElementById('boutique-products-grid');
+      if (prodGrid) {
+        var card = createProductCardElement(data, true);
+        prodGrid.appendChild(card);
+        var delBtn = card.querySelector('.admin-delete-btn');
+        if (delBtn) attachDeleteHandler(delBtn);
+      }
+
+      // Hide "coming soon" placeholder
+      var coming = document.querySelector('.boutique-coming');
+      if (coming) coming.style.display = 'none';
+
+      // Refresh feed
+      var feedGrid = document.getElementById('nouveautes-grid');
+      if (feedGrid) { feedGrid.innerHTML = ''; }
+      if (typeof window.__populateNouveautes === 'function') window.__populateNouveautes();
+
+      showAdminMsg('admin-boutique-msg', 'Produit publié avec succès !', false);
+      setTimeout(function() { closeModal('admin-modal-boutique'); }, 1500);
+    });
+  }
 
 })();

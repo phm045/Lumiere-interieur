@@ -99,6 +99,58 @@ CREATE POLICY "clients_creer_rdv" ON reservations FOR INSERT WITH CHECK (auth.ui
 INSERT INTO coupons (code, description, reduction_pourcent, valide_jusqu_au)
 VALUES ('BIENVENUE10', 'Réduction de bienvenue : -10% sur votre première consultation', 10, '2027-12-31');
 
+-- Table des articles de blog (créés par l'admin)
+CREATE TABLE IF NOT EXISTS blog_articles (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  slug TEXT NOT NULL UNIQUE,
+  category TEXT NOT NULL,
+  title TEXT NOT NULL,
+  excerpt TEXT NOT NULL,
+  content TEXT NOT NULL,
+  image_url TEXT DEFAULT 'hero-voyance.png',
+  date_publication TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE blog_articles ENABLE ROW LEVEL SECURITY;
+
+-- Tout le monde peut lire les articles
+CREATE POLICY "Lecture publique des articles"
+  ON blog_articles FOR SELECT
+  USING (true);
+
+-- Seul l'admin peut insérer / modifier / supprimer
+CREATE POLICY "Admin gère les articles"
+  ON blog_articles FOR ALL
+  USING (auth.jwt() ->> 'email' = 'philippe.medium45@gmail.com')
+  WITH CHECK (auth.jwt() ->> 'email' = 'philippe.medium45@gmail.com');
+
+-- Table des produits boutique (créés par l'admin)
+CREATE TABLE IF NOT EXISTS boutique_products (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  slug TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  price NUMERIC NOT NULL,
+  image_url TEXT DEFAULT 'crystals-nature.png',
+  category TEXT NOT NULL,
+  status TEXT DEFAULT 'disponible',
+  created_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE boutique_products ENABLE ROW LEVEL SECURITY;
+
+-- Tout le monde peut lire les produits
+CREATE POLICY "Lecture publique des produits"
+  ON boutique_products FOR SELECT
+  USING (true);
+
+-- Seul l'admin peut insérer / modifier / supprimer
+CREATE POLICY "Admin gère les produits"
+  ON boutique_products FOR ALL
+  USING (auth.jwt() ->> 'email' = 'philippe.medium45@gmail.com')
+  WITH CHECK (auth.jwt() ->> 'email' = 'philippe.medium45@gmail.com');
+
 -- Fonction RPC pour permettre à un utilisateur de supprimer son propre compte
 -- Les tables avec ON DELETE CASCADE suppriment automatiquement les données liées
 CREATE OR REPLACE FUNCTION delete_own_account()

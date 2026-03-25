@@ -80,6 +80,20 @@
   <!-- ==================== ACCUEIL ==================== -->
   <div id="accueil" class="page active">
 
+    <!-- Bannière d'absence (dynamique, masquée par défaut) -->
+    <div class="absence-banner" id="absence-banner" hidden>
+      <div class="absence-banner__inner">
+        <div class="absence-banner__icon">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="absence-banner__text">
+          <span class="absence-banner__title" id="absence-banner-title">Actuellement indisponible</span>
+          <span class="absence-banner__detail" id="absence-banner-detail"></span>
+        </div>
+        <button class="absence-banner__close" id="absence-banner-close" aria-label="Fermer">&times;</button>
+      </div>
+    </div>
+
     <!-- Hero -->
     <section class="hero">
       <div class="hero__bg">

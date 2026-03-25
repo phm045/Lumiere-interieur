@@ -6059,4 +6059,87 @@
     });
   }
 
+  // ═══════════════════════════════════════════════════
+  // BANNIÈRE D'ABSENCE — Accueil (visible par tous)
+  // ═══════════════════════════════════════════════════
+  async function verifierAbsenceEnCours() {
+    var banner = document.getElementById('absence-banner');
+    if (!banner) return;
+    try {
+      var result = await supabase.from('disponibilites').select('*').eq('type', 'absence');
+      var absences = result.data || [];
+      var now = new Date();
+      // Trouver une absence dont la période couvre aujourd'hui
+      var absenceActive = null;
+      for (var i = 0; i < absences.length; i++) {
+        var d = absences[i].data || {};
+        var debut = new Date(d.debut + 'T00:00:00');
+        var fin = new Date(d.fin + 'T23:59:59');
+        if (now >= debut && now <= fin) {
+          absenceActive = absences[i];
+          break;
+        }
+      }
+      if (!absenceActive) {
+        banner.hidden = true;
+        return;
+      }
+      // Construire le message
+      var d = absenceActive.data;
+      var finDate = new Date(d.fin);
+      var options = { day: 'numeric', month: 'long', year: 'numeric' };
+      var finStr = finDate.toLocaleDateString('fr-FR', options);
+      var title = document.getElementById('absence-banner-title');
+      var detail = document.getElementById('absence-banner-detail');
+      if (title) {
+        title.textContent = d.motif ? d.motif : 'Actuellement indisponible';
+      }
+      if (detail) {
+        var msg = 'Je suis absent(e) jusqu\u2019au ' + finStr + '. Les consultations reprendront \u00e0 mon retour.';
+        // Si retour demain ou aujourd'hui
+        var diffJours = Math.ceil((finDate - now) / (1000*60*60*24));
+        if (diffJours <= 0) {
+          msg = 'Derni\u00e8re journ\u00e9e d\u2019absence. Les consultations reprennent d\u00e8s demain\u00a0!';
+        } else if (diffJours === 1) {
+          msg = 'De retour d\u00e8s demain\u00a0! Les consultations reprendront tr\u00e8s bient\u00f4t.';
+        }
+        detail.textContent = msg;
+      }
+      // Stocker l'id sur la bannière pour le bouton fermer
+      banner.setAttribute('data-absence-id', absenceActive.id);
+      // Vérifier si l'utilisateur a fermé la bannière dans cette session
+      if (sessionStorage.getItem('absence-banner-closed') === String(absenceActive.id)) {
+        banner.hidden = true;
+      } else {
+        banner.hidden = false;
+      }
+    } catch(e) {
+      // Silencieux si la table n'existe pas encore
+      console.warn('V\u00e9rification absence:', e);
+    }
+  }
+
+  // Bouton fermer la bannière
+  var closeBannerBtn = document.getElementById('absence-banner-close');
+  if (closeBannerBtn) {
+    closeBannerBtn.addEventListener('click', function() {
+      var banner = document.getElementById('absence-banner');
+      if (banner) {
+        banner.style.animation = 'none';
+        banner.style.transition = 'transform 0.3s ease, opacity 0.3s ease';
+        banner.style.transform = 'translateY(-100%)';
+        banner.style.opacity = '0';
+        setTimeout(function() { banner.hidden = true; }, 300);
+        // Retenir l'id pour ne pas réafficher dans cette session
+        try {
+          var id = banner.getAttribute('data-absence-id');
+          if (id) sessionStorage.setItem('absence-banner-closed', id);
+        } catch(e) {}
+      }
+    });
+  }
+
+  // Vérifier au chargement de la page
+  verifierAbsenceEnCours();
+
 })();

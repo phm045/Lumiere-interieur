@@ -5733,7 +5733,63 @@
 
   // ═══════════════════════════════════════════════════
   // DISPONIBILITÉS — Gestion horaires, absences, dates
+  // Stockage hybride : Supabase si table existe, sinon localStorage
   // ═══════════════════════════════════════════════════
+
+  var _dispoUseLocal = false; // bascule sur localStorage si Supabase indisponible
+
+  // --- Vérifier si la table disponibilites existe ---
+  async function dispoCheckTable() {
+    try {
+      var r = await supabase.from('disponibilites').select('id').limit(1);
+      if (r.error && (r.error.code === 'PGRST205' || r.error.code === '42P01' || r.status === 404)) {
+        _dispoUseLocal = true;
+        console.warn('Table disponibilites absente dans Supabase \u2014 utilisation de localStorage.');
+      } else {
+        _dispoUseLocal = false;
+      }
+    } catch(e) {
+      _dispoUseLocal = true;
+    }
+  }
+
+  // --- Helpers localStorage ---
+  function dispoLocalGet(type) {
+    try {
+      var all = JSON.parse(localStorage.getItem('li_disponibilites') || '[]');
+      if (type) return all.filter(function(d) { return d.type === type; });
+      return all;
+    } catch(e) { return []; }
+  }
+  function dispoLocalSet(data) {
+    try { localStorage.setItem('li_disponibilites', JSON.stringify(data)); } catch(e) {}
+  }
+  function dispoLocalAdd(item) {
+    var all = dispoLocalGet();
+    item.id = item.id || ('local_' + Date.now() + '_' + Math.random().toString(36).substr(2,5));
+    item.created_at = item.created_at || new Date().toISOString();
+    all.push(item);
+    dispoLocalSet(all);
+    return item;
+  }
+  function dispoLocalDelete(id) {
+    var all = dispoLocalGet();
+    dispoLocalSet(all.filter(function(d) { return d.id !== id; }));
+  }
+  function dispoLocalUpdate(id, updates) {
+    var all = dispoLocalGet();
+    for (var i = 0; i < all.length; i++) {
+      if (all[i].id === id) {
+        for (var k in updates) all[i][k] = updates[k];
+        break;
+      }
+    }
+    dispoLocalSet(all);
+  }
+  function dispoLocalFindOne(type) {
+    var items = dispoLocalGet(type);
+    return items.length > 0 ? items[0] : null;
+  }
 
   // --- Sous-onglets disponibilités ---
   var dispoSubtabs = document.querySelectorAll('.dispo-subtab');
@@ -5811,12 +5867,18 @@
     return horaires;
   }
 
-  // --- Charger les horaires depuis Supabase ---
+  // --- Charger les horaires (hybride Supabase / localStorage) ---
   async function chargerHoraires() {
     try {
-      var result = await supabase.from('disponibilites').select('*').eq('type', 'horaires').single();
-      if (result.data && result.data.data) {
-        var horaires = result.data.data;
+      var record = null;
+      if (_dispoUseLocal) {
+        record = dispoLocalFindOne('horaires');
+      } else {
+        var result = await supabase.from('disponibilites').select('*').eq('type', 'horaires').single();
+        record = result.data;
+      }
+      if (record && record.data) {
+        var horaires = record.data;
         var jours = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
         jours.forEach(function(jour) {
           if (!horaires[jour]) return;
@@ -5852,12 +5914,21 @@
       btnSauverHoraires.textContent = 'Enregistrement\u2026';
       try {
         var horaires = collecterHoraires();
-        // Upsert : on cherche d'abord si un enregistrement existe
-        var existing = await supabase.from('disponibilites').select('id').eq('type', 'horaires').single();
-        if (existing.data) {
-          await supabase.from('disponibilites').update({ data: horaires, updated_at: new Date().toISOString() }).eq('id', existing.data.id);
+        if (_dispoUseLocal) {
+          var ex = dispoLocalFindOne('horaires');
+          if (ex) {
+            dispoLocalUpdate(ex.id, { data: horaires, updated_at: new Date().toISOString() });
+          } else {
+            dispoLocalAdd({ type: 'horaires', data: horaires });
+          }
         } else {
-          await supabase.from('disponibilites').insert({ type: 'horaires', data: horaires });
+          // Upsert : on cherche d'abord si un enregistrement existe
+          var existing = await supabase.from('disponibilites').select('id').eq('type', 'horaires').single();
+          if (existing.data) {
+            await supabase.from('disponibilites').update({ data: horaires, updated_at: new Date().toISOString() }).eq('id', existing.data.id);
+          } else {
+            await supabase.from('disponibilites').insert({ type: 'horaires', data: horaires });
+          }
         }
         msg.hidden = false;
         msg.className = 'dispo-message dispo-message--success';
@@ -5873,13 +5944,19 @@
     });
   }
 
-  // --- Charger les absences ---
+  // --- Charger les absences (hybride) ---
   async function chargerAbsences() {
     var liste = document.getElementById('absences-liste');
     if (!liste) return;
     try {
-      var result = await supabase.from('disponibilites').select('*').eq('type', 'absence').order('created_at', { ascending: false });
-      var data = result.data || [];
+      var data = [];
+      if (_dispoUseLocal) {
+        data = dispoLocalGet('absence');
+        data.sort(function(a,b) { return (b.created_at||'').localeCompare(a.created_at||''); });
+      } else {
+        var result = await supabase.from('disponibilites').select('*').eq('type', 'absence').order('created_at', { ascending: false });
+        data = result.data || [];
+      }
       if (data.length === 0) {
         liste.innerHTML = '<p class="dispo-liste__vide">Aucune absence enregistr\u00e9e.</p>';
         return;
@@ -5910,7 +5987,12 @@
       liste.querySelectorAll('[data-suppr-id]').forEach(function(btn) {
         btn.addEventListener('click', async function() {
           if (!confirm('Supprimer cette absence ?')) return;
-          await supabase.from('disponibilites').delete().eq('id', btn.getAttribute('data-suppr-id'));
+          var delId = btn.getAttribute('data-suppr-id');
+          if (_dispoUseLocal) {
+            dispoLocalDelete(delId);
+          } else {
+            await supabase.from('disponibilites').delete().eq('id', delId);
+          }
           chargerAbsences();
         });
       });
@@ -5943,10 +6025,14 @@
 
       btnAjouterAbsence.disabled = true;
       try {
-        await supabase.from('disponibilites').insert({
-          type: 'absence',
-          data: { debut: debut, fin: fin, motif: motif }
-        });
+        if (_dispoUseLocal) {
+          dispoLocalAdd({ type: 'absence', data: { debut: debut, fin: fin, motif: motif } });
+        } else {
+          await supabase.from('disponibilites').insert({
+            type: 'absence',
+            data: { debut: debut, fin: fin, motif: motif }
+          });
+        }
         document.getElementById('absence-debut').value = '';
         document.getElementById('absence-fin').value = '';
         document.getElementById('absence-motif').value = '';
@@ -5964,13 +6050,19 @@
     });
   }
 
-  // --- Charger les dates spéciales ---
+  // --- Charger les dates spéciales (hybride) ---
   async function chargerDatesSpeciales() {
     var liste = document.getElementById('dates-speciales-liste');
     if (!liste) return;
     try {
-      var result = await supabase.from('disponibilites').select('*').eq('type', 'date_speciale').order('created_at', { ascending: false });
-      var data = result.data || [];
+      var data = [];
+      if (_dispoUseLocal) {
+        data = dispoLocalGet('date_speciale');
+        data.sort(function(a,b) { return (b.created_at||'').localeCompare(a.created_at||''); });
+      } else {
+        var result = await supabase.from('disponibilites').select('*').eq('type', 'date_speciale').order('created_at', { ascending: false });
+        data = result.data || [];
+      }
       if (data.length === 0) {
         liste.innerHTML = '<p class="dispo-liste__vide">Aucune date sp\u00e9ciale enregistr\u00e9e.</p>';
         return;
@@ -5999,7 +6091,12 @@
       liste.querySelectorAll('[data-suppr-ds-id]').forEach(function(btn) {
         btn.addEventListener('click', async function() {
           if (!confirm('Supprimer cette date sp\u00e9ciale ?')) return;
-          await supabase.from('disponibilites').delete().eq('id', btn.getAttribute('data-suppr-ds-id'));
+          var dsId = btn.getAttribute('data-suppr-ds-id');
+          if (_dispoUseLocal) {
+            dispoLocalDelete(dsId);
+          } else {
+            await supabase.from('disponibilites').delete().eq('id', dsId);
+          }
           chargerDatesSpeciales();
         });
       });
@@ -6027,10 +6124,14 @@
 
       btnAjouterDateSpeciale.disabled = true;
       try {
-        await supabase.from('disponibilites').insert({
-          type: 'date_speciale',
-          data: { date: jour, debut: debut, fin: fin, label: label }
-        });
+        if (_dispoUseLocal) {
+          dispoLocalAdd({ type: 'date_speciale', data: { date: jour, debut: debut, fin: fin, label: label } });
+        } else {
+          await supabase.from('disponibilites').insert({
+            type: 'date_speciale',
+            data: { date: jour, debut: debut, fin: fin, label: label }
+          });
+        }
         document.getElementById('date-speciale-jour').value = '';
         document.getElementById('date-speciale-debut').value = '09:00';
         document.getElementById('date-speciale-fin').value = '18:00';
@@ -6052,7 +6153,8 @@
   // --- Charger les données dispo au clic sur l'onglet ---
   var dispoTabBtn = document.querySelector('[data-admin-tab="disponibilites"]');
   if (dispoTabBtn) {
-    dispoTabBtn.addEventListener('click', function() {
+    dispoTabBtn.addEventListener('click', async function() {
+      await dispoCheckTable();
       chargerHoraires();
       chargerAbsences();
       chargerDatesSpeciales();
@@ -6066,8 +6168,14 @@
     var banner = document.getElementById('absence-banner');
     if (!banner) return;
     try {
-      var result = await supabase.from('disponibilites').select('*').eq('type', 'absence');
-      var absences = result.data || [];
+      await dispoCheckTable();
+      var absences = [];
+      if (_dispoUseLocal) {
+        absences = dispoLocalGet('absence');
+      } else {
+        var result = await supabase.from('disponibilites').select('*').eq('type', 'absence');
+        absences = result.data || [];
+      }
       var now = new Date();
       // Trouver une absence dont la période couvre aujourd'hui
       var absenceActive = null;

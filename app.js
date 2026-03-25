@@ -4722,7 +4722,7 @@
       var { data, error } = await supabase
         .from('temoignages')
         .select('*')
-        .order('created_at', { ascending: false });
+        .order('date_creation', { ascending: false });
 
       if (error) throw error;
       if (!data || data.length === 0) {
@@ -4751,7 +4751,7 @@
         var starsStr = '';
         for (var s = 0; s < (t.note || 0); s++) starsStr += '\u2605';
         for (var e = (t.note || 0); e < 5; e++) starsStr += '\u2606';
-        var dateStr = t.created_at ? new Date(t.created_at).toLocaleDateString('fr-FR') : '\u2014';
+        var dateStr = t.date_creation ? new Date(t.date_creation).toLocaleDateString('fr-FR') : '\u2014';
         var statusBadge = t.approuve
           ? '<span class="moderation-badge moderation-badge--approved">\u2714 Approuv\u00e9</span>'
           : '<span class="moderation-badge moderation-badge--pending">\u23f3 En attente</span>';

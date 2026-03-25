@@ -3868,6 +3868,7 @@
       if (tabId === 'clients') chargerAdminClients();
       if (tabId === 'newsletter') chargerAdminNewsletter();
       if (tabId === 'temoignages') chargerAdminTemoignages();
+      if (tabId === 'visiteurs') chargerAdminVisiteurs();
     });
   })();
 
@@ -5572,33 +5573,154 @@
 
 
   // ========================================
-  // COMPTEUR DE VISITEURS
+  // COMPTEUR DE VISITEURS + TRACKING
   // ========================================
   (async function initCompteurVisiteurs() {
     var el = document.getElementById('compteur-visiteurs');
-    if (!el || !window.supabase) return;
+    if (!window.supabase) return;
 
     try {
       var sb = supabase;
-      // Vérifier si déjà compté dans cette session
       var sessionKey = 'li_visite_comptee';
       var dejaCompte = false;
       try { dejaCompte = !!safeSession.getItem(sessionKey); } catch(e) {}
 
       if (!dejaCompte) {
-        // Incrémenter le compteur
+        // Incrémenter le compteur global
         await sb.rpc('incrementer_visiteurs');
         try { safeSession.setItem(sessionKey, '1'); } catch(e) {}
+
+        // Logger la visite avec IP et géolocalisation
+        try {
+          var geo = await fetch('https://ipapi.co/json/').then(function(r) { return r.json(); });
+          await sb.from('visites_log').insert({
+            ip: geo.ip || null,
+            ville: geo.city || null,
+            pays: geo.country_name || null,
+            region: geo.region || null,
+            navigateur: navigator.userAgent.substring(0, 200),
+            page: window.location.hash || '#accueil'
+          });
+        } catch(geoErr) {
+          // Fallback sans géolocalisation
+          try {
+            await sb.from('visites_log').insert({
+              ip: null,
+              ville: null,
+              pays: null,
+              region: null,
+              navigateur: navigator.userAgent.substring(0, 200),
+              page: window.location.hash || '#accueil'
+            });
+          } catch(e2) {}
+        }
       }
 
       // Lire le total
-      var result = await sb.from('visiteurs').select('total').eq('id', 1).maybeSingle();
-      if (result.data && result.data.total != null) {
-        el.textContent = result.data.total.toLocaleString('fr-FR');
+      if (el) {
+        var result = await sb.from('visiteurs').select('total').eq('id', 1).maybeSingle();
+        if (result.data && result.data.total != null) {
+          el.textContent = result.data.total.toLocaleString('fr-FR');
+        }
       }
     } catch(e) {
       // Fallback silencieux
     }
   })();
+
+  // ========================================
+  // ADMIN — Onglet Visiteurs
+  // ========================================
+  async function chargerAdminVisiteurs(filter) {
+    var container = document.getElementById('admin-visiteurs-table');
+    if (!container) return;
+    container.innerHTML = '<p class="admin-dash-loading">Chargement des visiteurs\u2026</p>';
+
+    filter = filter || '50';
+
+    try {
+      var query = supabase.from('visites_log').select('*').order('created_at', { ascending: false });
+
+      if (filter === 'today') {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        query = query.gte('created_at', today.toISOString());
+      } else if (filter === 'week') {
+        var week = new Date();
+        week.setDate(week.getDate() - 7);
+        query = query.gte('created_at', week.toISOString());
+      } else {
+        query = query.limit(parseInt(filter) || 50);
+      }
+
+      var result = await query;
+      if (result.error) throw result.error;
+      var data = result.data || [];
+
+      // Stats résumées
+      var statsEl = document.getElementById('admin-visiteurs-stats');
+      if (statsEl) {
+        var villes = {};
+        var pays = {};
+        data.forEach(function(v) {
+          if (v.ville) villes[v.ville] = (villes[v.ville] || 0) + 1;
+          if (v.pays) pays[v.pays] = (pays[v.pays] || 0) + 1;
+        });
+        var topVille = Object.entries(villes).sort(function(a, b) { return b[1] - a[1]; })[0];
+        statsEl.innerHTML = '<div style="font-size:0.85rem;"><strong style="color:var(--accent,#d4a574);font-size:1.2rem;">' + data.length + '</strong> <span style="color:var(--color-text-muted);">visites</span></div>' +
+          '<div style="font-size:0.85rem;"><strong style="color:var(--accent,#d4a574);font-size:1.2rem;">' + Object.keys(villes).length + '</strong> <span style="color:var(--color-text-muted);">villes</span></div>' +
+          '<div style="font-size:0.85rem;"><strong style="color:var(--accent,#d4a574);font-size:1.2rem;">' + Object.keys(pays).length + '</strong> <span style="color:var(--color-text-muted);">pays</span></div>' +
+          (topVille ? '<div style="font-size:0.85rem;"><span style="color:var(--color-text-muted);">Top : </span><strong style="color:var(--accent,#d4a574);">' + topVille[0] + '</strong> <span style="color:var(--color-text-muted);">(' + topVille[1] + ')</span></div>' : '');
+      }
+
+      if (data.length === 0) {
+        container.innerHTML = '<p class="admin-dash-empty">Aucune visite enregistr\u00e9e.</p>';
+        return;
+      }
+
+      var html = '<div class="admin-dash-table--visiteurs">';
+      html += '<div class="admin-dash-table__row admin-dash-table__row--header">' +
+        '<div class="admin-dash-table__cell">Date</div>' +
+        '<div class="admin-dash-table__cell">IP</div>' +
+        '<div class="admin-dash-table__cell">Ville</div>' +
+        '<div class="admin-dash-table__cell">R\u00e9gion</div>' +
+        '<div class="admin-dash-table__cell">Pays</div>' +
+        '<div class="admin-dash-table__cell">Page</div>' +
+        '</div>';
+
+      for (var i = 0; i < data.length; i++) {
+        var v = data[i];
+        var d = v.created_at ? new Date(v.created_at) : null;
+        var dateStr = d ? d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '\u2014';
+        var ipDisplay = v.ip || '\u2014';
+        var villeDisplay = v.ville || '\u2014';
+        var regionDisplay = v.region || '\u2014';
+        var paysDisplay = v.pays || '\u2014';
+        var pageDisplay = (v.page || '#accueil').replace('#', '');
+
+        html += '<div class="admin-dash-table__row">' +
+          '<div class="admin-dash-table__cell" data-label="Date">' + dateStr + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="IP" style="font-family:monospace;font-size:0.78rem;">' + escHtml(ipDisplay) + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="Ville" style="font-weight:600;">' + escHtml(villeDisplay) + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="R\u00e9gion">' + escHtml(regionDisplay) + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="Pays">' + escHtml(paysDisplay) + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="Page" style="opacity:0.7;">' + escHtml(pageDisplay) + '</div>' +
+          '</div>';
+      }
+      html += '</div>';
+      container.innerHTML = html;
+      initResizableColumns(container.querySelector('.admin-dash-table--visiteurs'));
+    } catch(e) {
+      container.innerHTML = '<p class="admin-dash-empty">Erreur lors du chargement des visiteurs.</p>';
+    }
+  }
+
+  // Filtre visiteurs
+  var visiteurFilter = document.getElementById('admin-visiteurs-filter');
+  if (visiteurFilter) {
+    visiteurFilter.addEventListener('change', function() {
+      chargerAdminVisiteurs(this.value);
+    });
+  }
 
 })();

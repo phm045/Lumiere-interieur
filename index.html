@@ -1880,6 +1880,10 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
               <span>Visiteurs</span>
             </button>
+            <button class="admin-dash-tab" data-admin-tab="disponibilites">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span>Disponibilités</span>
+            </button>
           </div>
 
           <!-- TAB: Dashboard Home -->
@@ -2189,6 +2193,264 @@
             <div class="admin-dash-table" id="admin-visiteurs-table">
               <p class="admin-dash-loading">Chargement des visiteurs...</p>
             </div>
+          </div>
+
+          <!-- TAB: Disponibilités -->
+          <div class="admin-tab-content" id="admin-tab-disponibilites">
+
+            <!-- Sous-navigation disponibilités -->
+            <div class="dispo-subtabs">
+              <button class="dispo-subtab dispo-subtab--active" data-dispo-tab="horaires">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                Horaires hebdo
+              </button>
+              <button class="dispo-subtab" data-dispo-tab="absences">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><line x1="9" y1="16" x2="15" y2="16"/></svg>
+                Absences / Congés
+              </button>
+              <button class="dispo-subtab" data-dispo-tab="dates">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/><path d="M8 14l2 2 4-4"/></svg>
+                Dates spéciales
+              </button>
+            </div>
+
+            <!-- Section : Horaires hebdomadaires -->
+            <div class="dispo-panel dispo-panel--active" id="dispo-panel-horaires">
+              <p class="dispo-desc">Définissez vos créneaux de consultation pour chaque jour de la semaine.</p>
+              <div class="dispo-semaine" id="dispo-semaine">
+                <!-- Lundi -->
+                <div class="dispo-jour" data-jour="lundi">
+                  <div class="dispo-jour__header">
+                    <label class="dispo-toggle">
+                      <input type="checkbox" class="dispo-toggle__input" data-jour-toggle="lundi" checked>
+                      <span class="dispo-toggle__slider"></span>
+                    </label>
+                    <span class="dispo-jour__nom">Lundi</span>
+                  </div>
+                  <div class="dispo-jour__creneaux" id="creneaux-lundi">
+                    <div class="dispo-creneau">
+                      <input type="time" class="dispo-time" value="09:00" data-role="debut">
+                      <span class="dispo-sep">→</span>
+                      <input type="time" class="dispo-time" value="12:00" data-role="fin">
+                      <button class="dispo-creneau__suppr" title="Supprimer">&times;</button>
+                    </div>
+                    <div class="dispo-creneau">
+                      <input type="time" class="dispo-time" value="14:00" data-role="debut">
+                      <span class="dispo-sep">→</span>
+                      <input type="time" class="dispo-time" value="18:00" data-role="fin">
+                      <button class="dispo-creneau__suppr" title="Supprimer">&times;</button>
+                    </div>
+                  </div>
+                  <button class="dispo-jour__ajouter" data-jour-add="lundi">+ Ajouter un créneau</button>
+                </div>
+                <!-- Mardi -->
+                <div class="dispo-jour" data-jour="mardi">
+                  <div class="dispo-jour__header">
+                    <label class="dispo-toggle">
+                      <input type="checkbox" class="dispo-toggle__input" data-jour-toggle="mardi" checked>
+                      <span class="dispo-toggle__slider"></span>
+                    </label>
+                    <span class="dispo-jour__nom">Mardi</span>
+                  </div>
+                  <div class="dispo-jour__creneaux" id="creneaux-mardi">
+                    <div class="dispo-creneau">
+                      <input type="time" class="dispo-time" value="09:00" data-role="debut">
+                      <span class="dispo-sep">→</span>
+                      <input type="time" class="dispo-time" value="12:00" data-role="fin">
+                      <button class="dispo-creneau__suppr" title="Supprimer">&times;</button>
+                    </div>
+                    <div class="dispo-creneau">
+                      <input type="time" class="dispo-time" value="14:00" data-role="debut">
+                      <span class="dispo-sep">→</span>
+                      <input type="time" class="dispo-time" value="18:00" data-role="fin">
+                      <button class="dispo-creneau__suppr" title="Supprimer">&times;</button>
+                    </div>
+                  </div>
+                  <button class="dispo-jour__ajouter" data-jour-add="mardi">+ Ajouter un créneau</button>
+                </div>
+                <!-- Mercredi -->
+                <div class="dispo-jour" data-jour="mercredi">
+                  <div class="dispo-jour__header">
+                    <label class="dispo-toggle">
+                      <input type="checkbox" class="dispo-toggle__input" data-jour-toggle="mercredi" checked>
+                      <span class="dispo-toggle__slider"></span>
+                    </label>
+                    <span class="dispo-jour__nom">Mercredi</span>
+                  </div>
+                  <div class="dispo-jour__creneaux" id="creneaux-mercredi">
+                    <div class="dispo-creneau">
+                      <input type="time" class="dispo-time" value="09:00" data-role="debut">
+                      <span class="dispo-sep">→</span>
+                      <input type="time" class="dispo-time" value="12:00" data-role="fin">
+                      <button class="dispo-creneau__suppr" title="Supprimer">&times;</button>
+                    </div>
+                    <div class="dispo-creneau">
+                      <input type="time" class="dispo-time" value="14:00" data-role="debut">
+                      <span class="dispo-sep">→</span>
+                      <input type="time" class="dispo-time" value="18:00" data-role="fin">
+                      <button class="dispo-creneau__suppr" title="Supprimer">&times;</button>
+                    </div>
+                  </div>
+                  <button class="dispo-jour__ajouter" data-jour-add="mercredi">+ Ajouter un créneau</button>
+                </div>
+                <!-- Jeudi -->
+                <div class="dispo-jour" data-jour="jeudi">
+                  <div class="dispo-jour__header">
+                    <label class="dispo-toggle">
+                      <input type="checkbox" class="dispo-toggle__input" data-jour-toggle="jeudi" checked>
+                      <span class="dispo-toggle__slider"></span>
+                    </label>
+                    <span class="dispo-jour__nom">Jeudi</span>
+                  </div>
+                  <div class="dispo-jour__creneaux" id="creneaux-jeudi">
+                    <div class="dispo-creneau">
+                      <input type="time" class="dispo-time" value="09:00" data-role="debut">
+                      <span class="dispo-sep">→</span>
+                      <input type="time" class="dispo-time" value="12:00" data-role="fin">
+                      <button class="dispo-creneau__suppr" title="Supprimer">&times;</button>
+                    </div>
+                    <div class="dispo-creneau">
+                      <input type="time" class="dispo-time" value="14:00" data-role="debut">
+                      <span class="dispo-sep">→</span>
+                      <input type="time" class="dispo-time" value="18:00" data-role="fin">
+                      <button class="dispo-creneau__suppr" title="Supprimer">&times;</button>
+                    </div>
+                  </div>
+                  <button class="dispo-jour__ajouter" data-jour-add="jeudi">+ Ajouter un créneau</button>
+                </div>
+                <!-- Vendredi -->
+                <div class="dispo-jour" data-jour="vendredi">
+                  <div class="dispo-jour__header">
+                    <label class="dispo-toggle">
+                      <input type="checkbox" class="dispo-toggle__input" data-jour-toggle="vendredi" checked>
+                      <span class="dispo-toggle__slider"></span>
+                    </label>
+                    <span class="dispo-jour__nom">Vendredi</span>
+                  </div>
+                  <div class="dispo-jour__creneaux" id="creneaux-vendredi">
+                    <div class="dispo-creneau">
+                      <input type="time" class="dispo-time" value="09:00" data-role="debut">
+                      <span class="dispo-sep">→</span>
+                      <input type="time" class="dispo-time" value="12:00" data-role="fin">
+                      <button class="dispo-creneau__suppr" title="Supprimer">&times;</button>
+                    </div>
+                    <div class="dispo-creneau">
+                      <input type="time" class="dispo-time" value="14:00" data-role="debut">
+                      <span class="dispo-sep">→</span>
+                      <input type="time" class="dispo-time" value="18:00" data-role="fin">
+                      <button class="dispo-creneau__suppr" title="Supprimer">&times;</button>
+                    </div>
+                  </div>
+                  <button class="dispo-jour__ajouter" data-jour-add="vendredi">+ Ajouter un créneau</button>
+                </div>
+                <!-- Samedi -->
+                <div class="dispo-jour" data-jour="samedi">
+                  <div class="dispo-jour__header">
+                    <label class="dispo-toggle">
+                      <input type="checkbox" class="dispo-toggle__input" data-jour-toggle="samedi">
+                      <span class="dispo-toggle__slider"></span>
+                    </label>
+                    <span class="dispo-jour__nom">Samedi</span>
+                  </div>
+                  <div class="dispo-jour__creneaux dispo-jour__creneaux--off" id="creneaux-samedi">
+                    <div class="dispo-creneau">
+                      <input type="time" class="dispo-time" value="10:00" data-role="debut">
+                      <span class="dispo-sep">→</span>
+                      <input type="time" class="dispo-time" value="13:00" data-role="fin">
+                      <button class="dispo-creneau__suppr" title="Supprimer">&times;</button>
+                    </div>
+                  </div>
+                  <button class="dispo-jour__ajouter" data-jour-add="samedi">+ Ajouter un créneau</button>
+                </div>
+                <!-- Dimanche -->
+                <div class="dispo-jour" data-jour="dimanche">
+                  <div class="dispo-jour__header">
+                    <label class="dispo-toggle">
+                      <input type="checkbox" class="dispo-toggle__input" data-jour-toggle="dimanche">
+                      <span class="dispo-toggle__slider"></span>
+                    </label>
+                    <span class="dispo-jour__nom">Dimanche</span>
+                  </div>
+                  <div class="dispo-jour__creneaux dispo-jour__creneaux--off" id="creneaux-dimanche">
+                  </div>
+                  <button class="dispo-jour__ajouter" data-jour-add="dimanche">+ Ajouter un créneau</button>
+                </div>
+              </div>
+              <div class="dispo-actions">
+                <button class="btn btn--primary" id="btn-sauver-horaires">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                  Enregistrer les horaires
+                </button>
+                <div class="dispo-message" id="msg-horaires" hidden></div>
+              </div>
+            </div>
+
+            <!-- Section : Absences / Congés -->
+            <div class="dispo-panel" id="dispo-panel-absences">
+              <p class="dispo-desc">Bloquez des périodes où vous ne serez pas disponible (vacances, congés maladie, etc.).</p>
+              <div class="dispo-absence-form" id="absence-form">
+                <div class="dispo-absence-form__row">
+                  <div class="dispo-absence-form__group">
+                    <label class="admin-modal__label">Date de début</label>
+                    <input type="date" class="admin-modal__input" id="absence-debut">
+                  </div>
+                  <div class="dispo-absence-form__group">
+                    <label class="admin-modal__label">Date de fin</label>
+                    <input type="date" class="admin-modal__input" id="absence-fin">
+                  </div>
+                  <div class="dispo-absence-form__group">
+                    <label class="admin-modal__label">Motif (optionnel)</label>
+                    <input type="text" class="admin-modal__input" id="absence-motif" placeholder="Ex : Vacances, Maladie..." maxlength="100">
+                  </div>
+                  <div class="dispo-absence-form__group dispo-absence-form__group--btn">
+                    <button class="btn btn--primary" id="btn-ajouter-absence">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Ajouter
+                    </button>
+                  </div>
+                </div>
+                <div class="dispo-message" id="msg-absence" hidden></div>
+              </div>
+              <div id="absences-liste" class="dispo-liste">
+                <p class="dispo-liste__vide">Aucune absence enregistrée.</p>
+              </div>
+            </div>
+
+            <!-- Section : Dates spéciales -->
+            <div class="dispo-panel" id="dispo-panel-dates">
+              <p class="dispo-desc">Ajoutez des dates avec des horaires exceptionnels (jours fériés ouverts, événements spéciaux, etc.).</p>
+              <div class="dispo-date-form" id="date-speciale-form">
+                <div class="dispo-date-form__row">
+                  <div class="dispo-date-form__group">
+                    <label class="admin-modal__label">Date</label>
+                    <input type="date" class="admin-modal__input" id="date-speciale-jour">
+                  </div>
+                  <div class="dispo-date-form__group">
+                    <label class="admin-modal__label">De</label>
+                    <input type="time" class="admin-modal__input" id="date-speciale-debut" value="09:00">
+                  </div>
+                  <div class="dispo-date-form__group">
+                    <label class="admin-modal__label">À</label>
+                    <input type="time" class="admin-modal__input" id="date-speciale-fin" value="18:00">
+                  </div>
+                  <div class="dispo-date-form__group">
+                    <label class="admin-modal__label">Label</label>
+                    <input type="text" class="admin-modal__input" id="date-speciale-label" placeholder="Ex : Journée portes ouvertes" maxlength="100">
+                  </div>
+                  <div class="dispo-date-form__group dispo-date-form__group--btn">
+                    <button class="btn btn--primary" id="btn-ajouter-date-speciale">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                      Ajouter
+                    </button>
+                  </div>
+                </div>
+                <div class="dispo-message" id="msg-date-speciale" hidden></div>
+              </div>
+              <div id="dates-speciales-liste" class="dispo-liste">
+                <p class="dispo-liste__vide">Aucune date spéciale enregistrée.</p>
+              </div>
+            </div>
+
           </div>
 
           <!-- Admin Logout -->

@@ -5561,3 +5561,370 @@ textarea.blog-comments__input {
   font-size: 1.1rem;
   flex-shrink: 0;
 }
+
+/* ═══════════════════════════════════════════════════
+   DISPONIBILITÉS — Admin Tab
+   ═══════════════════════════════════════════════════ */
+
+/* Sous-onglets */
+.dispo-subtabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 0.75rem;
+}
+.dispo-subtab {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: var(--text-secondary, #999);
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.dispo-subtab:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary, #fff);
+}
+.dispo-subtab--active {
+  background: rgba(212,165,116,0.15);
+  color: rgba(212,165,116,1);
+  border-color: rgba(212,165,116,0.3);
+}
+.dispo-subtab--active svg {
+  stroke: rgba(212,165,116,1);
+}
+
+/* Panneaux */
+.dispo-panel { display: none; }
+.dispo-panel--active { display: block; }
+
+.dispo-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #999);
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+
+/* ─── Horaires hebdomadaires ─── */
+.dispo-semaine {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.dispo-jour {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  transition: background 0.2s;
+}
+.dispo-jour:hover {
+  background: rgba(255,255,255,0.05);
+}
+.dispo-jour__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.dispo-jour__nom {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary, #fff);
+  min-width: 80px;
+}
+
+/* Toggle switch */
+.dispo-toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.dispo-toggle__input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.dispo-toggle__slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: rgba(255,255,255,0.15);
+  border-radius: 22px;
+  transition: 0.3s;
+}
+.dispo-toggle__slider::before {
+  content: '';
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.dispo-toggle__input:checked + .dispo-toggle__slider {
+  background: rgba(212,165,116,0.7);
+}
+.dispo-toggle__input:checked + .dispo-toggle__slider::before {
+  transform: translateX(18px);
+}
+
+/* Créneaux horaires */
+.dispo-jour__creneaux {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  transition: opacity 0.2s;
+}
+.dispo-jour__creneaux--off {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.dispo-creneau {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.dispo-time {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary, #fff);
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.88rem;
+  width: 110px;
+  transition: border-color 0.2s;
+}
+.dispo-time:focus {
+  outline: none;
+  border-color: rgba(212,165,116,0.6);
+  box-shadow: 0 0 0 2px rgba(212,165,116,0.1);
+}
+.dispo-sep {
+  color: var(--text-secondary, #999);
+  font-size: 0.85rem;
+}
+.dispo-creneau__suppr {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(231,76,60,0.3);
+  background: rgba(231,76,60,0.08);
+  color: #e74c3c;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.dispo-creneau__suppr:hover {
+  background: rgba(231,76,60,0.2);
+  border-color: rgba(231,76,60,0.5);
+}
+
+/* Bouton ajouter créneau */
+.dispo-jour__ajouter {
+  background: none;
+  border: 1px dashed rgba(255,255,255,0.15);
+  color: rgba(212,165,116,0.8);
+  font-size: 0.78rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Work Sans', sans-serif;
+  transition: all 0.2s;
+}
+.dispo-jour__ajouter:hover {
+  border-color: rgba(212,165,116,0.4);
+  background: rgba(212,165,116,0.06);
+  color: rgba(212,165,116,1);
+}
+
+/* Actions et messages */
+.dispo-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.dispo-message {
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.dispo-message[hidden] { display: none; }
+.dispo-message--success {
+  background: rgba(39,174,96,0.12);
+  color: #27ae60;
+  border: 1px solid rgba(39,174,96,0.25);
+}
+.dispo-message--error {
+  background: rgba(231,76,60,0.12);
+  color: #e74c3c;
+  border: 1px solid rgba(231,76,60,0.25);
+}
+
+/* ─── Absences / Congés ─── */
+.dispo-absence-form__row,
+.dispo-date-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+.dispo-absence-form__group,
+.dispo-date-form__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.dispo-absence-form__group--btn,
+.dispo-date-form__group--btn {
+  align-self: end;
+}
+
+/* ─── Dates spéciales ─── */
+.dispo-date-form__row {
+  grid-template-columns: 1fr 0.7fr 0.7fr 1.5fr auto;
+}
+
+/* ─── Listes absences / dates ─── */
+.dispo-liste {
+  margin-top: 1rem;
+}
+.dispo-liste__vide {
+  text-align: center;
+  color: var(--text-secondary, #999);
+  font-size: 0.85rem;
+  padding: 2rem 0;
+  opacity: 0.7;
+}
+.dispo-liste__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: background 0.2s;
+}
+.dispo-liste__item:hover {
+  background: rgba(255,255,255,0.06);
+}
+.dispo-liste__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.dispo-liste__dates {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+}
+.dispo-liste__motif {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #999);
+}
+.dispo-liste__badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.dispo-liste__badge--futur {
+  background: rgba(212,165,116,0.15);
+  color: rgba(212,165,116,1);
+}
+.dispo-liste__badge--passe {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-secondary, #999);
+}
+.dispo-liste__badge--actif {
+  background: rgba(231,76,60,0.12);
+  color: #e74c3c;
+}
+.dispo-liste__suppr {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(231,76,60,0.3);
+  background: rgba(231,76,60,0.06);
+  color: #e74c3c;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+}
+.dispo-liste__suppr:hover {
+  background: rgba(231,76,60,0.2);
+  border-color: rgba(231,76,60,0.5);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .dispo-subtabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .dispo-subtabs::-webkit-scrollbar { display: none; }
+  .dispo-absence-form__row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .dispo-absence-form__group:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+  .dispo-absence-form__group--btn {
+    grid-column: 1 / -1;
+  }
+  .dispo-date-form__row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .dispo-date-form__group:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+  .dispo-date-form__group--btn {
+    grid-column: 1 / -1;
+  }
+  .dispo-time { width: 100%; }
+}
+@media (max-width: 480px) {
+  .dispo-absence-form__row,
+  .dispo-date-form__row {
+    grid-template-columns: 1fr;
+  }
+  .dispo-creneau {
+    flex-wrap: wrap;
+  }
+}

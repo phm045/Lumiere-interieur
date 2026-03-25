@@ -5731,4 +5731,332 @@
     });
   }
 
+  // ═══════════════════════════════════════════════════
+  // DISPONIBILITÉS — Gestion horaires, absences, dates
+  // ═══════════════════════════════════════════════════
+
+  // --- Sous-onglets disponibilités ---
+  var dispoSubtabs = document.querySelectorAll('.dispo-subtab');
+  dispoSubtabs.forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var tabId = btn.getAttribute('data-dispo-tab');
+      dispoSubtabs.forEach(function(b) { b.classList.remove('dispo-subtab--active'); });
+      btn.classList.add('dispo-subtab--active');
+      document.querySelectorAll('.dispo-panel').forEach(function(p) { p.classList.remove('dispo-panel--active'); });
+      var target = document.getElementById('dispo-panel-' + tabId);
+      if (target) target.classList.add('dispo-panel--active');
+    });
+  });
+
+  // --- Toggle jours actifs/inactifs ---
+  document.querySelectorAll('[data-jour-toggle]').forEach(function(toggle) {
+    function updateJour() {
+      var jour = toggle.getAttribute('data-jour-toggle');
+      var creneaux = document.getElementById('creneaux-' + jour);
+      if (!creneaux) return;
+      if (toggle.checked) {
+        creneaux.classList.remove('dispo-jour__creneaux--off');
+      } else {
+        creneaux.classList.add('dispo-jour__creneaux--off');
+      }
+    }
+    toggle.addEventListener('change', updateJour);
+    updateJour();
+  });
+
+  // --- Supprimer un créneau horaire ---
+  document.getElementById('dispo-semaine').addEventListener('click', function(e) {
+    var supprBtn = e.target.closest('.dispo-creneau__suppr');
+    if (!supprBtn) return;
+    var creneau = supprBtn.closest('.dispo-creneau');
+    if (creneau) creneau.remove();
+  });
+
+  // --- Ajouter un créneau horaire ---
+  document.querySelectorAll('[data-jour-add]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var jour = btn.getAttribute('data-jour-add');
+      var container = document.getElementById('creneaux-' + jour);
+      if (!container) return;
+      var div = document.createElement('div');
+      div.className = 'dispo-creneau';
+      div.innerHTML = '<input type="time" class="dispo-time" value="09:00" data-role="debut">' +
+        '<span class="dispo-sep">\u2192</span>' +
+        '<input type="time" class="dispo-time" value="12:00" data-role="fin">' +
+        '<button class="dispo-creneau__suppr" title="Supprimer">&times;</button>';
+      container.appendChild(div);
+    });
+  });
+
+  // --- Collecter les horaires du formulaire ---
+  function collecterHoraires() {
+    var jours = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+    var horaires = {};
+    jours.forEach(function(jour) {
+      var toggle = document.querySelector('[data-jour-toggle="' + jour + '"]');
+      var actif = toggle ? toggle.checked : false;
+      var creneaux = [];
+      var container = document.getElementById('creneaux-' + jour);
+      if (container) {
+        container.querySelectorAll('.dispo-creneau').forEach(function(c) {
+          var debut = c.querySelector('[data-role="debut"]');
+          var fin = c.querySelector('[data-role="fin"]');
+          if (debut && fin && debut.value && fin.value) {
+            creneaux.push({ debut: debut.value, fin: fin.value });
+          }
+        });
+      }
+      horaires[jour] = { actif: actif, creneaux: creneaux };
+    });
+    return horaires;
+  }
+
+  // --- Charger les horaires depuis Supabase ---
+  async function chargerHoraires() {
+    try {
+      var result = await supabase.from('disponibilites').select('*').eq('type', 'horaires').single();
+      if (result.data && result.data.data) {
+        var horaires = result.data.data;
+        var jours = ['lundi','mardi','mercredi','jeudi','vendredi','samedi','dimanche'];
+        jours.forEach(function(jour) {
+          if (!horaires[jour]) return;
+          var toggle = document.querySelector('[data-jour-toggle="' + jour + '"]');
+          if (toggle) {
+            toggle.checked = horaires[jour].actif;
+            toggle.dispatchEvent(new Event('change'));
+          }
+          var container = document.getElementById('creneaux-' + jour);
+          if (container && horaires[jour].creneaux) {
+            container.innerHTML = '';
+            horaires[jour].creneaux.forEach(function(c) {
+              var div = document.createElement('div');
+              div.className = 'dispo-creneau';
+              div.innerHTML = '<input type="time" class="dispo-time" value="' + (c.debut || '09:00') + '" data-role="debut">' +
+                '<span class="dispo-sep">\u2192</span>' +
+                '<input type="time" class="dispo-time" value="' + (c.fin || '18:00') + '" data-role="fin">' +
+                '<button class="dispo-creneau__suppr" title="Supprimer">&times;</button>';
+              container.appendChild(div);
+            });
+          }
+        });
+      }
+    } catch(e) { console.warn('Horaires non charg\u00e9s:', e); }
+  }
+
+  // --- Sauvegarder les horaires ---
+  var btnSauverHoraires = document.getElementById('btn-sauver-horaires');
+  if (btnSauverHoraires) {
+    btnSauverHoraires.addEventListener('click', async function() {
+      var msg = document.getElementById('msg-horaires');
+      btnSauverHoraires.disabled = true;
+      btnSauverHoraires.textContent = 'Enregistrement\u2026';
+      try {
+        var horaires = collecterHoraires();
+        // Upsert : on cherche d'abord si un enregistrement existe
+        var existing = await supabase.from('disponibilites').select('id').eq('type', 'horaires').single();
+        if (existing.data) {
+          await supabase.from('disponibilites').update({ data: horaires, updated_at: new Date().toISOString() }).eq('id', existing.data.id);
+        } else {
+          await supabase.from('disponibilites').insert({ type: 'horaires', data: horaires });
+        }
+        msg.hidden = false;
+        msg.className = 'dispo-message dispo-message--success';
+        msg.textContent = '\u2713 Horaires enregistr\u00e9s avec succ\u00e8s';
+        setTimeout(function() { msg.hidden = true; }, 3000);
+      } catch(e) {
+        msg.hidden = false;
+        msg.className = 'dispo-message dispo-message--error';
+        msg.textContent = 'Erreur : ' + (e.message || e);
+      }
+      btnSauverHoraires.disabled = false;
+      btnSauverHoraires.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Enregistrer les horaires';
+    });
+  }
+
+  // --- Charger les absences ---
+  async function chargerAbsences() {
+    var liste = document.getElementById('absences-liste');
+    if (!liste) return;
+    try {
+      var result = await supabase.from('disponibilites').select('*').eq('type', 'absence').order('created_at', { ascending: false });
+      var data = result.data || [];
+      if (data.length === 0) {
+        liste.innerHTML = '<p class="dispo-liste__vide">Aucune absence enregistr\u00e9e.</p>';
+        return;
+      }
+      var html = '';
+      var now = new Date();
+      data.forEach(function(a) {
+        var d = a.data || {};
+        var debut = new Date(d.debut);
+        var fin = new Date(d.fin);
+        var badge = '';
+        if (now >= debut && now <= fin) badge = '<span class="dispo-liste__badge dispo-liste__badge--actif">En cours</span>';
+        else if (now < debut) badge = '<span class="dispo-liste__badge dispo-liste__badge--futur">\u00c0 venir</span>';
+        else badge = '<span class="dispo-liste__badge dispo-liste__badge--passe">Pass\u00e9</span>';
+        var debutStr = debut.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+        var finStr = fin.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
+        html += '<div class="dispo-liste__item">' +
+          '<div class="dispo-liste__info">' +
+            '<span class="dispo-liste__dates">' + debutStr + ' \u2192 ' + finStr + ' ' + badge + '</span>' +
+            (d.motif ? '<span class="dispo-liste__motif">' + escHtml(d.motif) + '</span>' : '') +
+          '</div>' +
+          '<button class="dispo-liste__suppr" data-suppr-id="' + a.id + '" title="Supprimer">&times;</button>' +
+          '</div>';
+      });
+      liste.innerHTML = html;
+
+      // Attach delete handlers
+      liste.querySelectorAll('[data-suppr-id]').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+          if (!confirm('Supprimer cette absence ?')) return;
+          await supabase.from('disponibilites').delete().eq('id', btn.getAttribute('data-suppr-id'));
+          chargerAbsences();
+        });
+      });
+    } catch(e) {
+      liste.innerHTML = '<p class="dispo-liste__vide">Erreur de chargement.</p>';
+    }
+  }
+
+  // --- Ajouter une absence ---
+  var btnAjouterAbsence = document.getElementById('btn-ajouter-absence');
+  if (btnAjouterAbsence) {
+    btnAjouterAbsence.addEventListener('click', async function() {
+      var debut = document.getElementById('absence-debut').value;
+      var fin = document.getElementById('absence-fin').value;
+      var motif = document.getElementById('absence-motif').value.trim();
+      var msg = document.getElementById('msg-absence');
+
+      if (!debut || !fin) {
+        msg.hidden = false;
+        msg.className = 'dispo-message dispo-message--error';
+        msg.textContent = 'Veuillez renseigner les dates de d\u00e9but et de fin.';
+        return;
+      }
+      if (new Date(fin) < new Date(debut)) {
+        msg.hidden = false;
+        msg.className = 'dispo-message dispo-message--error';
+        msg.textContent = 'La date de fin doit \u00eatre apr\u00e8s la date de d\u00e9but.';
+        return;
+      }
+
+      btnAjouterAbsence.disabled = true;
+      try {
+        await supabase.from('disponibilites').insert({
+          type: 'absence',
+          data: { debut: debut, fin: fin, motif: motif }
+        });
+        document.getElementById('absence-debut').value = '';
+        document.getElementById('absence-fin').value = '';
+        document.getElementById('absence-motif').value = '';
+        msg.hidden = false;
+        msg.className = 'dispo-message dispo-message--success';
+        msg.textContent = '\u2713 Absence ajout\u00e9e';
+        setTimeout(function() { msg.hidden = true; }, 3000);
+        chargerAbsences();
+      } catch(e) {
+        msg.hidden = false;
+        msg.className = 'dispo-message dispo-message--error';
+        msg.textContent = 'Erreur : ' + (e.message || e);
+      }
+      btnAjouterAbsence.disabled = false;
+    });
+  }
+
+  // --- Charger les dates spéciales ---
+  async function chargerDatesSpeciales() {
+    var liste = document.getElementById('dates-speciales-liste');
+    if (!liste) return;
+    try {
+      var result = await supabase.from('disponibilites').select('*').eq('type', 'date_speciale').order('created_at', { ascending: false });
+      var data = result.data || [];
+      if (data.length === 0) {
+        liste.innerHTML = '<p class="dispo-liste__vide">Aucune date sp\u00e9ciale enregistr\u00e9e.</p>';
+        return;
+      }
+      var html = '';
+      var now = new Date();
+      data.forEach(function(ds) {
+        var d = ds.data || {};
+        var dateObj = new Date(d.date);
+        var badge = now.toDateString() === dateObj.toDateString() ?
+          '<span class="dispo-liste__badge dispo-liste__badge--actif">Aujourd\'hui</span>' :
+          (dateObj > now ? '<span class="dispo-liste__badge dispo-liste__badge--futur">\u00c0 venir</span>' :
+          '<span class="dispo-liste__badge dispo-liste__badge--passe">Pass\u00e9</span>');
+        var dateStr = dateObj.toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        html += '<div class="dispo-liste__item">' +
+          '<div class="dispo-liste__info">' +
+            '<span class="dispo-liste__dates">' + dateStr + ' ' + badge + '</span>' +
+            '<span class="dispo-liste__motif">' + (d.debut || '') + ' \u2192 ' + (d.fin || '') +
+              (d.label ? ' \u2014 ' + escHtml(d.label) : '') + '</span>' +
+          '</div>' +
+          '<button class="dispo-liste__suppr" data-suppr-ds-id="' + ds.id + '" title="Supprimer">&times;</button>' +
+          '</div>';
+      });
+      liste.innerHTML = html;
+
+      liste.querySelectorAll('[data-suppr-ds-id]').forEach(function(btn) {
+        btn.addEventListener('click', async function() {
+          if (!confirm('Supprimer cette date sp\u00e9ciale ?')) return;
+          await supabase.from('disponibilites').delete().eq('id', btn.getAttribute('data-suppr-ds-id'));
+          chargerDatesSpeciales();
+        });
+      });
+    } catch(e) {
+      liste.innerHTML = '<p class="dispo-liste__vide">Erreur de chargement.</p>';
+    }
+  }
+
+  // --- Ajouter une date spéciale ---
+  var btnAjouterDateSpeciale = document.getElementById('btn-ajouter-date-speciale');
+  if (btnAjouterDateSpeciale) {
+    btnAjouterDateSpeciale.addEventListener('click', async function() {
+      var jour = document.getElementById('date-speciale-jour').value;
+      var debut = document.getElementById('date-speciale-debut').value;
+      var fin = document.getElementById('date-speciale-fin').value;
+      var label = document.getElementById('date-speciale-label').value.trim();
+      var msg = document.getElementById('msg-date-speciale');
+
+      if (!jour) {
+        msg.hidden = false;
+        msg.className = 'dispo-message dispo-message--error';
+        msg.textContent = 'Veuillez s\u00e9lectionner une date.';
+        return;
+      }
+
+      btnAjouterDateSpeciale.disabled = true;
+      try {
+        await supabase.from('disponibilites').insert({
+          type: 'date_speciale',
+          data: { date: jour, debut: debut, fin: fin, label: label }
+        });
+        document.getElementById('date-speciale-jour').value = '';
+        document.getElementById('date-speciale-debut').value = '09:00';
+        document.getElementById('date-speciale-fin').value = '18:00';
+        document.getElementById('date-speciale-label').value = '';
+        msg.hidden = false;
+        msg.className = 'dispo-message dispo-message--success';
+        msg.textContent = '\u2713 Date sp\u00e9ciale ajout\u00e9e';
+        setTimeout(function() { msg.hidden = true; }, 3000);
+        chargerDatesSpeciales();
+      } catch(e) {
+        msg.hidden = false;
+        msg.className = 'dispo-message dispo-message--error';
+        msg.textContent = 'Erreur : ' + (e.message || e);
+      }
+      btnAjouterDateSpeciale.disabled = false;
+    });
+  }
+
+  // --- Charger les données dispo au clic sur l'onglet ---
+  var dispoTabBtn = document.querySelector('[data-admin-tab="disponibilites"]');
+  if (dispoTabBtn) {
+    dispoTabBtn.addEventListener('click', function() {
+      chargerHoraires();
+      chargerAbsences();
+      chargerDatesSpeciales();
+    });
+  }
+
 })();

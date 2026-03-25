@@ -4848,11 +4848,20 @@ textarea.blog-comments__input {
 }
 
 .admin-dash-table--clients .admin-dash-table__row {
-  grid-template-columns: 1fr 1fr 100px 80px 90px;
+  grid-template-columns: minmax(100px, 1.2fr) minmax(120px, 1.5fr) 95px 75px 80px;
 }
 
 .admin-dash-table--newsletter .admin-dash-table__row {
-  grid-template-columns: 1fr 1fr 120px 80px;
+  grid-template-columns: minmax(80px, 1fr) minmax(120px, 1.5fr) 100px 70px;
+}
+
+.admin-dash-table--temoignages .admin-dash-table__row {
+  grid-template-columns: 105px minmax(70px, 0.7fr) 80px minmax(120px, 2fr) 85px 150px;
+}
+
+.admin-dash-table__row--highlight {
+  background: rgba(243, 156, 18, 0.04);
+  border-left: 3px solid rgba(243, 156, 18, 0.4);
 }
 
 /* Column resize handles */
@@ -4895,7 +4904,8 @@ textarea.blog-comments__input {
 /* Allow horizontal scroll when columns are resized beyond container */
 .admin-dash-table--rdv,
 .admin-dash-table--clients,
-.admin-dash-table--newsletter {
+.admin-dash-table--newsletter,
+.admin-dash-table--temoignages {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -5034,7 +5044,8 @@ textarea.blog-comments__input {
   .admin-dash-table--commandes .admin-dash-table__row,
   .admin-dash-table--rdv .admin-dash-table__row,
   .admin-dash-table--clients .admin-dash-table__row,
-  .admin-dash-table--newsletter .admin-dash-table__row {
+  .admin-dash-table--newsletter .admin-dash-table__row,
+  .admin-dash-table--temoignages .admin-dash-table__row {
     grid-template-columns: 1fr;
     gap: 0.3rem;
   }

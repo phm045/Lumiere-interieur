@@ -166,3 +166,27 @@ BEGIN
   DELETE FROM auth.users WHERE id = auth.uid();
 END;
 $$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- ================================================
+-- Table des disponibilités (horaires, absences, dates spéciales)
+-- ================================================
+CREATE TABLE IF NOT EXISTS disponibilites (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  type TEXT NOT NULL,          -- 'horaires', 'absence', 'date_speciale'
+  data JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE disponibilites ENABLE ROW LEVEL SECURITY;
+
+-- Tout le monde peut lire les disponibilités (nécessaire pour la bannière d'absence)
+CREATE POLICY "Lecture publique des disponibilités"
+  ON disponibilites FOR SELECT
+  USING (true);
+
+-- Seul l'admin peut insérer / modifier / supprimer
+CREATE POLICY "Admin gère les disponibilités"
+  ON disponibilites FOR ALL
+  USING (auth.jwt() ->> 'email' = 'philippe.medium45@gmail.com')
+  WITH CHECK (auth.jwt() ->> 'email' = 'philippe.medium45@gmail.com');

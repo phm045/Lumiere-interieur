@@ -2747,17 +2747,28 @@
         }
 
         // Sauvegarder dans Supabase avec statut "en attente de modération"
+        var insertOk = false;
         try {
           if (window.supabase) {
-            await supabase.from('temoignages').insert({
+            var result = await supabase.from('temoignages').insert({
               nom: nom,
               note: note,
               texte: texte,
               approuve: false
             });
+            if (result.error) {
+              throw result.error;
+            }
+            insertOk = true;
           }
         } catch (err) {
-          // Silencieux — fonctionne aussi sans backend
+          console.error('Erreur insertion t\u00e9moignage:', err);
+          if (msgEl) {
+            msgEl.hidden = false;
+            msgEl.className = 'auth-form__message auth-form__message--erreur';
+            msgEl.textContent = 'Erreur lors de l\u2019envoi de votre t\u00e9moignage. Veuillez r\u00e9essayer.';
+          }
+          return;
         }
 
         // Message de succès avec mention de la modération

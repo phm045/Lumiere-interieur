@@ -3974,8 +3974,20 @@
       if (result.error) throw result.error;
       var s = result.data;
       var el;
+      // Clients: use get_admin_clients RPC for accurate count (get_admin_stats may exclude some)
       el = document.getElementById('stat-clients');
-      if (el) el.textContent = (s.nb_clients != null) ? s.nb_clients : '0';
+      if (el) {
+        try {
+          var clientsResult = await supabase.rpc('get_admin_clients');
+          if (clientsResult.data && clientsResult.data.length != null) {
+            el.textContent = clientsResult.data.length;
+          } else {
+            el.textContent = (s.nb_clients != null) ? s.nb_clients : '0';
+          }
+        } catch(ec) {
+          el.textContent = (s.nb_clients != null) ? s.nb_clients : '0';
+        }
+      }
       el = document.getElementById('stat-commandes');
       if (el) el.textContent = (s.nb_commandes != null) ? s.nb_commandes : '0';
       el = document.getElementById('stat-ca');
@@ -4007,6 +4019,12 @@
   }
 
   async function chargerAdminStatsFallback() {
+    // Clients: use get_admin_clients for accurate count
+    try {
+      var clientsRes = await supabase.rpc('get_admin_clients');
+      var elC = document.getElementById('stat-clients');
+      if (elC) elC.textContent = (clientsRes.data) ? clientsRes.data.length : '0';
+    } catch(e) {}
     try {
       var blogRes = await supabase.from('blog_articles').select('id', { count: 'exact', head: true });
       var el = document.getElementById('stat-articles');
@@ -5854,24 +5872,21 @@
         if (newRdv > 0) setBadge('rdv', newRdv);
       } catch(e) {}
 
-      // --- Clients ---
+      // --- Clients (use get_admin_clients for accurate count) ---
       try {
-        var clientsRes = await supabase.rpc('get_admin_stats');
-        if (clientsRes.data) {
-          var totalClients = clientsRes.data.nb_clients || 0;
-          _badgeCurrentCounts.clients = totalClients;
-          var newClients = getNewCount('clients', totalClients);
-          if (newClients > 0) setBadge('clients', newClients);
+        var clientsListRes = await supabase.rpc('get_admin_clients');
+        var totalClients = (clientsListRes.data) ? clientsListRes.data.length : 0;
+        _badgeCurrentCounts.clients = totalClients;
+        var newClients = getNewCount('clients', totalClients);
+        if (newClients > 0) setBadge('clients', newClients);
+      } catch(e) {}
 
-          // Newsletter — use Brevo count if available, fallback to RPC
-          var totalNl = clientsRes.data.nb_newsletter || 0;
-          if (totalNl === 0) {
-            try { totalNl = await getBrevoNewsletterCount(); } catch(e) {}
-          }
-          _badgeCurrentCounts.newsletter = totalNl;
-          var newNl = getNewCount('newsletter', totalNl);
-          if (newNl > 0) setBadge('newsletter', newNl);
-        }
+      // --- Newsletter (Brevo) ---
+      try {
+        var totalNl = await getBrevoNewsletterCount();
+        _badgeCurrentCounts.newsletter = totalNl;
+        var newNl = getNewCount('newsletter', totalNl);
+        if (newNl > 0) setBadge('newsletter', newNl);
       } catch(e) {}
 
       // --- Témoignages (en attente de modération) ---

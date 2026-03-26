@@ -6020,3 +6020,43 @@ textarea.blog-comments__input {
     font-size: 0.78rem;
   }
 }
+
+/* ═══════════════════════════════════════════════════
+   BADGES NOTIFICATIONS — Onglets Admin
+   ═══════════════════════════════════════════════════ */
+.admin-dash-tab {
+  position: relative;
+}
+.admin-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #e74c3c;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: 'Work Sans', sans-serif;
+  line-height: 1;
+  margin-left: 0.3rem;
+  animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  flex-shrink: 0;
+}
+.admin-tab-badge[hidden] {
+  display: none;
+}
+@keyframes badgePop {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+/* Badge accent pour certains onglets */
+.admin-tab-badge--accent {
+  background: rgba(212,165,116,0.9);
+}
+.admin-tab-badge--info {
+  background: #3498db;
+}

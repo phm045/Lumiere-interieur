@@ -3914,6 +3914,7 @@
     chargerAdminStats();
     chargerCAMensuel();
     verifierArchivageAuto();
+    chargerBadgesNotifications();
     // Initialize search listeners once
     if (!_adminDashInitialized) {
       _adminDashInitialized = true;
@@ -5730,6 +5731,163 @@
       chargerAdminVisiteurs(this.value);
     });
   }
+
+  // ═══════════════════════════════════════════════════
+  // BADGES NOTIFICATIONS — Onglets Admin
+  // ═══════════════════════════════════════════════════
+
+  function setBadge(tabName, count) {
+    var badge = document.getElementById('badge-' + tabName);
+    if (!badge) return;
+    if (count > 0) {
+      badge.textContent = count > 99 ? '99+' : count;
+      badge.hidden = false;
+    } else {
+      badge.hidden = true;
+    }
+  }
+
+  function getLastSeen(tabName) {
+    try {
+      var data = JSON.parse(localStorage.getItem('li_admin_seen') || '{}');
+      return data[tabName] || 0;
+    } catch(e) { return 0; }
+  }
+
+  function setLastSeen(tabName, count) {
+    try {
+      var data = JSON.parse(localStorage.getItem('li_admin_seen') || '{}');
+      data[tabName] = count;
+      localStorage.setItem('li_admin_seen', JSON.stringify(data));
+    } catch(e) {}
+  }
+
+  // Masquer le badge quand on clique sur un onglet et mémoriser le compteur actuel
+  var allAdminTabs = document.querySelectorAll('.admin-dash-tab[data-admin-tab]');
+  allAdminTabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var tabName = tab.getAttribute('data-admin-tab');
+      var badge = document.getElementById('badge-' + tabName);
+      if (badge) badge.hidden = true;
+      // Sauver le compteur actuel comme "vu" avec un petit délai pour laisser les données se charger
+      setTimeout(function() {
+        var currentCount = _badgeCurrentCounts[tabName];
+        if (currentCount != null) setLastSeen(tabName, currentCount);
+      }, 2000);
+    });
+  });
+
+  var _badgeCurrentCounts = {};
+
+  async function chargerBadgesNotifications() {
+    try {
+      // --- Blog ---
+      try {
+        var blogRes = await supabase.from('blog_articles').select('id', { count: 'exact', head: true });
+        var nbStaticBlog = document.querySelectorAll('.blog-card[data-article]:not([data-dynamic])').length;
+        var totalBlog = (blogRes.count || 0) + nbStaticBlog;
+        _badgeCurrentCounts.blog = totalBlog;
+        var newBlog = totalBlog - getLastSeen('blog');
+        if (newBlog > 0) setBadge('blog', newBlog);
+      } catch(e) {}
+
+      // --- Boutique ---
+      try {
+        var prodRes = await supabase.from('boutique_products').select('id', { count: 'exact', head: true });
+        var totalProd = prodRes.count || 0;
+        _badgeCurrentCounts.boutique = totalProd;
+        var newProd = totalProd - getLastSeen('boutique');
+        if (newProd > 0) setBadge('boutique', newProd);
+      } catch(e) {}
+
+      // --- Coupons ---
+      try {
+        var coupRes = await supabase.from('coupons').select('id', { count: 'exact', head: true }).eq('actif', true);
+        var totalCoup = coupRes.count || 0;
+        _badgeCurrentCounts.coupons = totalCoup;
+        var newCoup = totalCoup - getLastSeen('coupons');
+        if (newCoup > 0) setBadge('coupons', newCoup);
+      } catch(e) {}
+
+      // --- Commandes ---
+      try {
+        var cmdRes = await supabase.from('commandes').select('id', { count: 'exact', head: true });
+        var totalCmd = cmdRes.count || 0;
+        _badgeCurrentCounts.commandes = totalCmd;
+        var newCmd = totalCmd - getLastSeen('commandes');
+        if (newCmd > 0) setBadge('commandes', newCmd);
+      } catch(e) {}
+
+      // --- RDV (Cal.eu) ---
+      try {
+        var calBookings = await fetchCalBookings();
+        var upcomingRdv = calBookings.filter(function(b) { return b.status !== 'cancelled'; }).length;
+        _badgeCurrentCounts.rdv = upcomingRdv;
+        var newRdv = upcomingRdv - getLastSeen('rdv');
+        if (newRdv > 0) setBadge('rdv', newRdv);
+      } catch(e) {}
+
+      // --- Clients ---
+      try {
+        var clientsRes = await supabase.rpc('get_admin_stats');
+        if (clientsRes.data) {
+          var totalClients = clientsRes.data.nb_clients || 0;
+          _badgeCurrentCounts.clients = totalClients;
+          var newClients = totalClients - getLastSeen('clients');
+          if (newClients > 0) setBadge('clients', newClients);
+
+          // Newsletter
+          var totalNl = clientsRes.data.nb_newsletter || 0;
+          _badgeCurrentCounts.newsletter = totalNl;
+          var newNl = totalNl - getLastSeen('newsletter');
+          if (newNl > 0) setBadge('newsletter', newNl);
+        }
+      } catch(e) {}
+
+      // --- Témoignages (en attente de modération) ---
+      try {
+        var temoRes = await supabase.from('temoignages').select('id', { count: 'exact', head: true }).eq('approuve', false);
+        var pendingTemo = temoRes.count || 0;
+        _badgeCurrentCounts.temoignages = pendingTemo;
+        // Toujours afficher les témoignages en attente (pas de "last seen")
+        if (pendingTemo > 0) setBadge('temoignages', pendingTemo);
+      } catch(e) {}
+
+      // --- Visiteurs (aujourd'hui) ---
+      try {
+        var today = new Date();
+        today.setHours(0, 0, 0, 0);
+        var visitRes = await supabase.from('visites_log').select('id', { count: 'exact', head: true }).gte('created_at', today.toISOString());
+        var todayVisits = visitRes.count || 0;
+        _badgeCurrentCounts.visiteurs = todayVisits;
+        if (todayVisits > 0) setBadge('visiteurs', todayVisits);
+      } catch(e) {}
+
+      // --- Disponibilités (absences actives) ---
+      try {
+        var now = new Date();
+        var absences = [];
+        if (_dispoUseLocal) {
+          absences = dispoLocalGet('absence');
+        } else {
+          var absRes = await supabase.from('disponibilites').select('*').eq('type', 'absence');
+          absences = absRes.data || [];
+        }
+        var activeAbs = absences.filter(function(a) {
+          var d = a.data || {};
+          if (!d.debut || !d.fin) return false;
+          return now >= new Date(d.debut + 'T00:00:00') && now <= new Date(d.fin + 'T23:59:59');
+        }).length;
+        _badgeCurrentCounts.disponibilites = activeAbs;
+        if (activeAbs > 0) setBadge('disponibilites', activeAbs);
+      } catch(e) {}
+
+    } catch(e) {
+      console.warn('Erreur chargement badges:', e);
+    }
+  }
+
+  // Les badges sont chargés via chargerDashboardAdmin() quand l'admin se connecte
 
   // ═══════════════════════════════════════════════════
   // DISPONIBILITÉS — Gestion horaires, absences, dates

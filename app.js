@@ -3934,10 +3934,28 @@
 
   // ─── Stripe API helpers for coupon sync ───
 
-  // Known Stripe promo IDs for existing coupons (fallback before Supabase stores them)
-  var KNOWN_STRIPE_PROMOS = {
-    'BIENVENUE': { promo_id: 'promo_1TFNGe2S616qVFR9olKNGNHM', coupon_id: 'IlwJ7Hty' }
-  };
+  // localStorage-based Stripe promo ID mapping (since Supabase coupons table has no stripe columns)
+  var STRIPE_PROMO_MAP_KEY = 'stripe_promo_map';
+
+  function getStripePromoMap() {
+    try {
+      return JSON.parse(localStorage.getItem(STRIPE_PROMO_MAP_KEY)) || {};
+    } catch(e) { return {}; }
+  }
+
+  function saveStripePromoMapping(code, promoId, couponId) {
+    var map = getStripePromoMap();
+    map[code] = { promo_id: promoId, coupon_id: couponId };
+    localStorage.setItem(STRIPE_PROMO_MAP_KEY, JSON.stringify(map));
+  }
+
+  // Pre-populate localStorage with known existing Stripe promo mappings
+  (function initStripePromoMap() {
+    var map = getStripePromoMap();
+    if (!map['BIENVENUE']) {
+      saveStripePromoMapping('BIENVENUE', 'promo_1TFNGe2S616qVFR9olKNGNHM', 'IlwJ7Hty');
+    }
+  })();
 
   // Generic Stripe API call helper
   async function stripeApiCall(endpoint, method, params) {
@@ -4004,29 +4022,23 @@
     return null;
   }
 
-  // Get or create the Stripe promo ID for a given coupon row, and save it to Supabase
+  // Get or create the Stripe promo ID for a given coupon, using localStorage for mapping
   async function obtenirOuCreerStripePromo(coupon) {
-    // Already has a stripe_promo_id stored?
-    if (coupon.stripe_promo_id) return coupon.stripe_promo_id;
-
-    // Check known hardcoded fallbacks
-    var known = KNOWN_STRIPE_PROMOS[coupon.code];
-    if (known) {
-      // Save to Supabase for future use
-      await supabase.from('coupons').update({ stripe_promo_id: known.promo_id, stripe_coupon_id: known.coupon_id }).eq('id', coupon.id);
-      return known.promo_id;
-    }
+    // Check localStorage first
+    var map = getStripePromoMap();
+    var cached = map[coupon.code];
+    if (cached && cached.promo_id) return cached.promo_id;
 
     // Try to find existing promo on Stripe
     var existant = await stripeTrouverPromoParCode(coupon.code);
     if (existant) {
-      await supabase.from('coupons').update({ stripe_promo_id: existant.id, stripe_coupon_id: existant.coupon }).eq('id', coupon.id);
+      saveStripePromoMapping(coupon.code, existant.id, existant.coupon);
       return existant.id;
     }
 
-    // Create new coupon+promo on Stripe
+    // Create new coupon+promo on Stripe and save to localStorage
     var result = await stripeCreerCouponEtPromo(coupon.code, coupon.reduction_pourcent);
-    await supabase.from('coupons').update({ stripe_promo_id: result.promo_id, stripe_coupon_id: result.coupon_id }).eq('id', coupon.id);
+    saveStripePromoMapping(coupon.code, result.promo_id, result.coupon_id);
     return result.promo_id;
   }
 
@@ -4157,12 +4169,11 @@
         data.valide_jusqu_au = new Date(expiryVal).toISOString();
       }
 
-      // Create coupon + promo on Stripe first
+      // Create coupon + promo on Stripe first, save mapping to localStorage
       var stripeIds = null;
       try {
         stripeIds = await stripeCreerCouponEtPromo(code, reduction);
-        data.stripe_promo_id = stripeIds.promo_id;
-        data.stripe_coupon_id = stripeIds.coupon_id;
+        saveStripePromoMapping(code, stripeIds.promo_id, stripeIds.coupon_id);
       } catch(stripeErr) {
         console.warn('[Stripe] Erreur création coupon Stripe:', stripeErr);
         // Continue with Supabase creation even if Stripe fails

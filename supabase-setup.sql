@@ -27,15 +27,8 @@ CREATE TABLE IF NOT EXISTS coupons (
   usage_max INTEGER DEFAULT 1,
   usage_actuel INTEGER DEFAULT 0,
   actif BOOLEAN DEFAULT true,
-  stripe_promo_id TEXT,
-  stripe_coupon_id TEXT,
   date_creation TIMESTAMPTZ DEFAULT now()
 );
-
--- Migration : ajouter les colonnes Stripe aux coupons existants
--- (à exécuter si la table existe déjà)
-ALTER TABLE coupons ADD COLUMN IF NOT EXISTS stripe_promo_id TEXT;
-ALTER TABLE coupons ADD COLUMN IF NOT EXISTS stripe_coupon_id TEXT;
 
 -- Table des coupons utilisés par les clients
 CREATE TABLE IF NOT EXISTS coupons_utilises (

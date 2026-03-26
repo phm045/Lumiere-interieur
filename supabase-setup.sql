@@ -72,6 +72,11 @@ CREATE POLICY "Les clients enregistrent leurs coupons"
   ON coupons_utilises FOR INSERT
   WITH CHECK (auth.uid() = user_id);
 
+CREATE POLICY "Les clients lient leurs coupons aux commandes"
+  ON coupons_utilises FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
 -- Mettre à jour le compteur d'utilisation des coupons
 CREATE OR REPLACE FUNCTION incrementer_usage_coupon()
 RETURNS TRIGGER AS $$

@@ -1777,12 +1777,135 @@
     '00wbITdyAabtdQI8MT8so05': { service: 'Voyance par mail — 1 question', montant: 9 }
   };
 
+  // Map des services vers leurs prix de base (pour lookup par nom)
+  var SERVICE_PRICES = {
+    'Focus Intuitif': 40,
+    'R\u00e9v\u00e9lations Intuitives': 55,
+    'Panorama Intuitif': 75,
+    'Voyance par mail — 1 question': 9
+  };
+
+  // --- R\u00e9cup\u00e9rer le coupon actif de l'utilisateur pour les services ---
+  var _cachedCoupon = null;
+  var _couponCacheTime = 0;
+  async function getActiveCouponForServices() {
+    // Cache pendant 30 secondes pour \u00e9viter trop de requ\u00eates
+    if (_cachedCoupon !== null && Date.now() - _couponCacheTime < 30000) {
+      return _cachedCoupon;
+    }
+
+    try {
+      var { data: { session } } = await supabase.auth.getSession();
+      if (!session) { _cachedCoupon = false; _couponCacheTime = Date.now(); return false; }
+
+      // R\u00e9cup\u00e9rer les coupons utilis\u00e9s par l'utilisateur (non encore utilis\u00e9s pour un paiement)
+      var { data: couponUsages, error } = await supabase
+        .from('coupons_utilises')
+        .select('*, coupons(*)')
+        .eq('user_id', session.user.id)
+        .is('commande_id', null);
+
+      if (error || !couponUsages || couponUsages.length === 0) {
+        _cachedCoupon = false;
+        _couponCacheTime = Date.now();
+        return false;
+      }
+
+      // Trouver un coupon actif applicable aux services
+      for (var i = 0; i < couponUsages.length; i++) {
+        var cu = couponUsages[i];
+        var c = cu.coupons;
+        if (!c || !c.actif) continue;
+        if (c.valide_jusqu_au && new Date(c.valide_jusqu_au) < new Date()) continue;
+        if (c.applicable_a !== 'services' && c.applicable_a !== 'services_boutique') continue;
+
+        _cachedCoupon = {
+          id: c.id,
+          code: c.code,
+          reduction_pourcent: c.reduction_pourcent,
+          reduction_montant: c.reduction_montant,
+          usage_id: cu.id
+        };
+        _couponCacheTime = Date.now();
+        return _cachedCoupon;
+      }
+
+      _cachedCoupon = false;
+      _couponCacheTime = Date.now();
+      return false;
+    } catch (e) {
+      _cachedCoupon = false;
+      _couponCacheTime = Date.now();
+      return false;
+    }
+  }
+
+  // Invalider le cache coupon (apr\u00e8s application d'un coupon, etc.)
+  function invalidateCouponCache() {
+    _cachedCoupon = null;
+    _couponCacheTime = 0;
+  }
+
+  // --- Calculer le montant r\u00e9duit ---
+  function calculerMontantReduit(montantOriginal, coupon) {
+    if (!coupon) return montantOriginal;
+    var montant = Number(montantOriginal);
+    if (coupon.reduction_pourcent) {
+      montant = montant * (1 - coupon.reduction_pourcent / 100);
+    } else if (coupon.reduction_montant) {
+      montant = montant - Number(coupon.reduction_montant);
+    }
+    return Math.max(Math.round(montant * 100) / 100, 0.50);
+  }
+
+  // --- Formater la r\u00e9duction pour l'affichage ---
+  function formatReduction(coupon) {
+    if (!coupon) return '';
+    if (coupon.reduction_pourcent) return '-' + coupon.reduction_pourcent + '%';
+    if (coupon.reduction_montant) return '-' + Number(coupon.reduction_montant).toFixed(2) + ' \u20ac';
+    return '';
+  }
+
+  // --- Cr\u00e9er une session Stripe via l'Edge Function ---
+  async function createStripeCheckoutSession(service, montant, couponCode) {
+    var { data: { session } } = await supabase.auth.getSession();
+    if (!session) throw new Error('Non connect\u00e9');
+
+    var siteUrl = window.location.origin + window.location.pathname;
+    var response = await fetch(SUPABASE_URL + '/functions/v1/create-checkout', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + session.access_token,
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        service: service,
+        montant: montant,
+        coupon_code: couponCode || null,
+        success_url: siteUrl + '?checkout=success',
+        cancel_url: siteUrl + '#services'
+      })
+    });
+
+    var result = await response.json();
+    if (!response.ok) throw new Error(result.error || 'Erreur serveur');
+    return result;
+  }
+
   // --- V\u00e9rifier si retour de Stripe (success) ---
   async function verifierRetourStripe() {
     var params = new URLSearchParams(window.location.search);
     var sessionId = params.get('session_id');
+
+    // Nouveau format (Edge Function) : session_id + checkout=success
+    var isCheckoutSuccess = params.get('checkout') === 'success';
+    // Ancien format (Payment Links) : session_id + service key
     var serviceKey = params.get('service');
-    if (!sessionId || !serviceKey) return;
+    var montantParam = params.get('montant');
+    var couponIdParam = params.get('coupon_id');
+
+    if (!sessionId) return;
 
     // Nettoyer l'URL
     history.replaceState(null, '', window.location.pathname + '#mon-compte');
@@ -1791,9 +1914,6 @@
       var { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      var infos = STRIPE_SERVICES[serviceKey];
-      if (!infos) return;
-
       // V\u00e9rifier que cette session n'a pas d\u00e9j\u00e0 \u00e9t\u00e9 enregistr\u00e9e
       var { data: existe } = await supabase
         .from('commandes')
@@ -1801,17 +1921,44 @@
         .eq('stripe_session_id', sessionId)
         .maybeSingle();
 
-      if (existe) return; // D\u00e9j\u00e0 enregistr\u00e9e
+      if (existe) return;
+
+      var serviceName, montant;
+
+      if (isCheckoutSuccess && serviceKey) {
+        // Nouveau format : service name pass\u00e9 directement
+        serviceName = decodeURIComponent(serviceKey);
+        montant = montantParam ? Number(montantParam) : (SERVICE_PRICES[serviceName] || 0);
+      } else if (serviceKey && STRIPE_SERVICES[serviceKey]) {
+        // Ancien format : payment link key
+        var infos = STRIPE_SERVICES[serviceKey];
+        serviceName = infos.service;
+        montant = infos.montant;
+      } else {
+        return;
+      }
 
       // Enregistrer la commande
-      await supabase.from('commandes').insert({
+      var { data: commande } = await supabase.from('commandes').insert({
         user_id: session.user.id,
-        service: infos.service,
-        montant: infos.montant,
+        service: serviceName,
+        montant: montant,
         methode_paiement: 'stripe',
         statut: 'pay\u00e9',
         stripe_session_id: sessionId
-      });
+      }).select('id').single();
+
+      // Si un coupon a \u00e9t\u00e9 utilis\u00e9, lier la commande au coupon_utilis\u00e9
+      if (couponIdParam && commande) {
+        await supabase
+          .from('coupons_utilises')
+          .update({ commande_id: commande.id })
+          .eq('user_id', session.user.id)
+          .eq('coupon_id', couponIdParam)
+          .is('commande_id', null);
+
+        invalidateCouponCache();
+      }
 
       // Naviguer vers Mon compte > Commandes
       showPage('mon-compte');
@@ -2007,8 +2154,9 @@
                 : '-' + Number(coupon.reduction_montant).toFixed(2) + ' \u20ac';
               var scopeMsg = { 'services': 'les services', 'boutique': 'la boutique', 'services_boutique': 'les services et la boutique' };
               var scopeText = scopeMsg[coupon.applicable_a] || 'les services et la boutique';
-              afficherMessage('coupon-message', 'Coupon appliqu\u00e9 ! ' + red + ' sur ' + scopeText + ' (hors th\u00e9rapie).', 'succes');
+              afficherMessage('coupon-message', 'Coupon appliqu\u00e9 ! ' + red + ' sur ' + scopeText + '. La r\u00e9duction sera automatiquement appliqu\u00e9e lors de votre prochain paiement.', 'succes');
               input.value = '';
+              invalidateCouponCache();
               chargerCoupons();
             }
           }
@@ -2439,8 +2587,10 @@
   // --- Pop-ups PayPal ---
   var pendingPaypalForm = null;
   var pendingPaypalServiceName = '';
+  var pendingPaypalOriginalAmount = 0;
+  var pendingPaypalCoupon = null;
   document.querySelectorAll('.btn--paypal').forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
+    btn.addEventListener('click', async function (e) {
       e.preventDefault();
       e.stopPropagation();
       var form = btn.closest('form.paypal-form');
@@ -2458,8 +2608,27 @@
         if (match) serviceName = match[1];
       }
       pendingPaypalServiceName = serviceName;
+
+      // R\u00e9cup\u00e9rer le montant original du formulaire
+      var amountInput = form ? form.querySelector('input[name="amount"]') : null;
+      pendingPaypalOriginalAmount = amountInput ? parseFloat(amountInput.value) : 0;
+
+      // V\u00e9rifier si un coupon est actif
+      pendingPaypalCoupon = await getActiveCouponForServices();
       var serviceEl = document.getElementById('modal-paypal-service');
-      if (serviceEl) serviceEl.textContent = serviceName || '';
+      var discountEl = document.getElementById('modal-paypal-discount');
+
+      if (pendingPaypalCoupon && pendingPaypalOriginalAmount > 0) {
+        var reduit = calculerMontantReduit(pendingPaypalOriginalAmount, pendingPaypalCoupon);
+        if (serviceEl) serviceEl.textContent = serviceName + ' \u2014 ' + reduit.toFixed(2) + ' \u20ac';
+        if (discountEl) {
+          discountEl.textContent = 'Coupon ' + pendingPaypalCoupon.code + ' appliqu\u00e9 : ' + formatReduction(pendingPaypalCoupon) + ' (prix initial : ' + pendingPaypalOriginalAmount.toFixed(2) + ' \u20ac)';
+          discountEl.hidden = false;
+        }
+      } else {
+        if (serviceEl) serviceEl.textContent = serviceName || '';
+        if (discountEl) discountEl.hidden = true;
+      }
       openModal('modal-paypal');
     });
   });
@@ -2478,18 +2647,35 @@
         updateVmPaymentStatus();
       }
       if (pendingPaypalForm) {
+        // Appliquer le coupon au montant PayPal
+        if (pendingPaypalCoupon && pendingPaypalOriginalAmount > 0) {
+          var reduit = calculerMontantReduit(pendingPaypalOriginalAmount, pendingPaypalCoupon);
+          var amountInput = pendingPaypalForm.querySelector('input[name="amount"]');
+          if (amountInput) amountInput.value = reduit.toFixed(2);
+          var itemNameInput = pendingPaypalForm.querySelector('input[name="item_name"]');
+          if (itemNameInput) {
+            itemNameInput.value = itemNameInput.value + ' (coupon ' + pendingPaypalCoupon.code + ')';
+          }
+          // Lier le coupon \u00e0 la commande sera fait manuellement pour PayPal
+          // car il n'y a pas de webhook PayPal
+          invalidateCouponCache();
+        }
         pendingPaypalForm.submit();
         pendingPaypalForm = null;
       }
       pendingPaypalServiceName = '';
+      pendingPaypalCoupon = null;
+      pendingPaypalOriginalAmount = 0;
     });
   }
 
   // --- Pop-ups Stripe / CB ---
   var pendingStripeUrl = '';
   var pendingStripeServiceName = '';
+  var pendingStripeOriginalAmount = 0;
+  var pendingStripeCoupon = null;
   document.querySelectorAll('.btn--stripe').forEach(function (btn) {
-    btn.addEventListener('click', function (e) {
+    btn.addEventListener('click', async function (e) {
       e.preventDefault();
       e.stopPropagation();
       pendingStripeUrl = btn.getAttribute('href') || btn.closest('a').getAttribute('href');
@@ -2505,16 +2691,31 @@
         if (match) serviceName = match[1];
       }
       pendingStripeServiceName = serviceName;
+      pendingStripeOriginalAmount = SERVICE_PRICES[serviceName] || 0;
+
+      // V\u00e9rifier si un coupon est actif
+      pendingStripeCoupon = await getActiveCouponForServices();
       var serviceEl = document.getElementById('modal-stripe-service');
-      if (serviceEl) serviceEl.textContent = serviceName || '';
+      var discountEl = document.getElementById('modal-stripe-discount');
+
+      if (pendingStripeCoupon && pendingStripeOriginalAmount > 0) {
+        var reduit = calculerMontantReduit(pendingStripeOriginalAmount, pendingStripeCoupon);
+        if (serviceEl) serviceEl.textContent = serviceName + ' \u2014 ' + reduit.toFixed(2) + ' \u20ac';
+        if (discountEl) {
+          discountEl.textContent = 'Coupon ' + pendingStripeCoupon.code + ' appliqu\u00e9 : ' + formatReduction(pendingStripeCoupon) + ' (prix initial : ' + pendingStripeOriginalAmount.toFixed(2) + ' \u20ac)';
+          discountEl.hidden = false;
+        }
+      } else {
+        if (serviceEl) serviceEl.textContent = serviceName || '';
+        if (discountEl) discountEl.hidden = true;
+      }
       openModal('modal-stripe');
     });
   });
 
   var btnStripeConfirm = document.getElementById('modal-stripe-confirm');
   if (btnStripeConfirm) {
-    btnStripeConfirm.addEventListener('click', function () {
-      closeAllModals();
+    btnStripeConfirm.addEventListener('click', async function () {
       // Marquer le paiement Voyance par mail si c'est ce service
       if (pendingStripeServiceName && pendingStripeServiceName.toLowerCase().indexOf('mail') !== -1) {
         safeLocal.setItem('vm_payment_initiated', JSON.stringify({
@@ -2524,11 +2725,48 @@
         }));
         updateVmPaymentStatus();
       }
-      if (pendingStripeUrl) {
-        window.open(pendingStripeUrl, '_blank', 'noopener,noreferrer');
-        pendingStripeUrl = '';
+
+      // Si un coupon est actif, utiliser l'Edge Function pour cr\u00e9er une session avec le prix r\u00e9duit
+      if (pendingStripeCoupon && pendingStripeOriginalAmount > 0) {
+        var confirmBtn = document.getElementById('modal-stripe-confirm');
+        if (confirmBtn) {
+          confirmBtn.disabled = true;
+          confirmBtn.textContent = 'Cr\u00e9ation du paiement\u2026';
+        }
+        try {
+          var result = await createStripeCheckoutSession(
+            pendingStripeServiceName,
+            pendingStripeOriginalAmount,
+            pendingStripeCoupon.code
+          );
+          closeAllModals();
+          if (result.url) {
+            window.location.href = result.url;
+          }
+        } catch (err) {
+          console.error('Erreur cr\u00e9ation session Stripe:', err);
+          // Fallback : ouvrir le lien Stripe normal (prix plein)
+          closeAllModals();
+          if (pendingStripeUrl) {
+            window.open(pendingStripeUrl, '_blank', 'noopener,noreferrer');
+          }
+        } finally {
+          if (confirmBtn) {
+            confirmBtn.disabled = false;
+            confirmBtn.textContent = 'Payer par carte';
+          }
+        }
+      } else {
+        // Pas de coupon : ouvrir le lien Stripe habituel
+        closeAllModals();
+        if (pendingStripeUrl) {
+          window.open(pendingStripeUrl, '_blank', 'noopener,noreferrer');
+          pendingStripeUrl = '';
+        }
       }
       pendingStripeServiceName = '';
+      pendingStripeCoupon = null;
+      pendingStripeOriginalAmount = 0;
     });
   }
 

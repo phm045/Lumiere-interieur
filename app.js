@@ -1827,6 +1827,7 @@
           usage_id: cu.id
         };
         _couponCacheTime = Date.now();
+        console.log('[Coupon] Coupon actif trouv\u00e9:', c.code, '| R\u00e9duction:', c.reduction_pourcent ? c.reduction_pourcent + '%' : c.reduction_montant + '\u20ac');
         return _cachedCoupon;
       }
 
@@ -1866,46 +1867,29 @@
     return '';
   }
 
-  // --- Cr\u00e9er une session Stripe via l'Edge Function ---
-  async function createStripeCheckoutSession(service, montant, couponCode) {
-    var { data: { session } } = await supabase.auth.getSession();
-    if (!session) throw new Error('Non connect\u00e9');
-
-    var siteUrl = window.location.origin + window.location.pathname;
-    var response = await fetch(SUPABASE_URL + '/functions/v1/create-checkout', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + session.access_token,
-        'apikey': SUPABASE_ANON_KEY
-      },
-      body: JSON.stringify({
-        service: service,
-        montant: montant,
-        coupon_code: couponCode || null,
-        success_url: siteUrl + '?checkout=success',
-        cancel_url: siteUrl + '#services'
-      })
-    });
-
-    var result = await response.json();
-    if (!response.ok) throw new Error(result.error || 'Erreur serveur');
-    return result;
+  // --- Construire l'URL Stripe Payment Link avec code promo ---
+  // Stripe Payment Links supportent ?prefilled_promo_code=CODE
+  // quand les codes promo sont activ\u00e9s sur le lien dans le Dashboard Stripe.
+  // Le propri\u00e9taire du site doit cr\u00e9er des codes promo dans Stripe Dashboard
+  // correspondant aux codes coupons dans Supabase (ex: BIENVENUE10).
+  function buildStripeUrlWithPromo(baseUrl, couponCode) {
+    if (!couponCode) return baseUrl;
+    var separator = baseUrl.indexOf('?') === -1 ? '?' : '&';
+    var url = baseUrl + separator + 'prefilled_promo_code=' + encodeURIComponent(couponCode);
+    console.log('[Coupon Stripe] URL avec code promo:', url);
+    return url;
   }
 
   // --- V\u00e9rifier si retour de Stripe (success) ---
+  // Payment Links redirigent avec ?session_id=... et le service key dans l'URL
   async function verifierRetourStripe() {
     var params = new URLSearchParams(window.location.search);
     var sessionId = params.get('session_id');
-
-    // Nouveau format (Edge Function) : session_id + checkout=success
-    var isCheckoutSuccess = params.get('checkout') === 'success';
-    // Ancien format (Payment Links) : session_id + service key
     var serviceKey = params.get('service');
-    var montantParam = params.get('montant');
-    var couponIdParam = params.get('coupon_id');
 
     if (!sessionId) return;
+
+    console.log('[Stripe] Retour de paiement d\u00e9tect\u00e9, session:', sessionId);
 
     // Nettoyer l'URL
     history.replaceState(null, '', window.location.pathname + '#mon-compte');
@@ -1921,20 +1905,19 @@
         .eq('stripe_session_id', sessionId)
         .maybeSingle();
 
-      if (existe) return;
+      if (existe) {
+        console.log('[Stripe] Session d\u00e9j\u00e0 enregistr\u00e9e, ignor\u00e9e');
+        return;
+      }
 
       var serviceName, montant;
 
-      if (isCheckoutSuccess && serviceKey) {
-        // Nouveau format : service name pass\u00e9 directement
-        serviceName = decodeURIComponent(serviceKey);
-        montant = montantParam ? Number(montantParam) : (SERVICE_PRICES[serviceName] || 0);
-      } else if (serviceKey && STRIPE_SERVICES[serviceKey]) {
-        // Ancien format : payment link key
+      if (serviceKey && STRIPE_SERVICES[serviceKey]) {
         var infos = STRIPE_SERVICES[serviceKey];
         serviceName = infos.service;
         montant = infos.montant;
       } else {
+        console.log('[Stripe] Service key inconnu:', serviceKey);
         return;
       }
 
@@ -1948,17 +1931,7 @@
         stripe_session_id: sessionId
       }).select('id').single();
 
-      // Si un coupon a \u00e9t\u00e9 utilis\u00e9, lier la commande au coupon_utilis\u00e9
-      if (couponIdParam && commande) {
-        await supabase
-          .from('coupons_utilises')
-          .update({ commande_id: commande.id })
-          .eq('user_id', session.user.id)
-          .eq('coupon_id', couponIdParam)
-          .is('commande_id', null);
-
-        invalidateCouponCache();
-      }
+      console.log('[Stripe] Commande enregistr\u00e9e:', serviceName, montant + '\u20ac');
 
       // Naviguer vers Mon compte > Commandes
       showPage('mon-compte');
@@ -1967,7 +1940,7 @@
         if (btnCommandes) btnCommandes.click();
       }, 500);
     } catch (e) {
-      console.error('Erreur retour Stripe:', e);
+      console.error('[Stripe] Erreur retour:', e);
     }
   }
 
@@ -2121,10 +2094,13 @@
           .maybeSingle();
 
         if (!coupon) {
+          console.log('[Coupon] Code invalide ou introuvable:', code);
           afficherMessage('coupon-message', 'Code coupon invalide ou expir\u00e9.', 'erreur');
         } else if (coupon.valide_jusqu_au && new Date(coupon.valide_jusqu_au) < new Date()) {
+          console.log('[Coupon] Coupon expir\u00e9:', code, '| Expiration:', coupon.valide_jusqu_au);
           afficherMessage('coupon-message', 'Ce coupon a expir\u00e9.', 'erreur');
         } else if (coupon.usage_max && coupon.usage_actuel >= coupon.usage_max) {
+          console.log('[Coupon] Usage max atteint:', code, '|', coupon.usage_actuel + '/' + coupon.usage_max);
           afficherMessage('coupon-message', 'Ce coupon a atteint son nombre maximum d\u2019utilisations.', 'erreur');
         } else {
           // V\u00e9rifier si d\u00e9j\u00e0 utilis\u00e9 par ce client
@@ -2136,6 +2112,7 @@
             .maybeSingle();
 
           if (dejaUtilise) {
+            console.log('[Coupon] D\u00e9j\u00e0 utilis\u00e9 par cet utilisateur:', code);
             afficherMessage('coupon-message', 'Vous avez d\u00e9j\u00e0 utilis\u00e9 ce coupon.', 'erreur');
           } else {
             // Enregistrer l'utilisation
@@ -2147,8 +2124,12 @@
               });
 
             if (insertError) {
+              console.error('[Coupon] Erreur insertion:', insertError);
               afficherMessage('coupon-message', 'Erreur lors de l\u2019application du coupon.', 'erreur');
             } else {
+              console.log('[Coupon] Coupon appliqu\u00e9 avec succ\u00e8s:', code,
+                '| R\u00e9duction:', coupon.reduction_pourcent ? coupon.reduction_pourcent + '%' : coupon.reduction_montant + '\u20ac',
+                '| Applicable \u00e0:', coupon.applicable_a);
               var red = coupon.reduction_pourcent
                 ? '-' + coupon.reduction_pourcent + '%'
                 : '-' + Number(coupon.reduction_montant).toFixed(2) + ' \u20ac';
@@ -2650,15 +2631,20 @@
         // Appliquer le coupon au montant PayPal
         if (pendingPaypalCoupon && pendingPaypalOriginalAmount > 0) {
           var reduit = calculerMontantReduit(pendingPaypalOriginalAmount, pendingPaypalCoupon);
+          console.log('[Coupon PayPal] Service:', pendingPaypalServiceName,
+            '| Prix original:', pendingPaypalOriginalAmount + '\u20ac',
+            '| Coupon:', pendingPaypalCoupon.code,
+            '| R\u00e9duction:', formatReduction(pendingPaypalCoupon),
+            '| Prix r\u00e9duit:', reduit.toFixed(2) + '\u20ac');
           var amountInput = pendingPaypalForm.querySelector('input[name="amount"]');
           if (amountInput) amountInput.value = reduit.toFixed(2);
           var itemNameInput = pendingPaypalForm.querySelector('input[name="item_name"]');
           if (itemNameInput) {
             itemNameInput.value = itemNameInput.value + ' (coupon ' + pendingPaypalCoupon.code + ')';
           }
-          // Lier le coupon \u00e0 la commande sera fait manuellement pour PayPal
-          // car il n'y a pas de webhook PayPal
           invalidateCouponCache();
+        } else {
+          console.log('[PayPal] Paiement sans coupon pour:', pendingPaypalServiceName);
         }
         pendingPaypalForm.submit();
         pendingPaypalForm = null;
@@ -2702,9 +2688,10 @@
         var reduit = calculerMontantReduit(pendingStripeOriginalAmount, pendingStripeCoupon);
         if (serviceEl) serviceEl.textContent = serviceName + ' \u2014 ' + reduit.toFixed(2) + ' \u20ac';
         if (discountEl) {
-          discountEl.textContent = 'Coupon ' + pendingStripeCoupon.code + ' appliqu\u00e9 : ' + formatReduction(pendingStripeCoupon) + ' (prix initial : ' + pendingStripeOriginalAmount.toFixed(2) + ' \u20ac)';
+          discountEl.textContent = 'Coupon ' + pendingStripeCoupon.code + ' appliqu\u00e9 : ' + formatReduction(pendingStripeCoupon) + ' (prix initial : ' + pendingStripeOriginalAmount.toFixed(2) + ' \u20ac). Le code promo sera pr\u00e9-rempli sur la page de paiement Stripe.';
           discountEl.hidden = false;
         }
+        console.log('[Coupon Stripe] Coupon d\u00e9tect\u00e9:', pendingStripeCoupon.code, '| Service:', serviceName, '| Prix r\u00e9duit:', reduit.toFixed(2) + '\u20ac');
       } else {
         if (serviceEl) serviceEl.textContent = serviceName || '';
         if (discountEl) discountEl.hidden = true;
@@ -2726,38 +2713,22 @@
         updateVmPaymentStatus();
       }
 
-      // Si un coupon est actif, utiliser l'Edge Function pour cr\u00e9er une session avec le prix r\u00e9duit
+      // Si un coupon est actif, ajouter le code promo \u00e0 l'URL Stripe Payment Link
       if (pendingStripeCoupon && pendingStripeOriginalAmount > 0) {
-        var confirmBtn = document.getElementById('modal-stripe-confirm');
-        if (confirmBtn) {
-          confirmBtn.disabled = true;
-          confirmBtn.textContent = 'Cr\u00e9ation du paiement\u2026';
+        // Coupon actif : ouvrir le Payment Link avec le code promo pr\u00e9-rempli
+        var stripeUrl = buildStripeUrlWithPromo(pendingStripeUrl, pendingStripeCoupon.code);
+        console.log('[Coupon Stripe] Service:', pendingStripeServiceName,
+          '| Prix original:', pendingStripeOriginalAmount + '\u20ac',
+          '| Coupon:', pendingStripeCoupon.code,
+          '| R\u00e9duction:', formatReduction(pendingStripeCoupon));
+        closeAllModals();
+        if (stripeUrl) {
+          window.open(stripeUrl, '_blank', 'noopener,noreferrer');
         }
-        try {
-          var result = await createStripeCheckoutSession(
-            pendingStripeServiceName,
-            pendingStripeOriginalAmount,
-            pendingStripeCoupon.code
-          );
-          closeAllModals();
-          if (result.url) {
-            window.location.href = result.url;
-          }
-        } catch (err) {
-          console.error('Erreur cr\u00e9ation session Stripe:', err);
-          // Fallback : ouvrir le lien Stripe normal (prix plein)
-          closeAllModals();
-          if (pendingStripeUrl) {
-            window.open(pendingStripeUrl, '_blank', 'noopener,noreferrer');
-          }
-        } finally {
-          if (confirmBtn) {
-            confirmBtn.disabled = false;
-            confirmBtn.textContent = 'Payer par carte';
-          }
-        }
+        invalidateCouponCache();
       } else {
         // Pas de coupon : ouvrir le lien Stripe habituel
+        console.log('[Stripe] Paiement sans coupon pour:', pendingStripeServiceName);
         closeAllModals();
         if (pendingStripeUrl) {
           window.open(pendingStripeUrl, '_blank', 'noopener,noreferrer');

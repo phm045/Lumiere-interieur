@@ -1,5 +1,2 @@
 [project]
 id = "dhbbwzpfwtdtdiuixrmq"
-
-[functions.create-checkout]
-verify_jwt = true

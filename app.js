@@ -1771,10 +1771,10 @@
 
   // Map des liens Stripe vers les noms de services
   var STRIPE_SERVICES = {
-    'dRm8wI9MX2aZdcG85PeAg00': { service: 'Focus Intuitif', montant: 40 },
-    'cNiaEQbV502R4Ga1HreAg01': { service: 'R\u00e9v\u00e9lations Intuitives', montant: 55 },
-    'fZu8wI2kv3f33C6eudeAg02': { service: 'Panorama Intuitif', montant: 75 },
-    '8x2eV66ALg1Pa0u4TDeAg03': { service: 'Voyance par mail — 1 question', montant: 9 }
+    '6oUcMYgbl5nbdcGgCleAg04': { service: 'Focus Intuitif', montant: 40 },
+    '6oU5kw7EPbLzc8CgCleAg05': { service: 'R\u00e9v\u00e9lations Intuitives', montant: 55 },
+    'eVq7sEaR1bLz8Wqbi1eAg06': { service: 'Panorama Intuitif', montant: 75 },
+    'cNidR20cn02R1tY4TDeAg07': { service: 'Voyance par mail — 1 question', montant: 9 }
   };
 
   // Map des services vers leurs prix de base (pour lookup par nom)

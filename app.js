@@ -4470,10 +4470,21 @@ function getComments(articleId) {
       var cart = getCart();
       if (cart.length === 0) return;
 
+      // Refresh stripe_link from loaded products (in case it was updated after adding to cart)
+      var updated = false;
+      for (var r = 0; r < cart.length; r++) {
+        var fresh = _loadedProducts[cart[r].slug];
+        if (fresh && fresh.stripe_link && !cart[r].stripe_link) {
+          cart[r].stripe_link = fresh.stripe_link;
+          updated = true;
+        }
+      }
+      if (updated) saveCart(cart);
+
       // Check all items have a Stripe link
       var missingLinks = cart.filter(function(item) { return !item.stripe_link; });
       if (missingLinks.length > 0) {
-        alert('Certains produits ne sont pas encore disponibles \u00e0 l\u2019achat : ' + missingLinks.map(function(i) { return i.name; }).join(', ') + '.');
+        alert('Certains produits ne sont pas encore disponibles \u00e0 l\u2019achat : ' + missingLinks.map(function(i) { return i.name; }).join(', ') + '. Retirez-les du panier et ajoutez-les \u00e0 nouveau.');
         return;
       }
 

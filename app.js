@@ -3976,13 +3976,12 @@ function getComments(articleId) {
       blogGrid.querySelectorAll('.admin-add-btn').forEach(function(el) { el.remove(); });
     }
     var prodGrid = document.getElementById('boutique-products-grid');
-    if (prodGrid) {
-      prodGrid.innerHTML = '';
-      var parent = prodGrid.parentNode;
-      if (parent) {
-        parent.querySelectorAll('.admin-add-btn--boutique').forEach(function(el) { el.remove(); });
-        parent.querySelectorAll('.admin-add-btn--coupon').forEach(function(el) { el.remove(); });
-      }
+    if (prodGrid) prodGrid.innerHTML = '';
+    // Remove all admin buttons from the entire boutique page (not just prodGrid parent)
+    var boutiquePage = document.getElementById('boutique');
+    if (boutiquePage) {
+      boutiquePage.querySelectorAll('.admin-add-btn--boutique').forEach(function(el) { el.remove(); });
+      boutiquePage.querySelectorAll('.admin-add-btn--coupon').forEach(function(el) { el.remove(); });
     }
 
     // Load blog articles
@@ -4157,7 +4156,7 @@ function getComments(articleId) {
       }
 
       // Coupon management button - add in boutique section
-      var boutiqueSection = document.querySelector('[data-page="boutique"]') || (prodGrid && prodGrid.closest('section'));
+      var boutiqueSection = document.getElementById('boutique');
       if (boutiqueSection && !boutiqueSection.querySelector('.admin-add-btn--coupon')) {
         var addCouponBtn = document.createElement('div');
         addCouponBtn.className = 'admin-add-btn admin-add-btn--coupon';

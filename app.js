@@ -4517,7 +4517,7 @@ function getComments(articleId) {
         }
       } catch(err) {
         console.error('[Stripe Panier] Erreur:', err);
-        alert('Erreur lors de la cr\u00e9ation du paiement. Veuillez r\u00e9essayer.');
+        alert('Erreur lors de la cr\u00e9ation du paiement : ' + (err.message || 'erreur inconnue') + '. Veuillez r\u00e9essayer.');
       } finally {
         checkoutBtn.disabled = false;
         checkoutBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:0.4rem"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Valider ma commande';
@@ -4657,40 +4657,77 @@ function getComments(articleId) {
     }
   })();
 
-  // Generic Stripe API call helper (via CORS proxy to avoid browser CORS blocks)
+  // Generic Stripe API call helper (with CORS proxy fallbacks)
+  var CORS_PROXIES = [
+    function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
+    function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
+    function(u) { return 'https://cors.sh/' + u; },
+    function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
+  ];
+
   async function stripeApiCall(endpoint, method, params) {
     var stripeUrl = 'https://api.stripe.com/v1' + endpoint;
-    var options = {
-      method: method || 'POST',
-      headers: {
-        'Authorization': 'Basic ' + btoa(STRIPE_SECRET_KEY + ':'),
-        'Content-Type': 'application/x-www-form-urlencoded'
-      }
-    };
+    var authHeader = 'Basic ' + btoa(STRIPE_SECRET_KEY + ':');
+    var body = '';
     if (params) {
-      // Build body manually to support nested params like promotion[type]
       var parts = [];
       for (var key in params) {
         if (params.hasOwnProperty(key)) {
           parts.push(encodeURIComponent(key) + '=' + encodeURIComponent(params[key]));
         }
       }
-      var body = parts.join('&');
-      if (method === 'GET') {
-        stripeUrl += '?' + body;
-        delete options.headers['Content-Type'];
-      } else {
-        options.body = body;
+      body = parts.join('&');
+    }
+
+    if (method === 'GET' && body) {
+      stripeUrl += '?' + body;
+    }
+
+    // Try direct call first (may work in some contexts)
+    var proxies = [function(u) { return u; }].concat(CORS_PROXIES);
+    var lastError = null;
+
+    for (var p = 0; p < proxies.length; p++) {
+      try {
+        var proxyUrl = proxies[p](stripeUrl);
+        var options = {
+          method: method || 'POST',
+          headers: {
+            'Authorization': authHeader
+          }
+        };
+        if (method !== 'GET') {
+          options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
+          if (body) options.body = body;
+        }
+        var resp = await fetch(proxyUrl, options);
+        var text = await resp.text();
+        // Check if response is valid JSON (not an HTML error page)
+        var json;
+        try { json = JSON.parse(text); } catch(pe) {
+          console.warn('[Stripe API] Proxy ' + p + ' returned non-JSON, trying next...');
+          continue;
+        }
+        if (json.error && json.error === 'Server-side requests are not allowed on your plan.') {
+          console.warn('[Stripe API] Proxy ' + p + ' paywall, trying next...');
+          continue;
+        }
+        if (!resp.ok && json.error) {
+          console.error('[Stripe API] Erreur:', json);
+          throw new Error(json.error.message || 'Stripe API error');
+        }
+        if (p > 0) console.log('[Stripe API] Success via proxy ' + p);
+        return json;
+      } catch(e) {
+        lastError = e;
+        if (e.message && (e.message.indexOf('Stripe') !== -1 || e.message.indexOf('parameter') !== -1 || e.message.indexOf('Invalid') !== -1)) {
+          // Real Stripe error, don't retry with another proxy
+          throw e;
+        }
+        console.warn('[Stripe API] Proxy ' + p + ' failed:', e.message || e);
       }
     }
-    var url = 'https://corsproxy.io/?' + encodeURIComponent(stripeUrl);
-    var resp = await fetch(url, options);
-    var json = await resp.json();
-    if (!resp.ok) {
-      console.error('[Stripe API] Erreur:', json);
-      throw new Error(json.error ? json.error.message : 'Stripe API error');
-    }
-    return json;
+    throw lastError || new Error('Tous les proxies CORS ont \u00e9chou\u00e9. V\u00e9rifiez votre connexion.');
   }
 
   // Create a Stripe coupon + promotion code, returns { coupon_id, promo_id }

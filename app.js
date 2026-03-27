@@ -8,6 +8,7 @@
   // --- Admin email constant (early definition for auth checks) ---
   var ADMIN_EMAIL = 'philippe.medium45@gmail.com';
 
+  // TODO: SECURITY — Move to Supabase Edge Function
   // ⚠️ SÉCURITÉ : La clé secrète Stripe est exposée côté client car le site est statique (GitHub Pages)
   // sans backend. Idéalement, les appels à l'API Stripe devraient se faire côté serveur.
   var STRIPE_SECRET_KEY = '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';
@@ -933,7 +934,7 @@
   // --- CountAPI base URL (used for both views and likes) ---
   var COUNTAPI_BASE = 'https://countapi.mileshilliard.com/api/v1';
 
-  // --- Likes, Views & Comments helpers (shared via CountAPI + local liked flag) ---
+  // --- Likes: Supabase-backed with CountAPI fallback ---
   var likesCache = {};
   var LIKES_PREFIX = 'lumiere-likes-';
   function hasLiked(articleId) {
@@ -944,6 +945,22 @@
     try { safeLocal.setItem('blog_liked_' + articleId, val ? '1' : '0'); } catch(e) {}
   }
   function fetchLikes(articleId, callback) {
+    // Try Supabase first
+    if (supabase) {
+      supabase.from('blog_likes').select('count').eq('article_id', articleId).maybeSingle().then(function(result) {
+        if (!result.error && result.data && result.data.count !== undefined) {
+          likesCache[articleId] = parseInt(result.data.count, 10) || 0;
+          if (callback) callback(likesCache[articleId]);
+        } else {
+          // Fallback to CountAPI
+          fetchLikesFromCountAPI(articleId, callback);
+        }
+      }).catch(function() { fetchLikesFromCountAPI(articleId, callback); });
+    } else {
+      fetchLikesFromCountAPI(articleId, callback);
+    }
+  }
+  function fetchLikesFromCountAPI(articleId, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', COUNTAPI_BASE + '/get/' + LIKES_PREFIX + articleId);
     xhr.responseType = 'json';
@@ -961,6 +978,23 @@
     try { xhr.send(); } catch(e) { if (callback) callback(0); }
   }
   function addLike(articleId, callback) {
+    // Increment in Supabase (upsert)
+    if (supabase) {
+      supabase.rpc('increment_blog_like', { p_article_id: articleId }).then(function(result) {
+        if (!result.error && result.data !== undefined) {
+          likesCache[articleId] = parseInt(result.data, 10) || (likesCache[articleId] || 0) + 1;
+        }
+        if (callback) callback(likesCache[articleId] || 0);
+      }).catch(function() {
+        addLikeCountAPI(articleId, callback);
+      });
+    } else {
+      addLikeCountAPI(articleId, callback);
+    }
+    // Also hit CountAPI for backwards compatibility
+    addLikeCountAPI(articleId, function() {});
+  }
+  function addLikeCountAPI(articleId, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', COUNTAPI_BASE + '/hit/' + LIKES_PREFIX + articleId);
     xhr.responseType = 'json';
@@ -968,7 +1002,7 @@
     xhr.onload = function() {
       if (xhr.status >= 200 && xhr.status < 300 && xhr.response && xhr.response.value !== undefined) {
         var val = parseInt(xhr.response.value, 10) || 0;
-        likesCache[articleId] = val;
+        if (!likesCache[articleId] || val > likesCache[articleId]) likesCache[articleId] = val;
         if (callback) callback(val);
       } else {
         if (callback) callback(likesCache[articleId] || 0);
@@ -981,13 +1015,26 @@
     return { count: likesCache[articleId] || 0, liked: hasLiked(articleId) };
   }
   function saveLikes(articleId, data) {
-    // kept for compatibility — actual count is managed by CountAPI
     setLiked(articleId, data.liked);
   }
-  // --- Views: shared counter via countapi (visible by everyone) ---
+  // --- Views: Supabase-backed with CountAPI fallback ---
   var viewsCache = {};
   var COUNTAPI_PREFIX = 'lumiere-interieure-';
   function fetchViews(articleId, callback) {
+    if (supabase) {
+      supabase.from('blog_views').select('count').eq('article_id', articleId).maybeSingle().then(function(result) {
+        if (!result.error && result.data && result.data.count !== undefined) {
+          viewsCache[articleId] = parseInt(result.data.count, 10) || 0;
+          if (callback) callback(viewsCache[articleId]);
+        } else {
+          fetchViewsFromCountAPI(articleId, callback);
+        }
+      }).catch(function() { fetchViewsFromCountAPI(articleId, callback); });
+    } else {
+      fetchViewsFromCountAPI(articleId, callback);
+    }
+  }
+  function fetchViewsFromCountAPI(articleId, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', COUNTAPI_BASE + '/get/' + COUNTAPI_PREFIX + articleId);
     xhr.responseType = 'json';
@@ -1005,6 +1052,21 @@
     try { xhr.send(); } catch(e) { if (callback) callback(0); }
   }
   function addView(articleId, callback) {
+    if (supabase) {
+      supabase.rpc('increment_blog_view', { p_article_id: articleId }).then(function(result) {
+        if (!result.error && result.data !== undefined) {
+          viewsCache[articleId] = parseInt(result.data, 10) || (viewsCache[articleId] || 0) + 1;
+        }
+        if (callback) callback(viewsCache[articleId] || 0);
+      }).catch(function() {
+        addViewCountAPI(articleId, callback);
+      });
+    } else {
+      addViewCountAPI(articleId, callback);
+    }
+    addViewCountAPI(articleId, function() {});
+  }
+  function addViewCountAPI(articleId, callback) {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', COUNTAPI_BASE + '/hit/' + COUNTAPI_PREFIX + articleId);
     xhr.responseType = 'json';
@@ -1012,7 +1074,7 @@
     xhr.onload = function() {
       if (xhr.status >= 200 && xhr.status < 300 && xhr.response && xhr.response.value !== undefined) {
         var val = parseInt(xhr.response.value, 10) || 0;
-        viewsCache[articleId] = val;
+        if (!viewsCache[articleId] || val > viewsCache[articleId]) viewsCache[articleId] = val;
         if (callback) callback(val);
       } else {
         if (callback) callback(viewsCache[articleId] || 0);
@@ -1065,6 +1127,8 @@ function getComments(articleId) {
     catch(e) { return []; }
   }
   function saveComment(articleId, name, text, callback) {
+    name = sanitizeForHtml(name);
+    text = sanitizeForHtml(text);
     var comment = { name: name, text: text, date: formatDate(new Date()) };
     if (!supabase) {
       var local = getLocalComments(articleId);
@@ -1295,10 +1359,12 @@ function getComments(articleId) {
     }
   });
 
+  // TODO: SECURITY — Move to Supabase Edge Function
   // --- Cal.eu API key ---
   var _calKey = ['cal_live', '3ddff2655a51305821262e13b4e7f740'].join('_');
   var CAL_API = 'https://api.cal.eu/v2';
 
+  // TODO: SECURITY — Move to Supabase Edge Function
   // --- Newsletter Forms (Brevo API) ---
   var _bk = ['xkeysib', 'b85ac7388973b4a7f6d54ddee9929c16b1a21f4c92618ba8562cfdd9bd6355c8', 'iuFk4LnhmnZNaq8V'].join('-');
 
@@ -3156,6 +3222,9 @@ function getComments(articleId) {
         var msgEl = document.getElementById('avis-modal-message');
 
         if (!nom || !texte) return;
+
+        nom = sanitizeForHtml(nom);
+        texte = sanitizeForHtml(texte);
 
         // Vérifier qu'une note a été sélectionnée
         if (note < 1 || note > 5) {

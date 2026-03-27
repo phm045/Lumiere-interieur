@@ -4657,17 +4657,10 @@ function getComments(articleId) {
     }
   })();
 
-  // Generic Stripe API call helper (with CORS proxy fallbacks)
-  var CORS_PROXIES = [
-    function(u) { return 'https://corsproxy.io/?' + encodeURIComponent(u); },
-    function(u) { return 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u); },
-    function(u) { return 'https://cors.sh/' + u; },
-    function(u) { return 'https://thingproxy.freeboard.io/fetch/' + u; }
-  ];
+  // Stripe API via Supabase Edge Function (no CORS issues)
+  var STRIPE_EDGE_FN = 'https://mqjckeibaqlkmwdrnypu.supabase.co/functions/v1/stripe-checkout';
 
   async function stripeApiCall(endpoint, method, params) {
-    var stripeUrl = 'https://api.stripe.com/v1' + endpoint;
-    var authHeader = 'Basic ' + btoa(STRIPE_SECRET_KEY + ':');
     var body = '';
     if (params) {
       var parts = [];
@@ -4679,55 +4672,23 @@ function getComments(articleId) {
       body = parts.join('&');
     }
 
-    if (method === 'GET' && body) {
-      stripeUrl += '?' + body;
-    }
+    var resp = await fetch(STRIPE_EDGE_FN, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stripe_key: STRIPE_SECRET_KEY,
+        endpoint: '/v1' + endpoint,
+        method: method || 'POST',
+        body: body
+      })
+    });
 
-    // Try direct call first (may work in some contexts)
-    var proxies = [function(u) { return u; }].concat(CORS_PROXIES);
-    var lastError = null;
-
-    for (var p = 0; p < proxies.length; p++) {
-      try {
-        var proxyUrl = proxies[p](stripeUrl);
-        var options = {
-          method: method || 'POST',
-          headers: {
-            'Authorization': authHeader
-          }
-        };
-        if (method !== 'GET') {
-          options.headers['Content-Type'] = 'application/x-www-form-urlencoded';
-          if (body) options.body = body;
-        }
-        var resp = await fetch(proxyUrl, options);
-        var text = await resp.text();
-        // Check if response is valid JSON (not an HTML error page)
-        var json;
-        try { json = JSON.parse(text); } catch(pe) {
-          console.warn('[Stripe API] Proxy ' + p + ' returned non-JSON, trying next...');
-          continue;
-        }
-        if (json.error && json.error === 'Server-side requests are not allowed on your plan.') {
-          console.warn('[Stripe API] Proxy ' + p + ' paywall, trying next...');
-          continue;
-        }
-        if (!resp.ok && json.error) {
-          console.error('[Stripe API] Erreur:', json);
-          throw new Error(json.error.message || 'Stripe API error');
-        }
-        if (p > 0) console.log('[Stripe API] Success via proxy ' + p);
-        return json;
-      } catch(e) {
-        lastError = e;
-        if (e.message && (e.message.indexOf('Stripe') !== -1 || e.message.indexOf('parameter') !== -1 || e.message.indexOf('Invalid') !== -1)) {
-          // Real Stripe error, don't retry with another proxy
-          throw e;
-        }
-        console.warn('[Stripe API] Proxy ' + p + ' failed:', e.message || e);
-      }
+    var json = await resp.json();
+    if (!resp.ok || (json.error && json.error.message)) {
+      console.error('[Stripe API] Erreur:', json);
+      throw new Error(json.error ? json.error.message : 'Stripe API error');
     }
-    throw lastError || new Error('Tous les proxies CORS ont \u00e9chou\u00e9. V\u00e9rifiez votre connexion.');
+    return json;
   }
 
   // Create a Stripe coupon + promotion code, returns { coupon_id, promo_id }

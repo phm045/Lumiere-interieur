@@ -4118,11 +4118,11 @@ function getComments(articleId) {
       });
     }
 
-    // Add admin "+" buttons (admin only)
+    // Add admin "+" buttons (admin only) — skip if already present
     if (isAdmin) {
       // Blog add button - prepend to blog-grid
       var blogGrid = document.querySelector('.blog-grid');
-      if (blogGrid) {
+      if (blogGrid && !blogGrid.querySelector('.admin-add-btn')) {
         var addBlogBtn = document.createElement('div');
         addBlogBtn.className = 'admin-add-btn';
         addBlogBtn.innerHTML = '<span class="admin-add-btn__icon">+</span><span>Nouvel article</span>';
@@ -4132,7 +4132,7 @@ function getComments(articleId) {
 
       // Boutique add button - prepend to boutique container
       var prodGrid = document.getElementById('boutique-products-grid');
-      if (prodGrid) {
+      if (prodGrid && !prodGrid.parentNode.querySelector('.admin-add-btn--boutique')) {
         var addProdBtn = document.createElement('div');
         addProdBtn.className = 'admin-add-btn admin-add-btn--boutique';
         addProdBtn.innerHTML = '<span class="admin-add-btn__icon">+</span><span>Nouveau produit</span>';
@@ -4142,7 +4142,7 @@ function getComments(articleId) {
 
       // Coupon management button - add in boutique section
       var boutiqueSection = document.querySelector('[data-page="boutique"]') || (prodGrid && prodGrid.closest('section'));
-      if (boutiqueSection) {
+      if (boutiqueSection && !boutiqueSection.querySelector('.admin-add-btn--coupon')) {
         var addCouponBtn = document.createElement('div');
         addCouponBtn.className = 'admin-add-btn admin-add-btn--coupon';
         addCouponBtn.innerHTML = '<span class="admin-add-btn__icon">🎟</span><span>Gérer les coupons</span>';

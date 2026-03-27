@@ -4349,6 +4349,16 @@ function getComments(articleId) {
       countEl.textContent = count;
       countEl.hidden = count === 0;
     }
+    // Floating button
+    var fab = document.getElementById('cart-fab');
+    var fabCount = document.getElementById('cart-fab-count');
+    if (fab) {
+      fab.hidden = count === 0;
+    }
+    if (fabCount) {
+      fabCount.textContent = count;
+      fabCount.hidden = count === 0;
+    }
 
     var itemsEl = document.getElementById('cart-items');
     var emptyEl = document.getElementById('cart-empty');
@@ -4419,9 +4429,11 @@ function getComments(articleId) {
 
   (function initCartDrawerEvents() {
     var toggle = document.getElementById('cart-toggle');
+    var fab = document.getElementById('cart-fab');
     var closeBtn = document.getElementById('cart-close');
     var backdrop = document.querySelector('.cart-drawer__backdrop');
     if (toggle) toggle.addEventListener('click', openCartDrawer);
+    if (fab) fab.addEventListener('click', openCartDrawer);
     if (closeBtn) closeBtn.addEventListener('click', closeCartDrawer);
     if (backdrop) backdrop.addEventListener('click', closeCartDrawer);
     document.addEventListener('keydown', function(e) {

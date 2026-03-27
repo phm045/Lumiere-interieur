@@ -4864,7 +4864,7 @@ function getComments(articleId) {
   })();
 
   // Stripe API via Supabase Edge Function (no CORS issues)
-  var STRIPE_EDGE_FN = 'https://mqjckeibaqlkmwdrnypu.supabase.co/functions/v1/stripe-checkout';
+  var STRIPE_EDGE_FN = 'https://dhbbwzpfwtdtdiuixrmq.supabase.co/functions/v1/stripe-checkout';
 
   async function stripeApiCall(endpoint, method, params) {
     var body = '';

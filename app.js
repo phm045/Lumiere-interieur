@@ -98,12 +98,17 @@
     // Close blog overlay if navigating away
     closeBlogOverlay();
 
-    // Newsletter flottant : visible sur accueil, blog, boutique et services
-    var nlFloat = document.getElementById('nl-float');
-    if (nlFloat) {
+    // Unified FAB : newsletter sub-button visible sur accueil, blog, boutique et services
+    var ufabNl = document.getElementById('ufab-newsletter');
+    if (ufabNl) {
       var nlPages = ['accueil', 'blog', 'boutique', 'services'];
-      nlFloat.style.display = nlPages.indexOf(pageId) !== -1 ? '' : 'none';
+      ufabNl.style.display = nlPages.indexOf(pageId) !== -1 ? '' : 'none';
     }
+    // Fermer le menu FAB lors du changement de page
+    var ufab = document.getElementById('unified-fab');
+    if (ufab) ufab.classList.remove('ufab--open');
+    var nlCard = document.getElementById('nl-float-card');
+    if (nlCard) nlCard.hidden = true;
   }
 
   // Nav link clicks
@@ -1899,20 +1904,17 @@ function getComments(articleId) {
         chargerCoupons();
       }
     }
-    // Newsletter flottant : visible sur accueil, blog, boutique et services
-    var nlFloat = document.getElementById('nl-float');
-    if (nlFloat) {
+    // Unified FAB : newsletter sub-button visible sur accueil, blog, boutique et services
+    var ufabNl2 = document.getElementById('ufab-newsletter');
+    if (ufabNl2) {
       var nlPages = ['accueil', 'blog', 'boutique', 'services'];
-      nlFloat.style.display = nlPages.indexOf(pageId) !== -1 ? '' : 'none';
-      // Fermer la card si on change de page
-      var nlCard = document.getElementById('nl-float-card');
-      if (nlCard) nlCard.hidden = true;
-      nlFloat.classList.remove('nl-float--open');
-      var iconMail = nlFloat.querySelector('.nl-float__icon--mail');
-      var iconClose = nlFloat.querySelector('.nl-float__icon--close');
-      if (iconMail) iconMail.style.display = '';
-      if (iconClose) iconClose.style.display = 'none';
+      ufabNl2.style.display = nlPages.indexOf(pageId) !== -1 ? '' : 'none';
     }
+    // Fermer le menu FAB et la card newsletter
+    var ufab2 = document.getElementById('unified-fab');
+    if (ufab2) ufab2.classList.remove('ufab--open');
+    var nlCard2 = document.getElementById('nl-float-card');
+    if (nlCard2) nlCard2.hidden = true;
   };
 
   // Vérifier le statut auth au chargement
@@ -3351,116 +3353,160 @@ function getComments(articleId) {
 
 
   // ========================================
-  // NEWSLETTER FLOTTANT — Toggle card
+  // BOUTON FLOTTANT UNIFIÉ (uFAB) — Newsletter + Musique + Panier
   // ========================================
-  (function initNlFloat() {
-    var container = document.getElementById('nl-float');
-    var btn = document.getElementById('nl-float-toggle');
-    var card = document.getElementById('nl-float-card');
-    if (!btn || !card || !container) return;
+  (function initUnifiedFAB() {
+    var fab = document.getElementById('unified-fab');
+    var toggleBtn = document.getElementById('ufab-toggle');
+    var backdrop = document.getElementById('ufab-backdrop');
+    if (!fab || !toggleBtn) return;
 
-    var iconMail  = btn.querySelector('.nl-float__icon--mail');
-    var iconClose = btn.querySelector('.nl-float__icon--close');
     var isOpen = false;
 
-    function toggle() {
-      isOpen = !isOpen;
-      card.hidden = !isOpen;
-      container.classList.toggle('nl-float--open', isOpen);
-      if (iconMail)  iconMail.style.display  = isOpen ? 'none' : '';
-      if (iconClose) iconClose.style.display = isOpen ? '' : 'none';
+    function openFAB() {
+      isOpen = true;
+      fab.classList.add('ufab--open');
+    }
+    function closeFAB() {
+      isOpen = false;
+      fab.classList.remove('ufab--open');
+      // Aussi fermer la card newsletter si elle est ouverte
+      var nlCard = document.getElementById('nl-float-card');
+      if (nlCard) nlCard.hidden = true;
+    }
+    function toggleFAB() {
+      if (isOpen) closeFAB(); else openFAB();
     }
 
-    btn.addEventListener('click', toggle);
-
-    // Fermer si clic en dehors
-    document.addEventListener('click', function(e) {
-      if (isOpen && !container.contains(e.target)) {
-        toggle();
-      }
+    toggleBtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleFAB();
     });
-  })();
 
-  // ========================================
-  // SONS DE GUÉRISON — Bol Chantant (fond sonore)
-  // ========================================
-  (function initSoundHealer() {
-    var container = document.getElementById('sound-healer');
-    var btn = document.getElementById('sound-toggle');
-    var audio = document.getElementById('sound-audio');
-    if (!btn || !audio || !container) return;
-
-    var iconOff = btn.querySelector('.sound-healer__icon--off');
-    var iconOn  = btn.querySelector('.sound-healer__icon--on');
-    var isPlaying = false;
-    var fadeInterval = null;
-    var targetVolume = 0.25;  // Volume doux pour fond sonore
-
-    function fadeIn(duration) {
-      audio.volume = 0;
-      audio.play().then(function() {
-        var step = targetVolume / (duration / 30);
-        clearInterval(fadeInterval);
-        fadeInterval = setInterval(function() {
-          if (audio.volume + step >= targetVolume) {
-            audio.volume = targetVolume;
-            clearInterval(fadeInterval);
-          } else {
-            audio.volume = Math.min(audio.volume + step, 1);
-          }
-        }, 30);
-      }).catch(function(e) {
-        console.log('Audio autoplay bloqué:', e);
+    if (backdrop) {
+      backdrop.addEventListener('click', function() {
+        closeFAB();
       });
     }
 
-    function fadeOut(duration) {
-      var step = audio.volume / (duration / 30);
-      clearInterval(fadeInterval);
-      fadeInterval = setInterval(function() {
-        if (audio.volume - step <= 0.001) {
-          audio.volume = 0;
-          audio.pause();
-          clearInterval(fadeInterval);
-        } else {
-          audio.volume = Math.max(audio.volume - step, 0);
-        }
-      }, 30);
-    }
-
-    function updateUI() {
-      if (isPlaying) {
-        container.classList.add('sound-healer--playing');
-        iconOff.style.display = 'none';
-        iconOn.style.display  = '';
-        btn.setAttribute('aria-label', 'Désactiver les sons de guérison');
-      } else {
-        container.classList.remove('sound-healer--playing');
-        iconOff.style.display = '';
-        iconOn.style.display  = 'none';
-        btn.setAttribute('aria-label', 'Activer les sons de guérison');
-      }
-      // Mémoriser le choix
-      try { safeLocal.setItem('li_sound', isPlaying ? '1' : '0'); } catch(e) {}
-    }
-
-    btn.addEventListener('click', function() {
-      isPlaying = !isPlaying;
-      updateUI();
-      if (isPlaying) {
-        fadeIn(1500);  // Fondu de 1.5s
-      } else {
-        fadeOut(800);  // Fondu de 0.8s
-      }
+    // Fermer avec Escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && isOpen) closeFAB();
     });
 
-    // Restaurer l'état précédent (mais ne pas auto-play sans geste)
-    try {
-      if (safeLocal.getItem('li_sound') === '1') {
-        // On montre l'icône "on" pour indiquer que le son était actif,
-        // mais on attend le premier clic (politique navigateurs)
+    // --- NEWSLETTER ---
+    var nlBtn = document.getElementById('nl-float-toggle');
+    var nlCard = document.getElementById('nl-float-card');
+    var nlCardOpen = false;
+
+    if (nlBtn && nlCard) {
+      nlBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        nlCardOpen = !nlCardOpen;
+        nlCard.hidden = !nlCardOpen;
+      });
+      // Fermer card si clic en dehors
+      document.addEventListener('click', function(e) {
+        if (nlCardOpen && !nlCard.contains(e.target) && e.target !== nlBtn && !nlBtn.contains(e.target)) {
+          nlCardOpen = false;
+          nlCard.hidden = true;
+        }
+      });
+    }
+
+    // --- SONS DE GUÉRISON ---
+    var soundBtn = document.getElementById('sound-toggle');
+    var soundContainer = document.getElementById('ufab-sound');
+    var audio = document.getElementById('sound-audio');
+
+    if (soundBtn && audio && soundContainer) {
+      var iconOff = soundBtn.querySelector('.sound-healer__icon--off');
+      var iconOn  = soundBtn.querySelector('.sound-healer__icon--on');
+      var isPlaying = false;
+      var fadeInterval = null;
+      var targetVolume = 0.25;
+
+      function fadeIn(duration) {
+        audio.volume = 0;
+        audio.play().then(function() {
+          var step = targetVolume / (duration / 30);
+          clearInterval(fadeInterval);
+          fadeInterval = setInterval(function() {
+            if (audio.volume + step >= targetVolume) {
+              audio.volume = targetVolume;
+              clearInterval(fadeInterval);
+            } else {
+              audio.volume = Math.min(audio.volume + step, 1);
+            }
+          }, 30);
+        }).catch(function(e) {
+          console.log('Audio autoplay bloqué:', e);
+        });
       }
-    } catch(e) {}
+
+      function fadeOut(duration) {
+        var step = audio.volume / (duration / 30);
+        clearInterval(fadeInterval);
+        fadeInterval = setInterval(function() {
+          if (audio.volume - step <= 0.001) {
+            audio.volume = 0;
+            audio.pause();
+            clearInterval(fadeInterval);
+          } else {
+            audio.volume = Math.max(audio.volume - step, 0);
+          }
+        }, 30);
+      }
+
+      function updateSoundUI() {
+        if (isPlaying) {
+          soundContainer.classList.add('ufab-sound--playing');
+          if (iconOff) iconOff.style.display = 'none';
+          if (iconOn) iconOn.style.display  = '';
+          soundBtn.setAttribute('aria-label', 'Désactiver les sons de guérison');
+        } else {
+          soundContainer.classList.remove('ufab-sound--playing');
+          if (iconOff) iconOff.style.display = '';
+          if (iconOn) iconOn.style.display  = 'none';
+          soundBtn.setAttribute('aria-label', 'Activer les sons de guérison');
+        }
+        try { safeLocal.setItem('li_sound', isPlaying ? '1' : '0'); } catch(e) {}
+      }
+
+      soundBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        isPlaying = !isPlaying;
+        updateSoundUI();
+        if (isPlaying) {
+          fadeIn(1500);
+        } else {
+          fadeOut(800);
+        }
+      });
+
+      // Restaurer l'état précédent
+      try {
+        if (safeLocal.getItem('li_sound') === '1') {
+          // Indiquer visuellement que le son était actif
+        }
+      } catch(e) {}
+    }
+
+    // --- PANIER (délègue au cart drawer existant) ---
+    var cartBtn = document.getElementById('ufab-cart-btn');
+    if (cartBtn) {
+      cartBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        // Appeler openCartDrawer si elle existe
+        if (typeof openCartDrawer === 'function') {
+          openCartDrawer();
+        } else {
+          // Fallback : simuler clic sur cart-toggle de la nav
+          var navCart = document.getElementById('cart-toggle');
+          if (navCart) navCart.click();
+        }
+      });
+    }
   })();
 
   // ─── Interactive pin/unpin system — admin-only buttons, Supabase persistence ───
@@ -4349,15 +4395,20 @@ function getComments(articleId) {
       countEl.textContent = count;
       countEl.hidden = count === 0;
     }
-    // Floating button
-    var fab = document.getElementById('cart-fab');
-    var fabCount = document.getElementById('cart-fab-count');
-    if (fab) {
-      fab.hidden = count === 0;
+    // Unified FAB cart badge
+    var ufabCartBadge = document.getElementById('ufab-cart-badge');
+    if (ufabCartBadge) {
+      ufabCartBadge.textContent = count;
+      ufabCartBadge.hidden = count === 0;
     }
-    if (fabCount) {
-      fabCount.textContent = count;
-      fabCount.hidden = count === 0;
+    // Update main FAB badge (combine all notifications)
+    var ufabMainBadge = document.getElementById('ufab-main-badge');
+    if (ufabMainBadge) {
+      var nlBadge = document.getElementById('ufab-nl-badge');
+      var nlCount = nlBadge && !nlBadge.hidden ? parseInt(nlBadge.textContent || '0', 10) : 1;
+      var total = nlCount + count;
+      ufabMainBadge.textContent = total;
+      ufabMainBadge.style.display = total > 0 ? '' : 'none';
     }
 
     var itemsEl = document.getElementById('cart-items');
@@ -4415,12 +4466,13 @@ function getComments(articleId) {
     });
   }
 
-  // Cart drawer open/close
+  // Cart drawer open/close (exposé sur window pour le FAB unifié)
   function openCartDrawer() {
     var drawer = document.getElementById('cart-drawer');
     if (drawer) { drawer.hidden = false; document.body.style.overflow = 'hidden'; }
     updateCartUI();
   }
+  window.openCartDrawer = openCartDrawer;
 
   function closeCartDrawer() {
     var drawer = document.getElementById('cart-drawer');
@@ -4429,11 +4481,9 @@ function getComments(articleId) {
 
   (function initCartDrawerEvents() {
     var toggle = document.getElementById('cart-toggle');
-    var fab = document.getElementById('cart-fab');
     var closeBtn = document.getElementById('cart-close');
     var backdrop = document.querySelector('.cart-drawer__backdrop');
     if (toggle) toggle.addEventListener('click', openCartDrawer);
-    if (fab) fab.addEventListener('click', openCartDrawer);
     if (closeBtn) closeBtn.addEventListener('click', closeCartDrawer);
     if (backdrop) backdrop.addEventListener('click', closeCartDrawer);
     document.addEventListener('keydown', function(e) {

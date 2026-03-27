@@ -2520,23 +2520,67 @@
 </main>
 
 <!-- ========================================
-     NEWSLETTER FLOTTANT (services, blog, boutique)
+     BOUTON FLOTTANT UNIFIÉ (Newsletter + Musique + Panier)
      ======================================== -->
-<div id="nl-float" class="nl-float" style="display:none">
-  <button id="nl-float-toggle" class="nl-float__btn" aria-label="S'inscrire à la newsletter" title="Newsletter">
-    <svg class="nl-float__icon nl-float__icon--mail" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
-      <polyline points="22,6 12,13 2,6"/>
+<div id="unified-fab" class="ufab">
+  <!-- Backdrop overlay when menu is open -->
+  <div class="ufab__backdrop" id="ufab-backdrop"></div>
+
+  <!-- Sub-button: Newsletter -->
+  <div class="ufab__action ufab__action--newsletter" id="ufab-newsletter" data-tooltip="Newsletter">
+    <button class="ufab__action-btn" id="nl-float-toggle" aria-label="S'inscrire à la newsletter" title="Newsletter">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/>
+        <polyline points="22,6 12,13 2,6"/>
+      </svg>
+      <span class="ufab__badge" id="ufab-nl-badge">1</span>
+    </button>
+  </div>
+
+  <!-- Sub-button: Musique / Sons de guérison -->
+  <div class="ufab__action ufab__action--sound" id="ufab-sound" data-tooltip="Bol chantant">
+    <button class="ufab__action-btn" id="sound-toggle" aria-label="Activer les sons de guérison" title="Sons de guérison">
+      <svg class="sound-healer__icon sound-healer__icon--off" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+        <line x1="23" y1="9" x2="17" y2="15"/>
+        <line x1="17" y1="9" x2="23" y2="15"/>
+      </svg>
+      <svg class="sound-healer__icon sound-healer__icon--on" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+        <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
+        <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Sub-button: Panier -->
+  <div class="ufab__action ufab__action--cart" id="ufab-cart" data-tooltip="Panier">
+    <button class="ufab__action-btn" id="ufab-cart-btn" aria-label="Ouvrir le panier" title="Panier">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/>
+        <line x1="3" y1="6" x2="21" y2="6"/>
+        <path d="M16 10a4 4 0 0 1-8 0"/>
+      </svg>
+      <span class="ufab__badge ufab__badge--cart" id="ufab-cart-badge" hidden>0</span>
+    </button>
+  </div>
+
+  <!-- Main FAB button -->
+  <button class="ufab__main" id="ufab-toggle" aria-label="Menu rapide" title="Menu">
+    <svg class="ufab__icon ufab__icon--menu" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="1"/>
+      <circle cx="12" cy="5" r="1"/>
+      <circle cx="12" cy="19" r="1"/>
     </svg>
-    <svg class="nl-float__icon nl-float__icon--close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none">
+    <svg class="ufab__icon ufab__icon--close" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <line x1="18" y1="6" x2="6" y2="18"/>
       <line x1="6" y1="6" x2="18" y2="18"/>
     </svg>
-    <span class="nl-float__badge">1</span>
+    <!-- Combined badge (shows total notifications) -->
+    <span class="ufab__main-badge" id="ufab-main-badge">1</span>
   </button>
-  <span class="nl-float__label">Newsletter</span>
 
-  <!-- Card popup -->
+  <!-- Newsletter popup card (repositioned for unified FAB) -->
   <div id="nl-float-card" class="nl-float__card" hidden>
     <div class="nl-float__card-header">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -2558,6 +2602,11 @@
     </div>
   </div>
 </div>
+
+<!-- Audio pour sons de guérison (déplacé hors du FAB pour persistance) -->
+<audio id="sound-audio" loop preload="none">
+  <source src="./singing-bowl-meditation.mp3" type="audio/mpeg">
+</audio>
 
 <!-- ========================================
      FOOTER
@@ -2878,28 +2927,7 @@
   </div>
 </footer>
 
-<!-- ========================================
-     SONS DE GUERISON — Bol Chantant (fond sonore)
-     ======================================== -->
-<div id="sound-healer" class="sound-healer" aria-label="Sons de guérison au bol chantant">
-  <button id="sound-toggle" class="sound-healer__btn" aria-label="Activer les sons de guérison" title="Sons de guérison au bol chantant">
-    <svg class="sound-healer__icon sound-healer__icon--off" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M11 5L6 9H2v6h4l5 4V5z"/>
-      <line x1="23" y1="9" x2="17" y2="15"/>
-      <line x1="17" y1="9" x2="23" y2="15"/>
-    </svg>
-    <svg class="sound-healer__icon sound-healer__icon--on" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" style="display:none">
-      <path d="M11 5L6 9H2v6h4l5 4V5z"/>
-      <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-      <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-    </svg>
-    <span class="sound-healer__pulse"></span>
-  </button>
-  <span class="sound-healer__label">Bol chantant</span>
-  <audio id="sound-audio" loop preload="none">
-    <source src="./singing-bowl-meditation.mp3" type="audio/mpeg">
-  </audio>
-</div>
+<!-- Sons de guérison: intégré dans le bouton flottant unifié (#unified-fab) -->
 
 <!-- Cal.com Embed -->
 <script>
@@ -3154,11 +3182,7 @@ Cal("init", "consultations", { origin: "https://app.cal.eu" });
   </div>
 </div>
 
-<!-- Bouton flottant Panier -->
-<button class="cart-fab" id="cart-fab" aria-label="Ouvrir le panier" title="Panier" hidden>
-  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-  <span class="cart-fab__count" id="cart-fab-count" hidden>0</span>
-</button>
+<!-- Panier flottant: intégré dans le bouton flottant unifié (#unified-fab) -->
 
 <script src="./app.js" defer></script>
 <script data-pplx-inline-edit>

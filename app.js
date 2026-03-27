@@ -9,7 +9,7 @@
   var ADMIN_EMAIL = 'philippe.medium45@gmail.com';
 
   // --- API Proxy URLs (keys stored server-side in Supabase Edge Functions) ---
-  var EDGE_FN_BASE = 'https://dhbbwzpfwtdtdiuixrmq.supabase.co/functions/v1';
+  var EDGE_FN_BASE = 'https://mqjckeibaqlkmwdrnypu.supabase.co/functions/v1';
   var BREVO_PROXY = EDGE_FN_BASE + '/brevo-proxy';
   var CAL_PROXY = EDGE_FN_BASE + '/cal-proxy';
 
@@ -4975,7 +4975,7 @@ function getComments(articleId) {
   })();
 
   // Stripe API via Supabase Edge Function (no CORS issues)
-  var STRIPE_EDGE_FN = 'https://dhbbwzpfwtdtdiuixrmq.supabase.co/functions/v1/stripe-checkout';
+  var STRIPE_EDGE_FN = EDGE_FN_BASE + '/stripe-checkout';
 
   async function stripeApiCall(endpoint, method, params) {
     var body = '';

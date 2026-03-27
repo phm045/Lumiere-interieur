@@ -6,7 +6,7 @@
   'use strict';
 
   // --- Admin email constant (early definition for auth checks) ---
-  var ADMIN_EMAIL = 'philippe.medium45@gmail.com';
+  var ADMIN_EMAIL = 'equi.libre.916@gmail.com';
 
   // ⚠️ SÉCURITÉ : La clé secrète Stripe est exposée côté client car le site est statique (GitHub Pages)
   // sans backend. Idéalement, les appels à l'API Stripe devraient se faire côté serveur.

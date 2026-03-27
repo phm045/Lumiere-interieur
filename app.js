@@ -36,6 +36,11 @@
   var safeLocal = _safeStorage('local');
   var safeSession = _safeStorage('session');
 
+  // --- HTML sanitization helper (XSS prevention) ---
+  function sanitizeForHtml(str) {
+    return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
   // --- Theme Toggle ---
   const toggle = document.querySelector('[data-theme-toggle]');
   const root = document.documentElement;
@@ -159,15 +164,17 @@
   var header = document.querySelector('.header');
   var lastScroll = 0;
 
-  window.addEventListener('scroll', function () {
-    var currentScroll = window.scrollY;
-    if (currentScroll > 60) {
-      header.style.boxShadow = 'var(--shadow-sm)';
-    } else {
-      header.style.boxShadow = 'none';
-    }
-    lastScroll = currentScroll;
-  }, { passive: true });
+  if (header) {
+    window.addEventListener('scroll', function () {
+      var currentScroll = window.scrollY;
+      if (currentScroll > 60) {
+        header.style.boxShadow = 'var(--shadow-sm)';
+      } else {
+        header.style.boxShadow = 'none';
+      }
+      lastScroll = currentScroll;
+    }, { passive: true });
+  }
 
   // --- Blog Article Content ---
   var blogArticles = {
@@ -1043,10 +1050,10 @@
       listEl.innerHTML = comments.map(function(c) {
         return '<div class="blog-comment">' +
           '<div class="blog-comment__header">' +
-            '<span class="blog-comment__name">' + c.name + '</span>' +
-            '<span class="blog-comment__date">' + c.date + '</span>' +
+            '<span class="blog-comment__name">' + sanitizeForHtml(c.name) + '</span>' +
+            '<span class="blog-comment__date">' + sanitizeForHtml(c.date) + '</span>' +
           '</div>' +
-          '<p class="blog-comment__text">' + c.text + '</p>' +
+          '<p class="blog-comment__text">' + sanitizeForHtml(c.text) + '</p>' +
         '</div>';
       }).join('');
     }
@@ -1285,9 +1292,15 @@
           }).catch(function() { showSuccess(); });
         }
       })
-      .catch(function() {
+      .catch(function(err) {
         clearTimeout(safetyTimer);
-        showSuccess('Merci ' + prenom + '\u00a0! Inscription enregistr\u00e9e.');
+        var msgEl = form.querySelector('.newsletter__msg') || form.parentElement.querySelector('.newsletter__msg');
+        if (msgEl) {
+          msgEl.textContent = 'Une erreur est survenue. Veuillez réessayer plus tard.';
+          msgEl.className = 'newsletter__msg newsletter__msg--error';
+          msgEl.hidden = false;
+        }
+        resetBtn();
       });
     });
   });
@@ -1298,13 +1311,20 @@
 
   var SUPABASE_URL = 'https://dhbbwzpfwtdtdiuixrmq.supabase.co';
   var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYmJ3enBmd3RkdGRpdWl4cm1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwOTY4MTQsImV4cCI6MjA4OTY3MjgxNH0.ysMB2mgIV83NjTI_63WNlkHVul20zu34us-W-wzdyfg';
-  var supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  var supabase;
+  try {
+    supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
+  } catch(e) {
+    console.warn('Supabase non disponible:', e.message);
+    supabase = null;
+  }
 
   var navConnexion = document.getElementById('nav-connexion');
   var navCompte = document.getElementById('nav-compte');
 
   // --- Vérifier l'état de connexion au chargement ---
   async function verifierStatutAuth() {
+    if (!supabase) { window.__isAdmin = false; afficherEtatDeconnecte(); return; }
     try {
       var { data: { session } } = await supabase.auth.getSession();
       if (session && session.user) {
@@ -1322,7 +1342,7 @@
   }
 
   // Écouter les changements d'état d'auth
-  supabase.auth.onAuthStateChange(function (event, session) {
+  if (supabase) supabase.auth.onAuthStateChange(function (event, session) {
     if (session && session.user) {
       var meta = session.user.user_metadata || {};
       // Check admin status before displaying state
@@ -1672,7 +1692,7 @@
   var btnDeconnexion = document.getElementById('btn-deconnexion');
   if (btnDeconnexion) {
     btnDeconnexion.addEventListener('click', async function () {
-      await supabase.auth.signOut();
+      if (supabase) await supabase.auth.signOut();
       afficherEtatDeconnecte();
       history.pushState(null, '', '#accueil');
       showPage('accueil');
@@ -1689,12 +1709,14 @@
 
   function annulerSuppression() {
     etapeSuppr = 0;
-    groupeMdp.hidden = true;
-    inputMdp.value = '';
-    erreurMdp.hidden = true;
-    btnAnnuler.hidden = true;
-    btnSupprimer.disabled = false;
-    btnSupprimer.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Supprimer mon compte';
+    if (groupeMdp) groupeMdp.hidden = true;
+    if (inputMdp) inputMdp.value = '';
+    if (erreurMdp) erreurMdp.hidden = true;
+    if (btnAnnuler) btnAnnuler.hidden = true;
+    if (btnSupprimer) {
+      btnSupprimer.disabled = false;
+      btnSupprimer.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg> Supprimer mon compte';
+    }
   }
 
   if (btnAnnuler) {
@@ -2832,8 +2854,11 @@
   // --- Pop-ups Réservation Cal.com ---
   // Intercepter les boutons "Réserver maintenant" dans les services
   document.querySelectorAll('[data-cal-service]').forEach(function (btn) {
-    var origClick = null;
+    var confirmed = false;
     btn.addEventListener('click', function (e) {
+      if (confirmed) { confirmed = false; return; }
+      e.preventDefault();
+      e.stopPropagation();
       // On ne bloque pas Cal.com embed, on affiche juste la modal avant
       var serviceName = btn.getAttribute('data-cal-service') || '';
       var serviceEl = document.getElementById('modal-reservation-service');
@@ -2844,7 +2869,7 @@
       if (confirmBtn) {
         confirmBtn.onclick = function () {
           closeAllModals();
-          // Déclencher le clic Cal.com natif
+          confirmed = true;
           btn.click();
         };
       }
@@ -2923,7 +2948,7 @@
               + '<p><strong>Email :</strong> ' + email + '</p>'
               + '<p><strong>Sujet :</strong> ' + sujet + '</p>'
               + '<p><strong>Message :</strong></p>'
-              + '<blockquote style="border-left:3px solid #6b7f4e;padding-left:12px;color:#333;">' + message.replace(/\n/g, '<br>') + '</blockquote>',
+              + '<blockquote style="border-left:3px solid #6b7f4e;padding-left:12px;color:#333;">' + sanitizeForHtml(message).replace(/\n/g, '<br>') + '</blockquote>',
             replyTo: email,
             replyName: nom
           });
@@ -3192,7 +3217,7 @@
             + '<p><strong>Date de naissance :</strong> ' + dobFormatted + '</p>'
             + '<p><strong>Email :</strong> ' + email + '</p>'
             + '<p><strong>Question :</strong></p>'
-            + '<blockquote style="border-left:3px solid #b5704a;padding-left:12px;color:#333;">' + question.replace(/\n/g, '<br>') + '</blockquote>',
+            + '<blockquote style="border-left:3px solid #b5704a;padding-left:12px;color:#333;">' + sanitizeForHtml(question).replace(/\n/g, '<br>') + '</blockquote>',
           replyTo: email,
           replyName: prenom
         });
@@ -3346,6 +3371,7 @@
 
   // Check if current user is the admin
   async function checkAdmin() {
+    if (!supabase) return false;
     try {
       var result = await supabase.auth.getSession();
       var session = result.data.session;
@@ -3355,35 +3381,40 @@
 
   // Load pinned slugs from Supabase (for all visitors)
   async function loadPinsFromSupabase() {
+    if (!supabase) return JSON.parse(safeLocal.getItem('pinned_items') || '[]');
     try {
       var result = await supabase.from('site_pins').select('slug');
       if (result.error) throw result.error;
       return result.data.map(function(r) { return r.slug; });
     } catch(e) {
       // Fallback to localStorage if table doesn't exist yet
-      return JSON.parse(localStorage.getItem('pinned_items') || '[]');
+      return JSON.parse(safeLocal.getItem('pinned_items') || '[]');
     }
   }
 
   // Save a pin to Supabase + localStorage (admin only)
   async function addPinToSupabase(slug) {
-    try {
-      await supabase.from('site_pins').upsert({ slug: slug, pinned_at: new Date().toISOString() });
-    } catch(e) {}
-    var items = JSON.parse(localStorage.getItem('pinned_items') || '[]');
+    if (supabase) {
+      try {
+        await supabase.from('site_pins').upsert({ slug: slug, pinned_at: new Date().toISOString() });
+      } catch(e) {}
+    }
+    var items = JSON.parse(safeLocal.getItem('pinned_items') || '[]');
     if (items.indexOf(slug) === -1) items.push(slug);
-    localStorage.setItem('pinned_items', JSON.stringify(items));
+    safeLocal.setItem('pinned_items', JSON.stringify(items));
   }
 
   // Remove a pin from Supabase + localStorage (admin only)
   async function removePinFromSupabase(slug) {
-    try {
-      await supabase.from('site_pins').delete().eq('slug', slug);
-    } catch(e) {}
-    var items = JSON.parse(localStorage.getItem('pinned_items') || '[]');
+    if (supabase) {
+      try {
+        await supabase.from('site_pins').delete().eq('slug', slug);
+      } catch(e) {}
+    }
+    var items = JSON.parse(safeLocal.getItem('pinned_items') || '[]');
     var idx = items.indexOf(slug);
     if (idx > -1) items.splice(idx, 1);
-    localStorage.setItem('pinned_items', JSON.stringify(items));
+    safeLocal.setItem('pinned_items', JSON.stringify(items));
   }
 
   (async function initPinnedSystem() {
@@ -5398,13 +5429,14 @@
         var statusBadge = t.approuve
           ? '<span class="moderation-badge moderation-badge--approved">\u2714 Approuv\u00e9</span>'
           : '<span class="moderation-badge moderation-badge--pending">\u23f3 En attente</span>';
+        var safeId = sanitizeForHtml(t.id);
         var actions = '';
         if (!t.approuve) {
-          actions += '<button class="btn btn--outline" style="font-size:0.75rem;padding:0.25rem 0.6rem;" onclick="window.__approuverTemoignage(\'' + t.id + '\')" title="Approuver">\u2714 Approuver</button> ';
+          actions += '<button class="btn btn--outline" style="font-size:0.75rem;padding:0.25rem 0.6rem;" data-action-temoignage="approuver" data-temoignage-id="' + safeId + '" title="Approuver">\u2714 Approuver</button> ';
         } else {
-          actions += '<button class="btn btn--outline" style="font-size:0.75rem;padding:0.25rem 0.6rem;opacity:0.5;" onclick="window.__revoquerTemoignage(\'' + t.id + '\')" title="R\u00e9voquer">\u21a9 R\u00e9voquer</button> ';
+          actions += '<button class="btn btn--outline" style="font-size:0.75rem;padding:0.25rem 0.6rem;opacity:0.5;" data-action-temoignage="revoquer" data-temoignage-id="' + safeId + '" title="R\u00e9voquer">\u21a9 R\u00e9voquer</button> ';
         }
-        actions += '<button class="btn btn--outline" style="font-size:0.75rem;padding:0.25rem 0.6rem;color:#e74c3c;border-color:#e74c3c;" onclick="window.__supprimerTemoignage(\'' + t.id + '\')" title="Supprimer">\u2716</button>';
+        actions += '<button class="btn btn--outline" style="font-size:0.75rem;padding:0.25rem 0.6rem;color:#e74c3c;border-color:#e74c3c;" data-action-temoignage="supprimer" data-temoignage-id="' + safeId + '" title="Supprimer">\u2716</button>';
 
         html += '<div class="admin-dash-table__row' + (!t.approuve ? ' admin-dash-table__row--highlight' : '') + '">' +
           '<div class="admin-dash-table__cell">' + statusBadge + '</div>' +
@@ -5417,6 +5449,17 @@
       }
       html += '</div>';
       container.innerHTML = html;
+      // Event delegation for testimonial action buttons (instead of inline onclick)
+      container.addEventListener('click', function(ev) {
+        var btn = ev.target.closest('[data-action-temoignage]');
+        if (!btn) return;
+        var action = btn.getAttribute('data-action-temoignage');
+        var id = btn.getAttribute('data-temoignage-id');
+        if (!id) return;
+        if (action === 'approuver' && window.__approuverTemoignage) window.__approuverTemoignage(id);
+        else if (action === 'revoquer' && window.__revoquerTemoignage) window.__revoquerTemoignage(id);
+        else if (action === 'supprimer' && window.__supprimerTemoignage) window.__supprimerTemoignage(id);
+      });
       adminCacheSet('tab_temoignages', html);
       initResizableColumns(container.querySelector('.admin-dash-table--temoignages'));
     } catch(err) {
@@ -5734,6 +5777,7 @@
     if (!data) data = window.__caData;
     if (!data) { alert('Aucune donn\u00e9e de CA disponible.'); return; }
 
+    if (!window.jspdf || !window.jspdf.jsPDF) { alert('La bibliothèque PDF n\'est pas chargée. Veuillez réessayer.'); return; }
     var jsPDF = window.jspdf.jsPDF;
     var doc = new jsPDF();
 
@@ -6655,7 +6699,8 @@
   });
 
   // --- Supprimer un créneau horaire ---
-  document.getElementById('dispo-semaine').addEventListener('click', function(e) {
+  var dispoSemaine = document.getElementById('dispo-semaine');
+  if (dispoSemaine) dispoSemaine.addEventListener('click', function(e) {
     var supprBtn = e.target.closest('.dispo-creneau__suppr');
     if (!supprBtn) return;
     var creneau = supprBtn.closest('.dispo-creneau');

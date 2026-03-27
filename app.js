@@ -1922,6 +1922,11 @@ function getComments(articleId) {
   // COMMANDES / PAIEMENTS / COUPONS — Supabase
   // ========================================
 
+  // Map des Payment Links Stripe pour les produits boutique (slug -> lien)
+  var BOUTIQUE_STRIPE_LINKS = {
+    'pendule-spirale-dore': 'https://buy.stripe.com/4gMcMYgbleXL4GaadXeAg0a'
+  };
+
   // Map des liens Stripe vers les noms de services
   var STRIPE_SERVICES = {
     '6oUcMYgbl5nbdcGgCleAg04': { service: 'Focus Intuitif', montant: 40 },
@@ -3955,6 +3960,10 @@ function getComments(articleId) {
         if (coming && visibleProducts.length > 0) coming.style.display = 'none';
         visibleProducts.forEach(function(product) {
           product.extra_images = extraImagesMap[product.slug] || [];
+          // Apply fallback stripe_link from hardcoded map if not set in DB
+          if (!product.stripe_link && BOUTIQUE_STRIPE_LINKS[product.slug]) {
+            product.stripe_link = BOUTIQUE_STRIPE_LINKS[product.slug];
+          }
           _loadedProducts[product.slug] = product; // Cache for overlay
           if (prodGrid) {
             var card = createProductCardElement(product, isAdmin);

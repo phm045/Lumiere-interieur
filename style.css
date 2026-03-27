@@ -7272,7 +7272,7 @@ a, button, [role="button"] {
   transform: scale(1.08);
   box-shadow: 0 6px 28px rgba(107, 127, 78, 0.25);
   background: var(--color-primary, #6b7f4e);
-  color: var(--color-text-inverse, #fff);
+  color: #fff;
 }
 .ufab__main:active {
   transform: scale(0.96);
@@ -7290,7 +7290,7 @@ a, button, [role="button"] {
 }
 .ufab--open .ufab__main {
   background: var(--color-primary, #6b7f4e);
-  color: var(--color-text-inverse, #fff);
+  color: #fff;
   border-color: var(--color-primary, #6b7f4e);
   transform: rotate(0deg);
 }
@@ -7338,15 +7338,15 @@ a, button, [role="button"] {
   transform: scale(1) translateY(0);
 }
 .ufab--open .ufab__action--cart {
-  bottom: 66px;
+  bottom: 68px;
   transition-delay: 40ms;
 }
 .ufab--open .ufab__action--sound {
-  bottom: 122px;
+  bottom: 126px;
   transition-delay: 80ms;
 }
 .ufab--open .ufab__action--newsletter {
-  bottom: 178px;
+  bottom: 184px;
   transition-delay: 120ms;
 }
 
@@ -7392,7 +7392,7 @@ a, button, [role="button"] {
 }
 .ufab__action--newsletter .ufab__action-btn:hover {
   background: var(--color-primary, #6b7f4e);
-  color: var(--color-text-inverse, #fff);
+  color: #fff;
 }
 
 /* Sound sub-button accent */
@@ -7402,13 +7402,13 @@ a, button, [role="button"] {
 }
 .ufab__action--sound .ufab__action-btn:hover {
   background: var(--color-accent, #b8952e);
-  color: var(--color-text-inverse, #fff);
+  color: #fff;
 }
 
 /* Sound playing state */
 .ufab__action--sound.ufab-sound--playing .ufab__action-btn {
   background: var(--color-accent, #b8952e);
-  color: var(--color-text-inverse, #fff);
+  color: #fff;
   border-color: var(--color-accent, #b8952e);
   animation: ufab-sound-glow 2.4s ease-out infinite;
 }
@@ -7425,7 +7425,7 @@ a, button, [role="button"] {
 }
 .ufab__action--cart .ufab__action-btn:hover {
   background: var(--color-accent, #b8952e);
-  color: var(--color-text-inverse, #fff);
+  color: #fff;
 }
 
 /* Sub-button badges */
@@ -7433,7 +7433,7 @@ a, button, [role="button"] {
   position: absolute;
   top: -3px;
   right: -3px;
-  width: 16px;
+  min-width: 16px;
   height: 16px;
   border-radius: var(--radius-full, 50%);
   background: var(--color-accent, #b8952e);
@@ -7445,6 +7445,11 @@ a, button, [role="button"] {
   justify-content: center;
   line-height: 1;
   pointer-events: none;
+  border: 1.5px solid var(--color-surface, #fff);
+}
+/* FIX: hidden badge must not display */
+.ufab__badge[hidden] {
+  display: none !important;
 }
 .ufab__badge--cart {
   background: #dc2626;
@@ -7479,7 +7484,7 @@ a, button, [role="button"] {
 /* Newsletter card repositioned for ufab */
 .ufab .nl-float__card {
   position: absolute;
-  bottom: 178px;
+  bottom: 120px;
   right: calc(100% + 0.75rem);
   left: auto;
   width: 300px;
@@ -7501,21 +7506,24 @@ a, button, [role="button"] {
     height: 20px;
   }
   .ufab__action-btn {
-    width: 40px;
-    height: 40px;
+    width: 42px;
+    height: 42px;
   }
   .ufab__action-btn svg {
     width: 18px;
     height: 18px;
   }
   .ufab--open .ufab__action--cart {
-    bottom: 58px;
+    bottom: 60px;
+    transition-delay: 40ms;
   }
   .ufab--open .ufab__action--sound {
-    bottom: 108px;
+    bottom: 114px;
+    transition-delay: 80ms;
   }
   .ufab--open .ufab__action--newsletter {
-    bottom: 158px;
+    bottom: 168px;
+    transition-delay: 120ms;
   }
   .ufab .nl-float__card {
     bottom: auto;
@@ -7526,6 +7534,10 @@ a, button, [role="button"] {
     right: 1rem;
     width: calc(100vw - 2rem);
     max-width: 340px;
+  }
+  /* Hide tooltips on mobile (touch devices) */
+  .ufab__action::before {
+    display: none;
   }
 }
 

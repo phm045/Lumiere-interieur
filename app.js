@@ -4320,9 +4320,6 @@ function getComments(articleId) {
   }
 
   // --- Upload image to Supabase Storage ---
-  // NOTE: The 'images' bucket must be created in Supabase Dashboard (Storage section)
-  // with public access enabled. If the bucket doesn't exist, upload will fail gracefully
-  // and the dropdown image will be used as fallback.
   async function uploadImage(file, bucket, path) {
     var { data, error } = await supabase.storage
       .from(bucket)
@@ -4330,7 +4327,11 @@ function getComments(articleId) {
         cacheControl: '3600',
         upsert: true
       });
-    if (error) throw error;
+    if (error) {
+      console.error('[Upload] Erreur:', error.message);
+      showSaveError('upload image : ' + error.message);
+      throw error;
+    }
     var { data: urlData } = supabase.storage
       .from(bucket)
       .getPublicUrl(path);

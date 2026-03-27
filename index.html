@@ -3047,7 +3047,7 @@ Cal("init", "consultations", { origin: "https://app.cal.eu" });
         <input type="text" class="admin-modal__input" name="category" placeholder="Ex : Cristaux, Encens, Méditation" required>
       </div>
       <div class="admin-modal__group">
-        <label class="admin-modal__label">Image</label>
+        <label class="admin-modal__label">Image principale</label>
         <select class="admin-modal__select" name="image_url">
           <option value="crystals-nature.png">crystals-nature.png</option>
           <option value="hero-voyance.png">hero-voyance.png</option>
@@ -3059,11 +3059,17 @@ Cal("init", "consultations", { origin: "https://app.cal.eu" });
           <option value="lithotherapie.png">lithotherapie.png</option>
         </select>
         <p style="text-align:center;color:#999;margin:0.3rem 0;font-size:0.85rem">— ou —</p>
-        <label class="admin-modal__label">Importer une image</label>
+        <label class="admin-modal__label">Importer l'image principale</label>
         <input type="file" id="admin-boutique-image-file" accept="image/*" class="admin-modal__input">
         <div id="admin-boutique-image-preview" style="margin-top:0.5rem;display:none">
           <img id="admin-boutique-preview-img" style="max-width:200px;max-height:150px;border-radius:8px;object-fit:cover" alt="Aperçu">
         </div>
+      </div>
+      <div class="admin-modal__group">
+        <label class="admin-modal__label">Photos supplémentaires (galerie)</label>
+        <input type="file" id="admin-boutique-extra-images" accept="image/*" multiple class="admin-modal__input">
+        <p style="font-size:0.8rem;color:#999;margin-top:0.3rem">Sélectionnez plusieurs photos pour créer une galerie. L'image principale sera toujours affichée en premier.</p>
+        <div id="admin-boutique-extra-preview" class="admin-extra-preview" style="margin-top:0.5rem;display:none"></div>
       </div>
       <div class="admin-modal__group">
         <label class="admin-modal__label">Visibilité</label>

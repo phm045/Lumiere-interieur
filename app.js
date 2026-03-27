@@ -8,10 +8,10 @@
   // --- Admin email constant (early definition for auth checks) ---
   var ADMIN_EMAIL = 'philippe.medium45@gmail.com';
 
-  // TODO: SECURITY — Move to Supabase Edge Function
-  // ⚠️ SÉCURITÉ : La clé secrète Stripe est exposée côté client car le site est statique (GitHub Pages)
-  // sans backend. Idéalement, les appels à l'API Stripe devraient se faire côté serveur.
-  var STRIPE_SECRET_KEY = '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';
+  // --- API Proxy URLs (keys stored server-side in Supabase Edge Functions) ---
+  var EDGE_FN_BASE = 'https://dhbbwzpfwtdtdiuixrmq.supabase.co/functions/v1';
+  var BREVO_PROXY = EDGE_FN_BASE + '/brevo-proxy';
+  var CAL_PROXY = EDGE_FN_BASE + '/cal-proxy';
 
   // --- Safe storage wrappers (fallback to in-memory when sandboxed) ---
   var _memStore = {};
@@ -966,10 +966,20 @@
     xhr.responseType = 'json';
     xhr.timeout = 5000;
     xhr.onload = function() {
-      if (xhr.status >= 200 && xhr.status < 300 && xhr.response && xhr.response.value !== undefined) {
-        var val = parseInt(xhr.response.value, 10) || 0;
-        likesCache[articleId] = val;
-        if (callback) callback(val);
+      if (xhr.status >= 200 && xhr.status < 300 && xhr.response) {
+        if (xhr.response.error) {
+          // Key not found — treat as 0
+          likesCache[articleId] = 0;
+          if (callback) callback(0);
+          return;
+        }
+        if (xhr.response.value !== undefined) {
+          var val = parseInt(xhr.response.value, 10) || 0;
+          likesCache[articleId] = val;
+          if (callback) callback(val);
+        } else {
+          if (callback) callback(likesCache[articleId] || 0);
+        }
       } else {
         if (callback) callback(likesCache[articleId] || 0);
       }
@@ -1040,10 +1050,20 @@
     xhr.responseType = 'json';
     xhr.timeout = 5000;
     xhr.onload = function() {
-      if (xhr.status >= 200 && xhr.status < 300 && xhr.response && xhr.response.value !== undefined) {
-        var val = parseInt(xhr.response.value, 10) || 0;
-        viewsCache[articleId] = val;
-        if (callback) callback(val);
+      if (xhr.status >= 200 && xhr.status < 300 && xhr.response) {
+        if (xhr.response.error) {
+          // Key not found — treat as 0
+          viewsCache[articleId] = 0;
+          if (callback) callback(0);
+          return;
+        }
+        if (xhr.response.value !== undefined) {
+          var val = parseInt(xhr.response.value, 10) || 0;
+          viewsCache[articleId] = val;
+          if (callback) callback(val);
+        } else {
+          if (callback) callback(viewsCache[articleId] || 0);
+        }
       } else {
         if (callback) callback(viewsCache[articleId] || 0);
       }
@@ -1191,6 +1211,7 @@ function getComments(articleId) {
           '</svg>' +
           '<span class="like-count">' + likes.count + '</span>' +
         '</button>' +
+        '<span class="blog-overlay__views"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg> <span class="overlay-view-count">0</span> vues</span>' +
       '</div>' +
       '<div class="blog-comments">' +
         '<h3 class="blog-comments__title">Commentaires</h3>' +
@@ -1226,6 +1247,12 @@ function getComments(articleId) {
       '<p class="blog-article__meta">' + article.date + '</p>' +
       article.content +
       buildInteractionsHTML(articleId);
+
+    // Update overlay view count
+    fetchViews(articleId, function(count) {
+      var viewCountEl = articleBody.querySelector('.overlay-view-count');
+      if (viewCountEl) viewCountEl.textContent = count || 0;
+    });
 
     // Fetch and render existing comments
     var listEl = document.getElementById('comments-list-' + articleId);
@@ -1359,14 +1386,6 @@ function getComments(articleId) {
     }
   });
 
-  // TODO: SECURITY — Move to Supabase Edge Function
-  // --- Cal.eu API key ---
-  var _calKey = ['cal_live', '3ddff2655a51305821262e13b4e7f740'].join('_');
-  var CAL_API = 'https://api.cal.eu/v2';
-
-  // TODO: SECURITY — Move to Supabase Edge Function
-  // --- Newsletter Forms (Brevo API) ---
-  var _bk = ['xkeysib', 'b85ac7388973b4a7f6d54ddee9929c16b1a21f4c92618ba8562cfdd9bd6355c8', 'iuFk4LnhmnZNaq8V'].join('-');
 
   document.querySelectorAll('[data-newsletter]').forEach(function(form) {
     form.addEventListener('submit', function(e) {
@@ -1407,18 +1426,18 @@ function getComments(articleId) {
 
       var safetyTimer = setTimeout(function() { showSuccess(); }, 12000);
 
-      fetch('https://api.brevo.com/v3/contacts', {
+      fetch(BREVO_PROXY, {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'api-key': _bk
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: email,
-          attributes: { PRENOM: prenom },
-          listIds: [3],
-          updateEnabled: true
+          endpoint: '/v3/contacts',
+          method: 'POST',
+          body: {
+            email: email,
+            attributes: { PRENOM: prenom },
+            listIds: [3],
+            updateEnabled: true
+          }
         })
       })
       .then(function(r) {
@@ -2671,25 +2690,25 @@ function getComments(articleId) {
   // ========================================
   async function envoyerEmailBrevo(options) {
     try {
-      var response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      var response = await fetch(BREVO_PROXY, {
         method: 'POST',
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-          'api-key': _bk
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
-          to: [{ email: options.destinataire, name: 'Philippe' }],
-          replyTo: options.replyTo ? { email: options.replyTo, name: options.replyName || '' } : undefined,
-          subject: options.sujet,
-          htmlContent: '<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px;color:#2c1f1a;">'
-            + '<div style="text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e8e2d5;">'
-            + '<strong style="color:#b5704a;font-size:18px;">Lumi\u00e8re Int\u00e9rieure</strong></div>'
-            + options.contenu
-            + '<hr style="border:none;border-top:1px solid #e8e2d5;margin:24px 0;">'
-            + '<p style="font-size:12px;color:#999;">Envoy\u00e9 depuis le site lumiere-interieure.com</p>'
-            + '</div>'
+          endpoint: '/v3/smtp/email',
+          method: 'POST',
+          body: {
+            sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
+            to: [{ email: options.destinataire, name: 'Philippe' }],
+            replyTo: options.replyTo ? { email: options.replyTo, name: options.replyName || '' } : undefined,
+            subject: options.sujet,
+            htmlContent: '<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px;color:#2c1f1a;">'
+              + '<div style="text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e8e2d5;">'
+              + '<strong style="color:#b5704a;font-size:18px;">Lumi\u00e8re Int\u00e9rieure</strong></div>'
+              + options.contenu
+              + '<hr style="border:none;border-top:1px solid #e8e2d5;margin:24px 0;">'
+              + '<p style="font-size:12px;color:#999;">Envoy\u00e9 depuis le site lumiere-interieure.com</p>'
+              + '</div>'
+          }
         })
       });
       return response.ok || response.status === 201;
@@ -2735,16 +2754,20 @@ function getComments(articleId) {
       var campaignName = 'Auto \u2014 ' + now.toLocaleDateString('fr-FR') + ' ' + now.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'});
 
       // 1. Creer la campagne
-      var createResp = await fetch('https://api.brevo.com/v3/emailCampaigns', {
+      var createResp = await fetch(BREVO_PROXY, {
         method: 'POST',
-        headers: { 'Accept': 'application/json', 'Content-Type': 'application/json', 'api-key': _bk },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
-          name: campaignName,
-          subject: sujet,
-          htmlContent: htmlContent,
-          recipients: { listIds: [3] },
-          inlineImageActivation: false
+          endpoint: '/v3/emailCampaigns',
+          method: 'POST',
+          body: {
+            sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
+            name: campaignName,
+            subject: sujet,
+            htmlContent: htmlContent,
+            recipients: { listIds: [3] },
+            inlineImageActivation: false
+          }
         })
       });
 
@@ -2757,9 +2780,13 @@ function getComments(articleId) {
       var campaignId = campaign.id;
 
       // 2. Envoyer immediatement
-      var sendResp = await fetch('https://api.brevo.com/v3/emailCampaigns/' + campaignId + '/sendNow', {
+      var sendResp = await fetch(BREVO_PROXY, {
         method: 'POST',
-        headers: { 'Accept': 'application/json', 'api-key': _bk }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: '/v3/emailCampaigns/' + campaignId + '/sendNow',
+          method: 'POST'
+        })
       });
 
       if (sendResp.ok || sendResp.status === 204) {
@@ -4966,7 +4993,6 @@ function getComments(articleId) {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        stripe_key: STRIPE_SECRET_KEY,
         endpoint: '/v1' + endpoint,
         method: method || 'POST',
         body: body
@@ -5975,11 +6001,10 @@ function getComments(articleId) {
     var statuses = ['upcoming', 'past', 'cancelled'];
     for (var si = 0; si < statuses.length; si++) {
       try {
-        var resp = await fetch(CAL_API + '/bookings?status=' + statuses[si] + '&take=100', {
-          headers: {
-            'Authorization': 'Bearer ' + _calKey,
-            'cal-api-version': '2024-08-13'
-          }
+        var resp = await fetch(CAL_PROXY, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: '/bookings?status=' + statuses[si] + '&take=100', method: 'GET' })
         });
         if (resp.ok) {
           var json = await resp.json();
@@ -6116,14 +6141,14 @@ function getComments(articleId) {
           try {
             if (action === 'annule' && calUid) {
               // Annuler le booking sur Cal.eu
-              var calResp = await fetch(CAL_API + '/bookings/' + calUid + '/cancel', {
+              var calResp = await fetch(CAL_PROXY, {
                 method: 'POST',
-                headers: {
-                  'Authorization': 'Bearer ' + _calKey,
-                  'cal-api-version': '2024-08-13',
-                  'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ cancellationReason: 'Annulé depuis le panneau admin' })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  endpoint: '/bookings/' + calUid + '/cancel',
+                  method: 'POST',
+                  body: { cancellationReason: 'Annulé depuis le panneau admin' }
+                })
               });
               var calData = await calResp.json();
               if (calData.status === 'error' && calData.error && calData.error.message && calData.error.message.indexOf('cancelled already') === -1) {
@@ -6223,9 +6248,13 @@ function getComments(articleId) {
   // Fetch total contacts count from Brevo list
   async function getBrevoNewsletterCount() {
     try {
-      var response = await fetch('https://api.brevo.com/v3/contacts/lists/3', {
-        method: 'GET',
-        headers: { 'Accept': 'application/json', 'api-key': _bk }
+      var response = await fetch(BREVO_PROXY, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          endpoint: '/v3/contacts/lists/3',
+          method: 'GET'
+        })
       });
       if (!response.ok) return 0;
       var info = await response.json();
@@ -6248,9 +6277,13 @@ function getComments(articleId) {
       var hasMore = true;
 
       while (hasMore) {
-        var response = await fetch('https://api.brevo.com/v3/contacts/lists/3/contacts?limit=' + limit + '&offset=' + offset + '&sort=desc', {
-          method: 'GET',
-          headers: { 'Accept': 'application/json', 'api-key': _bk }
+        var response = await fetch(BREVO_PROXY, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            endpoint: '/v3/contacts/lists/3/contacts?limit=' + limit + '&offset=' + offset + '&sort=desc',
+            method: 'GET'
+          })
         });
         if (!response.ok) throw new Error('Brevo API error: ' + response.status);
         var result = await response.json();

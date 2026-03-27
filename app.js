@@ -1483,6 +1483,47 @@ function getComments(articleId) {
     supabase = null;
   }
 
+  // --- Safe Supabase wrapper: auto-retry + user feedback on failure ---
+  async function safeSupabase(operation, description) {
+    var maxRetries = 2;
+    for (var attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        var result = await operation();
+        if (result && result.error) {
+          if (attempt < maxRetries) {
+            await new Promise(function(r) { setTimeout(r, 1000 * (attempt + 1)); });
+            continue;
+          }
+          console.error('[Supabase] Erreur ' + description + ':', result.error.message);
+          showSaveError(description);
+          return result;
+        }
+        return result;
+      } catch(err) {
+        if (attempt < maxRetries) {
+          await new Promise(function(r) { setTimeout(r, 1000 * (attempt + 1)); });
+          continue;
+        }
+        console.error('[Supabase] Exception ' + description + ':', err.message);
+        showSaveError(description);
+        return { error: err };
+      }
+    }
+  }
+
+  function showSaveError(description) {
+    // Show a toast notification for save failures
+    var existing = document.querySelector('.save-error-toast');
+    if (existing) existing.remove();
+    var toast = document.createElement('div');
+    toast.className = 'save-error-toast';
+    toast.innerHTML = '<strong>⚠ Sauvegarde échouée</strong><br><span>' + sanitizeForHtml(description) + '</span><br><small>Vérifiez votre connexion et réessayez.</small>';
+    toast.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#e74c3c;color:#fff;padding:16px 20px;border-radius:12px;z-index:99999;font-size:0.9rem;max-width:320px;box-shadow:0 4px 20px rgba(0,0,0,0.3);animation:fadeInUp 0.3s ease;cursor:pointer;';
+    toast.addEventListener('click', function() { toast.remove(); });
+    document.body.appendChild(toast);
+    setTimeout(function() { if (toast.parentNode) toast.remove(); }, 8000);
+  }
+
   var navConnexion = document.getElementById('nav-connexion');
   var navCompte = document.getElementById('nav-compte');
 
@@ -2200,14 +2241,17 @@ function getComments(articleId) {
       }
 
       // Enregistrer la commande
-      var { data: commande } = await supabase.from('commandes').insert({
-        user_id: session.user.id,
-        service: serviceName,
-        montant: montant,
-        methode_paiement: 'stripe',
-        statut: 'pay\u00e9',
-        stripe_session_id: sessionId
-      }).select('id').single();
+      var commandeResult = await safeSupabase(function() {
+        return supabase.from('commandes').insert({
+          user_id: session.user.id,
+          service: serviceName,
+          montant: montant,
+          methode_paiement: 'stripe',
+          statut: 'pay\u00e9',
+          stripe_session_id: sessionId
+        }).select('id').single();
+      }, 'enregistrement de la commande');
+      var commande = commandeResult && !commandeResult.error ? commandeResult.data : null;
 
       console.log('[Stripe] Commande enregistr\u00e9e:', serviceName, montant + '\u20ac');
 
@@ -2566,13 +2610,13 @@ function getComments(articleId) {
             .maybeSingle();
           if (existe) return;
 
-          await supabase.from('reservations').insert({
+          await safeSupabase(function() { return supabase.from('reservations').insert({
             user_id: session.user.id,
             service: serviceName,
             date_rdv: startTime || new Date().toISOString(),
             statut: '\u00e0 venir',
             notes: 'cal:' + uid
-          });
+          }); }, 'enregistrement du rendez-vous');
 
           // Naviguer vers Mes RDV
           history.pushState(null, '', '#mon-compte');
@@ -2636,13 +2680,13 @@ function getComments(articleId) {
         .maybeSingle();
       if (existe) return;
 
-      await supabase.from('reservations').insert({
+      await safeSupabase(function() { return supabase.from('reservations').insert({
         user_id: session.user.id,
         service: decodeURIComponent(serviceName),
         date_rdv: dateRdv,
         statut: '\u00e0 venir',
         notes: 'cal:' + bookingId
-      });
+      }); }, 'enregistrement du rendez-vous');
 
       showPage('mon-compte');
       setTimeout(function () {
@@ -4045,7 +4089,7 @@ function getComments(articleId) {
           delete blogArticles[slug];
         } else {
           // Also delete associated extra images
-          try { supabase.from('product_images').delete().eq('product_slug', slug).then(function() {}); } catch(imgErr) {}
+          safeSupabase(function() { return supabase.from('product_images').delete().eq('product_slug', slug); }, 'suppression des images produit');
           var pcard = document.querySelector('.boutique-product-card[data-product-slug="' + slug + '"]');
           if (pcard) pcard.remove();
           // Show "coming soon" if no more products
@@ -5720,7 +5764,7 @@ function getComments(articleId) {
           supabase.from('boutique_products').delete().eq('slug', slug).then(function(res) {
             if (res.error) { alert('Erreur : ' + res.error.message); return; }
             // Also delete associated extra images
-            try { supabase.from('product_images').delete().eq('product_slug', slug).then(function() {}); } catch(imgErr) {}
+            safeSupabase(function() { return supabase.from('product_images').delete().eq('product_slug', slug); }, 'suppression des images produit');
             chargerAdminBoutique();
             chargerAdminStats();
           });
@@ -5886,7 +5930,7 @@ function getComments(articleId) {
               showStripeToast('\u26A0 Erreur Stripe : ' + stripeErr.message + '. Le coupon a été mis à jour localement mais pas sur Stripe.', true);
             }
           }
-          await supabase.from('coupons').update({ actif: newVal }).eq('id', couponId);
+          await safeSupabase(function() { return supabase.from('coupons').update({ actif: newVal }).eq('id', couponId); }, 'mise à jour du coupon');
           chargerAdminCouponsTab();
           chargerAdminStats();
         });
@@ -6584,7 +6628,7 @@ function getComments(articleId) {
               } catch(ue) { console.warn('Extra image upload failed:', ue); }
             }
             if (newExtraImages.length > 0) {
-              try { await supabase.from('product_images').insert(newExtraImages); } catch(ie) {}
+              await safeSupabase(function() { return supabase.from('product_images').insert(newExtraImages); }, 'ajout des images produit');
             }
           }
 
@@ -7114,7 +7158,7 @@ function getComments(articleId) {
           btn.addEventListener('click', async function() {
             if (!confirm('Supprimer cette d\u00e9pense ?')) return;
             var depId = this.getAttribute('data-depense-id');
-            await supabase.from('depenses').delete().eq('id', depId);
+            await safeSupabase(function() { return supabase.from('depenses').delete().eq('id', depId); }, 'suppression de la dépense');
             chargerDepensesMois();
             calculerBenefices();
           });
@@ -7916,10 +7960,10 @@ function getComments(articleId) {
         if (_dispoUseLocal) {
           dispoLocalAdd({ type: 'absence', data: { debut: debut, fin: fin, motif: motif } });
         } else {
-          await supabase.from('disponibilites').insert({
+          await safeSupabase(function() { return supabase.from('disponibilites').insert({
             type: 'absence',
             data: { debut: debut, fin: fin, motif: motif }
-          });
+          }); }, 'enregistrement de la disponibilité');
         }
         document.getElementById('absence-debut').value = '';
         document.getElementById('absence-fin').value = '';
@@ -8015,10 +8059,10 @@ function getComments(articleId) {
         if (_dispoUseLocal) {
           dispoLocalAdd({ type: 'date_speciale', data: { date: jour, debut: debut, fin: fin, label: label } });
         } else {
-          await supabase.from('disponibilites').insert({
+          await safeSupabase(function() { return supabase.from('disponibilites').insert({
             type: 'date_speciale',
             data: { date: jour, debut: debut, fin: fin, label: label }
-          });
+          }); }, 'enregistrement de la disponibilité');
         }
         document.getElementById('date-speciale-jour').value = '';
         document.getElementById('date-speciale-debut').value = '09:00';

@@ -7551,3 +7551,13 @@ a, button, [role="button"] {
     right: var(--space-3, 0.75rem);
   }
 }
+
+/* Save error toast animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.save-error-toast {
+  font-family: var(--font-body);
+  line-height: 1.4;
+}

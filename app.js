@@ -1310,7 +1310,13 @@ function getComments(articleId) {
         var textInput = document.getElementById('comment-text');
         var name = nameInput.value.trim();
         var text = textInput.value.trim();
-        if (!name || !text) return;
+        if (!name || !text) {
+          if (!name && nameInput) nameInput.style.borderColor = '#e74c3c';
+          if (!text && textInput) textInput.style.borderColor = '#e74c3c';
+          return;
+        }
+        if (nameInput) nameInput.style.borderColor = '';
+        if (textInput) textInput.style.borderColor = '';
         saveComment(articleId, name, text, function() {
           fetchComments(articleId, function() {
             if (listEl) renderComments(articleId, listEl);
@@ -1519,6 +1525,24 @@ function getComments(articleId) {
     }
   }
 
+  // --- Traduction des erreurs Supabase Auth ---
+  function traduireErreurAuth(msg) {
+    var traductions = {
+      'missing email or phone': 'Veuillez saisir votre adresse email.',
+      'Invalid login credentials': 'Email ou mot de passe incorrect.',
+      'Email not confirmed': 'Veuillez confirmer votre email avant de vous connecter.',
+      'User already registered': 'Un compte existe déjà avec cette adresse email.',
+      'Password should be at least 6 characters': 'Le mot de passe doit contenir au moins 6 caractères.',
+      'Signup requires a valid password': 'Veuillez saisir un mot de passe valide.',
+      'Email rate limit exceeded': 'Trop de tentatives. Veuillez réessayer dans quelques minutes.',
+      'For security purposes, you can only request this after': 'Pour des raisons de sécurité, veuillez patienter avant de réessayer.'
+    };
+    for (var key in traductions) {
+      if (msg && msg.toLowerCase().indexOf(key.toLowerCase()) !== -1) return traductions[key];
+    }
+    return msg || 'Une erreur est survenue. Veuillez réessayer.';
+  }
+
   function showSaveError(description) {
     // Show a toast notification for save failures
     var existing = document.querySelector('.save-error-toast');
@@ -1712,9 +1736,7 @@ function getComments(articleId) {
         });
 
         if (error) {
-          var msg = error.message;
-          if (msg.includes('already registered')) msg = 'Un compte existe déjà avec cette adresse email.';
-          afficherMessage('insc-message', msg, 'erreur');
+          afficherMessage('insc-message', traduireErreurAuth(error.message), 'erreur');
         } else {
           afficherMessage('insc-message', 'Inscription réussie\u00a0! Bienvenue, ' + prenom + '.', 'succes');
           afficherEtatConnecte({ prenom: prenom, nom: nom, email: email });
@@ -1776,9 +1798,7 @@ function getComments(articleId) {
         });
 
         if (error) {
-          var msg = error.message;
-          if (msg.includes('Invalid login')) msg = 'Email ou mot de passe incorrect.';
-          afficherMessage('conn-message', msg, 'erreur');
+          afficherMessage('conn-message', traduireErreurAuth(error.message), 'erreur');
         } else {
           var meta = data.user.user_metadata || {};
           window.__isAdmin = !!(data.user.email === ADMIN_EMAIL);

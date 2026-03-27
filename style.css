@@ -1529,6 +1529,12 @@ section {
   color: var(--color-text-muted);
   word-break: break-all;
 }
+/* Fix email truncation in contact section */
+.contact-action a,
+.contact-action span {
+  word-break: break-all;
+  overflow-wrap: anywhere;
+}
 .contact-action__cta {
   font-size: var(--text-sm);
   font-weight: 500;

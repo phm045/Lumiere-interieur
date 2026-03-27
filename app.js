@@ -790,6 +790,14 @@
       }
     }
 
+    // Deduplicate items by slug
+    var seenSlugs = {};
+    items = items.filter(function(item) {
+      if (seenSlugs[item.slug]) return false;
+      seenSlugs[item.slug] = true;
+      return true;
+    });
+
     // Trier par date d\u00e9croissante
     items.sort(function(a, b) {
       if (a.pinned && !b.pinned) return -1;
@@ -4251,7 +4259,11 @@ function getComments(articleId) {
       var prodGrid = document.getElementById('boutique-products-grid');
       var coming = document.querySelector('.boutique-coming');
       if (coming && visibleProducts.length > 0) coming.style.display = 'none';
+      // Deduplicate products by slug before rendering
+      var renderedSlugs = {};
       visibleProducts.forEach(function(product) {
+        if (renderedSlugs[product.slug]) return; // skip duplicate
+        renderedSlugs[product.slug] = true;
         product.extra_images = extraImagesMap[product.slug] || [];
         // Apply fallback stripe_link from hardcoded map if not set in DB
         if (!product.stripe_link && BOUTIQUE_STRIPE_LINKS[product.slug]) {

@@ -4041,10 +4041,37 @@ function getComments(articleId) {
         productsFromDB = prodResult.data;
       }
     } catch(e) {
-      console.log('[Boutique] Table boutique_products non disponible, utilisation des produits démo');
+      console.log('[Boutique] Table boutique_products non disponible');
     }
 
-    // Si aucun produit en base et admin connecté, injecter les produits démo
+    // Admin auto-seed : insérer les produits démo en base s'ils n'y sont pas encore
+    if (isAdmin && productsFromDB.length < DEMO_PRODUCTS.length) {
+      var existingSlugs = productsFromDB.map(function(p) { return p.slug; });
+      var toSeed = DEMO_PRODUCTS.filter(function(p) { return existingSlugs.indexOf(p.slug) === -1; });
+      if (toSeed.length > 0) {
+        console.log('[Boutique] Auto-seed: insertion de', toSeed.length, 'produits démo en base...');
+        var seedData = toSeed.map(function(p) {
+          return { slug: p.slug, name: p.name, description: p.description, price: p.price, category: p.category, image_url: p.image_url, stripe_link: p.stripe_link, visible: p.visible };
+        });
+        try {
+          var seedResult = await supabase.from('boutique_products').insert(seedData);
+          if (seedResult.error) {
+            console.warn('[Boutique] Auto-seed erreur:', seedResult.error.message);
+          } else {
+            console.log('[Boutique] Auto-seed réussi :', toSeed.length, 'produits insérés');
+            // Recharger depuis la base
+            var reloadResult = await supabase.from('boutique_products').select('*').order('created_at', { ascending: false });
+            if (!reloadResult.error && reloadResult.data) {
+              productsFromDB = reloadResult.data;
+            }
+          }
+        } catch(seedErr) {
+          console.warn('[Boutique] Auto-seed exception:', seedErr.message);
+        }
+      }
+    }
+
+    // Utiliser les produits de la base, ou les démo en mémoire comme fallback
     var allProducts = productsFromDB.length > 0 ? productsFromDB : (isAdmin ? DEMO_PRODUCTS : []);
     console.log('[Boutique] Produits chargés:', allProducts.length, '(DB:', productsFromDB.length, ', isAdmin:', isAdmin, ')');
 

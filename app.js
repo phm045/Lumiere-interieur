@@ -3751,20 +3751,92 @@ function getComments(articleId) {
     card.className = 'boutique-product-card fade-in' + (isAdmin && data.visible === false ? ' boutique-product-card--hidden' : '');
     card.setAttribute('data-product-slug', data.slug);
     card.setAttribute('data-dynamic', 'true');
-    var hiddenBadge = (isAdmin && data.visible === false) ? '<span class="boutique-product-card__badge-hidden">Masqué</span>' : '';
+    var hiddenBadge = (isAdmin && data.visible === false) ? '<span class="boutique-product-card__badge-hidden">Masqu\u00e9</span>' : '';
+
+    // Build images array: main image + extra images
+    var allImages = [data.image_url || 'crystals-nature.png'];
+    if (data.extra_images && data.extra_images.length > 0) {
+      for (var ei = 0; ei < data.extra_images.length; ei++) {
+        allImages.push(data.extra_images[ei].image_url);
+      }
+    }
+
+    var imageHTML = '';
+    if (allImages.length > 1) {
+      // Carousel with multiple images
+      var slidesHTML = '';
+      for (var si = 0; si < allImages.length; si++) {
+        slidesHTML += '<div class="product-carousel__slide"><img src="' + allImages[si] + '" alt="' + data.name + ' - photo ' + (si + 1) + '" width="640" height="400" loading="lazy"></div>';
+      }
+      var dotsHTML = '<div class="product-carousel__dots">';
+      for (var di = 0; di < allImages.length; di++) {
+        dotsHTML += '<button class="product-carousel__dot' + (di === 0 ? ' product-carousel__dot--active' : '') + '" data-slide="' + di + '" aria-label="Photo ' + (di + 1) + '"></button>';
+      }
+      dotsHTML += '</div>';
+      imageHTML =
+        '<div class="product-carousel" data-carousel>' +
+          '<div class="product-carousel__track">' + slidesHTML + '</div>' +
+          '<button class="product-carousel__btn product-carousel__btn--prev" data-carousel-prev aria-label="Pr\u00e9c\u00e9dent">&#10094;</button>' +
+          '<button class="product-carousel__btn product-carousel__btn--next" data-carousel-next aria-label="Suivant">&#10095;</button>' +
+          dotsHTML +
+        '</div>';
+    } else {
+      // Single image (no carousel)
+      imageHTML = '<img src="' + allImages[0] + '" alt="' + data.name + '" width="640" height="400" loading="lazy">';
+    }
+
     card.innerHTML =
       '<div class="boutique-product-card__image">' +
         (isAdmin ? '<button class="admin-delete-btn" data-delete-type="boutique" data-delete-slug="' + data.slug + '" title="Supprimer">\ud83d\uddd1\ufe0f</button>' : '') +
         hiddenBadge +
-        '<img src="' + (data.image_url || 'crystals-nature.png') + '" alt="' + data.name + '" width="640" height="400" loading="lazy">' +
+        imageHTML +
       '</div>' +
       '<div class="boutique-product-card__content">' +
         '<p class="boutique-product-card__category">' + data.category + '</p>' +
         '<h3 class="boutique-product-card__name">' + data.name + '</h3>' +
         '<p class="boutique-product-card__desc">' + data.description + '</p>' +
-        '<p class="boutique-product-card__price">' + parseFloat(data.price).toFixed(2) + ' €</p>' +
+        '<p class="boutique-product-card__price">' + parseFloat(data.price).toFixed(2) + ' \u20ac</p>' +
       '</div>';
+
+    // Initialize carousel if present
+    initProductCarousel(card);
     return card;
+  }
+
+  // --- Initialize carousel on a product card ---
+  function initProductCarousel(card) {
+    var carousel = card.querySelector('[data-carousel]');
+    if (!carousel) return;
+    var track = carousel.querySelector('.product-carousel__track');
+    var dots = carousel.querySelectorAll('.product-carousel__dot');
+    var prevBtn = carousel.querySelector('[data-carousel-prev]');
+    var nextBtn = carousel.querySelector('[data-carousel-next]');
+    var slideCount = carousel.querySelectorAll('.product-carousel__slide').length;
+    var currentSlide = 0;
+
+    function goToSlide(index) {
+      if (index < 0) index = slideCount - 1;
+      if (index >= slideCount) index = 0;
+      currentSlide = index;
+      track.style.transform = 'translateX(-' + (currentSlide * 100) + '%)';
+      for (var d = 0; d < dots.length; d++) {
+        dots[d].classList.toggle('product-carousel__dot--active', d === currentSlide);
+      }
+    }
+
+    if (prevBtn) prevBtn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); goToSlide(currentSlide - 1); });
+    if (nextBtn) nextBtn.addEventListener('click', function(e) { e.preventDefault(); e.stopPropagation(); goToSlide(currentSlide + 1); });
+    for (var d = 0; d < dots.length; d++) {
+      dots[d].addEventListener('click', (function(idx) { return function(e) { e.preventDefault(); e.stopPropagation(); goToSlide(idx); }; })(d));
+    }
+
+    // Swipe support (touch)
+    var startX = 0;
+    carousel.addEventListener('touchstart', function(e) { startX = e.touches[0].clientX; }, { passive: true });
+    carousel.addEventListener('touchend', function(e) {
+      var diff = startX - e.changedTouches[0].clientX;
+      if (Math.abs(diff) > 40) { goToSlide(currentSlide + (diff > 0 ? 1 : -1)); }
+    }, { passive: true });
   }
 
   // --- Attach delete handler ---
@@ -3789,6 +3861,8 @@ function getComments(articleId) {
           if (card) card.remove();
           delete blogArticles[slug];
         } else {
+          // Also delete associated extra images
+          try { supabase.from('product_images').delete().eq('product_slug', slug).then(function() {}); } catch(imgErr) {}
           var pcard = document.querySelector('.boutique-product-card[data-product-slug="' + slug + '"]');
           if (pcard) pcard.remove();
           // Show "coming soon" if no more products
@@ -3838,16 +3912,30 @@ function getComments(articleId) {
       }
     } catch(e) { /* table may not exist yet */ }
 
-    // Load boutique products
+    // Load boutique products + their extra images
     try {
       var prodResult = await supabase.from('boutique_products').select('*').order('created_at', { ascending: false });
       if (!prodResult.error && prodResult.data && prodResult.data.length > 0) {
+        // Load all extra images at once
+        var allSlugs = prodResult.data.map(function(p) { return p.slug; });
+        var extraImagesMap = {};
+        try {
+          var imgResult = await supabase.from('product_images').select('*').in('product_slug', allSlugs).order('position', { ascending: true });
+          if (!imgResult.error && imgResult.data) {
+            imgResult.data.forEach(function(img) {
+              if (!extraImagesMap[img.product_slug]) extraImagesMap[img.product_slug] = [];
+              extraImagesMap[img.product_slug].push(img);
+            });
+          }
+        } catch(imgErr) { /* product_images table may not exist yet */ }
+
         // Filter: visitors only see visible products, admin sees all
         var visibleProducts = isAdmin ? prodResult.data : prodResult.data.filter(function(p) { return p.visible !== false; });
         var prodGrid = document.getElementById('boutique-products-grid');
         var coming = document.querySelector('.boutique-coming');
         if (coming && visibleProducts.length > 0) coming.style.display = 'none';
         visibleProducts.forEach(function(product) {
+          product.extra_images = extraImagesMap[product.slug] || [];
           if (prodGrid) {
             var card = createProductCardElement(product, isAdmin);
             prodGrid.appendChild(card);
@@ -3939,6 +4027,31 @@ function getComments(articleId) {
         // Clear the dropdown selection when a file is chosen
         var select = document.querySelector('#admin-boutique-form select[name="image_url"]');
         if (select) select.value = '';
+      }
+    });
+  }
+
+  // --- Extra images preview handler ---
+  var extraImagesInput = document.getElementById('admin-boutique-extra-images');
+  if (extraImagesInput) {
+    extraImagesInput.addEventListener('change', function() {
+      var preview = document.getElementById('admin-boutique-extra-preview');
+      if (!preview) return;
+      preview.innerHTML = '';
+      var files = this.files;
+      if (files.length === 0) { preview.style.display = 'none'; return; }
+      preview.style.display = 'flex';
+      for (var i = 0; i < files.length; i++) {
+        (function(idx) {
+          var reader = new FileReader();
+          reader.onload = function(e) {
+            var item = document.createElement('div');
+            item.className = 'admin-extra-preview__item';
+            item.innerHTML = '<img src="' + e.target.result + '" alt="Photo ' + (idx + 1) + '">';
+            preview.appendChild(item);
+          };
+          reader.readAsDataURL(files[idx]);
+        })(i);
       }
     });
   }
@@ -4083,6 +4196,31 @@ function getComments(articleId) {
         return;
       }
 
+      // Upload extra images to product_images table
+      var extraImagesInput = document.getElementById('admin-boutique-extra-images');
+      var extraImages = [];
+      if (extraImagesInput && extraImagesInput.files.length > 0) {
+        for (var ei = 0; ei < extraImagesInput.files.length; ei++) {
+          var extraFile = extraImagesInput.files[ei];
+          var extraExt = extraFile.name.split('.').pop();
+          var extraPath = 'boutique/' + slug + '-extra-' + ei + '-' + Date.now() + '.' + extraExt;
+          try {
+            var extraUrl = await uploadImage(extraFile, 'images', extraPath);
+            extraImages.push({ product_slug: slug, image_url: extraUrl, position: ei });
+          } catch(uploadErr) {
+            console.warn('Extra image upload failed:', uploadErr);
+          }
+        }
+        if (extraImages.length > 0) {
+          try {
+            await supabase.from('product_images').insert(extraImages);
+          } catch(imgInsertErr) {
+            console.warn('Extra images insert failed:', imgInsertErr);
+          }
+        }
+      }
+      data.extra_images = extraImages;
+
       // Add product card
       var prodGrid = document.getElementById('boutique-products-grid');
       if (prodGrid) {
@@ -4106,6 +4244,10 @@ function getComments(articleId) {
       showAdminMsg('admin-boutique-msg', isVisible ? 'Produit publi\u00e9 avec succ\u00e8s !' : 'Produit enregistr\u00e9 (masqu\u00e9)', false);
       // Envoyer newsletter seulement si visible
       if (isVisible) envoyerNewsletterAbonnes('boutique', data.name);
+      // Reset extra images input
+      if (extraImagesInput) extraImagesInput.value = '';
+      var extraPreview = document.getElementById('admin-boutique-extra-preview');
+      if (extraPreview) { extraPreview.innerHTML = ''; extraPreview.style.display = 'none'; }
       setTimeout(function() { closeModal('admin-modal-boutique'); }, 1500);
     });
   }
@@ -4884,6 +5026,8 @@ function getComments(articleId) {
           if (!confirm('Supprimer ce produit ?')) return;
           supabase.from('boutique_products').delete().eq('slug', slug).then(function(res) {
             if (res.error) { alert('Erreur : ' + res.error.message); return; }
+            // Also delete associated extra images
+            try { supabase.from('product_images').delete().eq('product_slug', slug).then(function() {}); } catch(imgErr) {}
             chargerAdminBoutique();
             chargerAdminStats();
           });
@@ -4907,7 +5051,7 @@ function getComments(articleId) {
   function ouvrirEditProduit(slug) {
     var form = document.getElementById('admin-boutique-form');
     if (!form) return;
-    supabase.from('boutique_products').select('*').eq('slug', slug).single().then(function(result) {
+    supabase.from('boutique_products').select('*').eq('slug', slug).single().then(async function(result) {
       if (result.error || !result.data) { alert('Produit introuvable.'); return; }
       var p = result.data;
       var titleEl = document.querySelector('#admin-modal-boutique .admin-modal__title');
@@ -4932,6 +5076,39 @@ function getComments(articleId) {
         }
         if (!found) imgSelect.selectedIndex = 0;
       }
+
+      // Load and display existing extra images
+      var existingGallery = document.getElementById('admin-boutique-existing-gallery');
+      if (existingGallery) existingGallery.remove();
+      try {
+        var imgResult = await supabase.from('product_images').select('*').eq('product_slug', slug).order('position', { ascending: true });
+        if (!imgResult.error && imgResult.data && imgResult.data.length > 0) {
+          var galleryContainer = document.createElement('div');
+          galleryContainer.id = 'admin-boutique-existing-gallery';
+          galleryContainer.innerHTML = '<label class="admin-modal__label" style="margin-top:0.5rem">Photos existantes de la galerie</label>';
+          var galleryItems = document.createElement('div');
+          galleryItems.className = 'admin-gallery-existing';
+          imgResult.data.forEach(function(img) {
+            var item = document.createElement('div');
+            item.className = 'admin-gallery-existing__item';
+            item.setAttribute('data-image-id', img.id);
+            item.innerHTML = '<img src="' + img.image_url + '" alt="Photo galerie">' +
+              '<button type="button" class="admin-gallery-existing__remove" title="Supprimer">&times;</button>';
+            item.querySelector('.admin-gallery-existing__remove').addEventListener('click', function() {
+              supabase.from('product_images').delete().eq('id', img.id).then(function(delRes) {
+                if (!delRes.error) item.remove();
+              });
+            });
+            galleryItems.appendChild(item);
+          });
+          galleryContainer.appendChild(galleryItems);
+          var extraGroup = document.getElementById('admin-boutique-extra-images');
+          if (extraGroup && extraGroup.closest('.admin-modal__group')) {
+            extraGroup.closest('.admin-modal__group').appendChild(galleryContainer);
+          }
+        }
+      } catch(imgErr) { /* product_images table may not exist */ }
+
       form.setAttribute('data-edit-slug', slug);
       openModal('admin-modal-boutique');
     });
@@ -5685,11 +5862,46 @@ function getComments(articleId) {
             showAdminMsg('admin-boutique-msg', 'Erreur : ' + res.error.message, true);
             return;
           }
+
+          // Upload new extra images if any
+          var editExtraInput = document.getElementById('admin-boutique-extra-images');
+          if (editExtraInput && editExtraInput.files.length > 0) {
+            // Get current max position
+            var maxPos = 0;
+            try {
+              var posResult = await supabase.from('product_images').select('position').eq('product_slug', editSlug).order('position', { ascending: false }).limit(1);
+              if (!posResult.error && posResult.data && posResult.data.length > 0) maxPos = posResult.data[0].position + 1;
+            } catch(pe) {}
+            var newExtraImages = [];
+            for (var nei = 0; nei < editExtraInput.files.length; nei++) {
+              var nFile = editExtraInput.files[nei];
+              var nExt = nFile.name.split('.').pop();
+              var nPath = 'boutique/' + editSlug + '-extra-' + (maxPos + nei) + '-' + Date.now() + '.' + nExt;
+              try {
+                var nUrl = await uploadImage(nFile, 'images', nPath);
+                newExtraImages.push({ product_slug: editSlug, image_url: nUrl, position: maxPos + nei });
+              } catch(ue) { console.warn('Extra image upload failed:', ue); }
+            }
+            if (newExtraImages.length > 0) {
+              try { await supabase.from('product_images').insert(newExtraImages); } catch(ie) {}
+            }
+          }
+
           showAdminMsg('admin-boutique-msg', 'Produit mis \u00e0 jour !', false);
           origBoutiqueForm.removeAttribute('data-edit-slug');
+          // Reset extra images input and gallery
+          var editExtraPreview = document.getElementById('admin-boutique-extra-preview');
+          if (editExtraPreview) { editExtraPreview.innerHTML = ''; editExtraPreview.style.display = 'none'; }
+          if (editExtraInput) editExtraInput.value = '';
+          var existingGallery = document.getElementById('admin-boutique-existing-gallery');
+          if (existingGallery) existingGallery.remove();
           setTimeout(function() {
             closeModal('admin-modal-boutique');
             chargerAdminBoutique();
+            // Refresh product cards in boutique page
+            var prodGrid = document.getElementById('boutique-products-grid');
+            if (prodGrid) { prodGrid.innerHTML = ''; }
+            if (typeof initDynamicContent === 'function') initDynamicContent(true);
             // Reset modal title
             var titleEl = document.querySelector('#admin-modal-boutique .admin-modal__title');
             if (titleEl) titleEl.textContent = 'Nouveau produit';
@@ -5730,6 +5942,13 @@ function getComments(articleId) {
             if (titleEl) titleEl.textContent = 'Nouveau produit';
             var submitBtn = boutiqueModal.querySelector('.admin-modal__submit');
             if (submitBtn) submitBtn.textContent = 'Publier le produit';
+            // Reset extra images
+            var extraInput = document.getElementById('admin-boutique-extra-images');
+            if (extraInput) extraInput.value = '';
+            var extraPreview = document.getElementById('admin-boutique-extra-preview');
+            if (extraPreview) { extraPreview.innerHTML = ''; extraPreview.style.display = 'none'; }
+            var existingGallery = document.getElementById('admin-boutique-existing-gallery');
+            if (existingGallery) existingGallery.remove();
           }
         }
       });

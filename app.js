@@ -3969,6 +3969,22 @@ function getComments(articleId) {
 
   // --- Load dynamic content from Supabase on page load ---
   async function initDynamicContent(isAdmin) {
+    // Clean up previous dynamic content to prevent duplicates on re-call
+    var blogGrid = document.querySelector('.blog-grid');
+    if (blogGrid) {
+      blogGrid.querySelectorAll('[data-dynamic]').forEach(function(el) { el.remove(); });
+      blogGrid.querySelectorAll('.admin-add-btn').forEach(function(el) { el.remove(); });
+    }
+    var prodGrid = document.getElementById('boutique-products-grid');
+    if (prodGrid) {
+      prodGrid.innerHTML = '';
+      var parent = prodGrid.parentNode;
+      if (parent) {
+        parent.querySelectorAll('.admin-add-btn--boutique').forEach(function(el) { el.remove(); });
+        parent.querySelectorAll('.admin-add-btn--coupon').forEach(function(el) { el.remove(); });
+      }
+    }
+
     // Load blog articles
     try {
       var blogResult = await supabase.from('blog_articles').select('*').order('created_at', { ascending: false });
@@ -6482,9 +6498,7 @@ function getComments(articleId) {
           setTimeout(function() {
             closeModal('admin-modal-boutique');
             chargerAdminBoutique();
-            // Refresh product cards in boutique page
-            var prodGrid = document.getElementById('boutique-products-grid');
-            if (prodGrid) { prodGrid.innerHTML = ''; }
+            // Refresh product cards in boutique page (cleanup handled inside initDynamicContent)
             if (typeof initDynamicContent === 'function') initDynamicContent(true);
             // Reset modal title
             var titleEl = document.querySelector('#admin-modal-boutique .admin-modal__title');

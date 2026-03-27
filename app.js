@@ -1424,9 +1424,18 @@ function getComments(articleId) {
   if (supabase) supabase.auth.onAuthStateChange(function (event, session) {
     if (session && session.user) {
       var meta = session.user.user_metadata || {};
-      // Check admin status before displaying state
+      var wasAdmin = window.__isAdmin;
       window.__isAdmin = !!(session.user.email === ADMIN_EMAIL);
       afficherEtatConnecte({ prenom: meta.prenom || '', nom: meta.nom || '', email: session.user.email });
+      // Si l'admin vient de se connecter ou si la session est restaurée, recharger la boutique
+      if (window.__isAdmin && !wasAdmin) {
+        try {
+          var prodGrid = document.getElementById('boutique-products-grid');
+          if (prodGrid && prodGrid.children.length === 0) {
+            initDynamicContent(true);
+          }
+        } catch(dynErr) { console.warn('[Auth] Rechargement boutique admin:', dynErr); }
+      }
     } else {
       window.__isAdmin = false;
       afficherEtatDeconnecte();
@@ -1642,6 +1651,10 @@ function getComments(articleId) {
           afficherMessage('conn-message', 'Connexion réussie ! Bonjour, ' + (meta.prenom || '') + '.', 'succes');
           afficherEtatConnecte({ prenom: meta.prenom || '', nom: meta.nom || '', email: data.user.email });
           formConnexion.reset();
+          // Recharger le contenu dynamique maintenant que isAdmin est défini
+          if (window.__isAdmin) {
+            try { initDynamicContent(true); } catch(dynErr) { console.warn('[Admin] Rechargement boutique:', dynErr); }
+          }
           setTimeout(function () {
             history.pushState(null, '', '#mon-compte');
             showPage('mon-compte');
@@ -4021,56 +4034,62 @@ function getComments(articleId) {
       }
     ];
 
+    var productsFromDB = [];
     try {
       var prodResult = await supabase.from('boutique_products').select('*').order('created_at', { ascending: false });
-      var productsFromDB = (!prodResult.error && prodResult.data) ? prodResult.data : [];
+      if (!prodResult.error && prodResult.data && prodResult.data.length > 0) {
+        productsFromDB = prodResult.data;
+      }
+    } catch(e) {
+      console.log('[Boutique] Table boutique_products non disponible, utilisation des produits démo');
+    }
 
-      // Si aucun produit en base et admin connecté, injecter les produits démo
-      var allProducts = productsFromDB.length > 0 ? productsFromDB : (isAdmin ? DEMO_PRODUCTS : []);
+    // Si aucun produit en base et admin connecté, injecter les produits démo
+    var allProducts = productsFromDB.length > 0 ? productsFromDB : (isAdmin ? DEMO_PRODUCTS : []);
+    console.log('[Boutique] Produits chargés:', allProducts.length, '(DB:', productsFromDB.length, ', isAdmin:', isAdmin, ')');
 
-      if (allProducts.length > 0) {
-        // Load all extra images at once (seulement si produits en base)
-        var extraImagesMap = {};
-        if (productsFromDB.length > 0) {
+    if (allProducts.length > 0) {
+      // Load all extra images at once (seulement si produits en base)
+      var extraImagesMap = {};
+      if (productsFromDB.length > 0) {
+        try {
           var allSlugs = productsFromDB.map(function(p) { return p.slug; });
-          try {
-            var imgResult = await supabase.from('product_images').select('*').in('product_slug', allSlugs).order('position', { ascending: true });
-            if (!imgResult.error && imgResult.data) {
-              imgResult.data.forEach(function(img) {
-                if (!extraImagesMap[img.product_slug]) extraImagesMap[img.product_slug] = [];
-                extraImagesMap[img.product_slug].push(img);
-              });
-            }
-          } catch(imgErr) { /* product_images table may not exist yet */ }
-        }
-
-        // Filter: visitors only see visible products, admin sees all
-        var visibleProducts = isAdmin ? allProducts : allProducts.filter(function(p) { return p.visible !== false; });
-        var prodGrid = document.getElementById('boutique-products-grid');
-        var coming = document.querySelector('.boutique-coming');
-        if (coming && visibleProducts.length > 0) coming.style.display = 'none';
-        visibleProducts.forEach(function(product) {
-          product.extra_images = extraImagesMap[product.slug] || [];
-          // Apply fallback stripe_link from hardcoded map if not set in DB
-          if (!product.stripe_link && BOUTIQUE_STRIPE_LINKS[product.slug]) {
-            product.stripe_link = BOUTIQUE_STRIPE_LINKS[product.slug];
-          }
-          _loadedProducts[product.slug] = product; // Cache for overlay
-          if (prodGrid) {
-            var card = createProductCardElement(product, isAdmin);
-            prodGrid.appendChild(card);
-            var delBtn = card.querySelector('.admin-delete-btn');
-            if (delBtn) attachDeleteHandler(delBtn);
-            // Click to open product detail (visitors)
-            card.addEventListener('click', function(e) {
-              if (e.target.closest('.admin-delete-btn')) return;
-              var slug = card.getAttribute('data-product-slug');
-              if (slug && _loadedProducts[slug]) openProductDetail(_loadedProducts[slug]);
+          var imgResult = await supabase.from('product_images').select('*').in('product_slug', allSlugs).order('position', { ascending: true });
+          if (!imgResult.error && imgResult.data) {
+            imgResult.data.forEach(function(img) {
+              if (!extraImagesMap[img.product_slug]) extraImagesMap[img.product_slug] = [];
+              extraImagesMap[img.product_slug].push(img);
             });
           }
-        });
+        } catch(imgErr) { /* product_images table may not exist yet */ }
       }
-    } catch(e) { /* table may not exist yet */ }
+
+      // Filter: visitors only see visible products, admin sees all
+      var visibleProducts = isAdmin ? allProducts : allProducts.filter(function(p) { return p.visible !== false; });
+      var prodGrid = document.getElementById('boutique-products-grid');
+      var coming = document.querySelector('.boutique-coming');
+      if (coming && visibleProducts.length > 0) coming.style.display = 'none';
+      visibleProducts.forEach(function(product) {
+        product.extra_images = extraImagesMap[product.slug] || [];
+        // Apply fallback stripe_link from hardcoded map if not set in DB
+        if (!product.stripe_link && BOUTIQUE_STRIPE_LINKS[product.slug]) {
+          product.stripe_link = BOUTIQUE_STRIPE_LINKS[product.slug];
+        }
+        _loadedProducts[product.slug] = product; // Cache for overlay
+        if (prodGrid) {
+          var card = createProductCardElement(product, isAdmin);
+          prodGrid.appendChild(card);
+          var delBtn = card.querySelector('.admin-delete-btn');
+          if (delBtn) attachDeleteHandler(delBtn);
+          // Click to open product detail (visitors)
+          card.addEventListener('click', function(e) {
+            if (e.target.closest('.admin-delete-btn')) return;
+            var slug = card.getAttribute('data-product-slug');
+            if (slug && _loadedProducts[slug]) openProductDetail(_loadedProducts[slug]);
+          });
+        }
+      });
+    }
 
     // Add admin "+" buttons (admin only)
     if (isAdmin) {

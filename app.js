@@ -1144,6 +1144,13 @@ function getComments(articleId) {
       updateCardStats(articleId);
     });
 
+    // Refresh likes from API to avoid stale count
+    fetchLikes(articleId, function() {
+      updateCardStats(articleId);
+      var likeCountEl = articleBody.querySelector('.like-count');
+      if (likeCountEl) likeCountEl.textContent = likesCache[articleId] || 0;
+    });
+
     articleBody.innerHTML =
       '<p class="blog-article__category">' + article.category + '</p>' +
       '<h1 class="blog-article__title">' + article.title + '</h1>' +

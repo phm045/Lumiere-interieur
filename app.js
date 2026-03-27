@@ -1481,8 +1481,8 @@ function getComments(articleId) {
   // AUTHENTIFICATION — Supabase Auth
   // ========================================
 
-  var SUPABASE_URL = 'https://dhbbwzpfwtdtdiuixrmq.supabase.co';
-  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRoYmJ3enBmd3RkdGRpdWl4cm1xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQwOTY4MTQsImV4cCI6MjA4OTY3MjgxNH0.ysMB2mgIV83NjTI_63WNlkHVul20zu34us-W-wzdyfg';
+  var SUPABASE_URL = 'https://mqjckeibaqlkmwdrnypu.supabase.co';
+  var SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1xamNrZWliYXFsa213ZHJueXB1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxMzY1OTgsImV4cCI6MjA4OTcxMjU5OH0.CnKG9F_7x7b-ZlDmE_0XXEScvAUgVlbUrKI6x-TT7oI';
   var supabase;
   try {
     supabase = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;

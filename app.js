@@ -1030,12 +1030,63 @@
       else { heartBtn.classList.remove('hearted'); heartBtn.querySelector('svg').setAttribute('fill', 'none'); }
     }
   }
-  function getComments(articleId) {
+  // --- Comments: Supabase-backed with localStorage fallback ---
+var commentsCache = {};
+function getComments(articleId) {
+    return commentsCache[articleId] || [];
+  }
+  function fetchComments(articleId, callback) {
+    if (!supabase) {
+      commentsCache[articleId] = getLocalComments(articleId);
+      if (callback) callback(commentsCache[articleId]);
+      return;
+    }
+    supabase.from('blog_comments').select('*').eq('article_id', articleId).order('created_at', { ascending: false }).then(function(result) {
+      if (result.error || !result.data) {
+        commentsCache[articleId] = getLocalComments(articleId);
+      } else {
+        commentsCache[articleId] = result.data.map(function(row) {
+          return { name: row.name, text: row.text, date: row.created_at ? formatDate(new Date(row.created_at)) : '' };
+        });
+      }
+      if (callback) callback(commentsCache[articleId]);
+    }).catch(function() {
+      commentsCache[articleId] = getLocalComments(articleId);
+      if (callback) callback(commentsCache[articleId]);
+    });
+  }
+  function getLocalComments(articleId) {
     try { return JSON.parse(safeLocal.getItem('blog_comments_' + articleId)) || []; }
     catch(e) { return []; }
   }
-  function saveComments(articleId, comments) {
-    try { safeLocal.setItem('blog_comments_' + articleId, JSON.stringify(comments)); } catch(e) {}
+  function saveComment(articleId, name, text, callback) {
+    var comment = { name: name, text: text, date: formatDate(new Date()) };
+    if (!supabase) {
+      var local = getLocalComments(articleId);
+      local.unshift(comment);
+      try { safeLocal.setItem('blog_comments_' + articleId, JSON.stringify(local)); } catch(e) {}
+      commentsCache[articleId] = local;
+      if (callback) callback();
+      return;
+    }
+    supabase.from('blog_comments').insert({ article_id: articleId, name: name, text: text }).then(function(result) {
+      if (result.error) {
+        // Fallback local
+        var local = getLocalComments(articleId);
+        local.unshift(comment);
+        try { safeLocal.setItem('blog_comments_' + articleId, JSON.stringify(local)); } catch(e) {}
+        commentsCache[articleId] = local;
+      } else {
+        fetchComments(articleId, function() {});
+      }
+      if (callback) callback();
+    }).catch(function() {
+      var local = getLocalComments(articleId);
+      local.unshift(comment);
+      try { safeLocal.setItem('blog_comments_' + articleId, JSON.stringify(local)); } catch(e) {}
+      commentsCache[articleId] = local;
+      if (callback) callback();
+    });
   }
   function formatDate(d) {
     var day = d.getDate();
@@ -1100,9 +1151,13 @@
       article.content +
       buildInteractionsHTML(articleId);
 
-    // Render existing comments
+    // Fetch and render existing comments
     var listEl = document.getElementById('comments-list-' + articleId);
-    if (listEl) renderComments(articleId, listEl);
+    if (listEl) {
+      fetchComments(articleId, function() {
+        renderComments(articleId, listEl);
+      });
+    }
 
     // Like button handler
     var likeBtn = articleBody.querySelector('[data-like-article="' + articleId + '"]');
@@ -1145,12 +1200,13 @@
         var name = nameInput.value.trim();
         var text = textInput.value.trim();
         if (!name || !text) return;
-        var comments = getComments(articleId);
-        comments.unshift({ name: name, text: text, date: formatDate(new Date()) });
-        saveComments(articleId, comments);
+        saveComment(articleId, name, text, function() {
+          fetchComments(articleId, function() {
+            if (listEl) renderComments(articleId, listEl);
+          });
+        });
         nameInput.value = '';
         textInput.value = '';
-        if (listEl) renderComments(articleId, listEl);
       });
     }
 
@@ -1199,6 +1255,17 @@
       // Optimistic UI update
       likesCache[articleId] = (likesCache[articleId] || 0) + 1;
       updateCardStats(articleId);
+      // Sync overlay like button if open
+      if (overlay && !overlay.hidden) {
+        var overlayBtn = overlay.querySelector('[data-like-article="' + articleId + '"]');
+        if (overlayBtn) {
+          overlayBtn.classList.add('liked');
+          var oSvg = overlayBtn.querySelector('svg');
+          if (oSvg) oSvg.setAttribute('fill', 'var(--color-terracotta)');
+          var oCount = overlayBtn.querySelector('.like-count');
+          if (oCount) oCount.textContent = likesCache[articleId];
+        }
+      }
     });
   });
 

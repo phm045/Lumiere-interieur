@@ -5565,7 +5565,7 @@ textarea.blog-comments__input {
   align-items: start;
   background: var(--color-surface);
   border-radius: 1rem;
-  overflow: hidden;
+  overflow: visible;
   box-shadow: 0 8px 32px rgba(0,0,0,0.08);
 }
 .product-overlay__gallery {
@@ -5574,6 +5574,7 @@ textarea.blog-comments__input {
   aspect-ratio: 1;
   overflow: hidden;
   background: #f5f3ef;
+  border-radius: 1rem 0 0 1rem;
 }
 .product-overlay__gallery .product-carousel {
   height: 100%;

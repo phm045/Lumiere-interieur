@@ -4402,6 +4402,328 @@ function getComments(articleId) {
       });
     }
 
+    // ========================================
+    // BOUTIQUE — Filtres par catégories + Suggestions e-commerce
+    // ========================================
+    (function buildCategoryFilters() {
+      var prodGrid = document.getElementById('boutique-products-grid');
+      if (!prodGrid) return;
+
+      // Collecter les catégories uniques avec compteur
+      var categoriesMap = {};
+      var totalVisible = 0;
+      var visibleProductsList = isAdmin ? allProducts : allProducts.filter(function(p) { return p.visible !== false; });
+      // Dédupliquer par slug
+      var seenSlugs = {};
+      visibleProductsList.forEach(function(p) {
+        if (seenSlugs[p.slug]) return;
+        seenSlugs[p.slug] = true;
+        var cat = (p.category || 'Autre').trim();
+        if (!categoriesMap[cat]) categoriesMap[cat] = 0;
+        categoriesMap[cat]++;
+        totalVisible++;
+      });
+
+      // Ne pas afficher les filtres s'il y a moins de 2 catégories et moins de 4 produits
+      var categoryNames = Object.keys(categoriesMap);
+      if (categoryNames.length < 2 && totalVisible < 4) return;
+
+      // Supprimer l'ancienne barre de filtres si elle existe (pour les re-calls)
+      var existingFilters = prodGrid.parentNode.querySelector('.boutique-filters');
+      if (existingFilters) existingFilters.remove();
+      var existingTip = prodGrid.parentNode.querySelector('#boutique-category-tip');
+      if (existingTip) existingTip.remove();
+      var existingSuggestions = prodGrid.parentNode.querySelector('.boutique-suggestions');
+      if (existingSuggestions) existingSuggestions.remove();
+
+      // Créer la barre de filtres
+      var filtersBar = document.createElement('div');
+      filtersBar.className = 'boutique-filters';
+      filtersBar.innerHTML =
+        '<span class="boutique-filters__label">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+            '<polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/>' +
+          '</svg>' +
+          'Filtrer' +
+        '</span>';
+
+      // Bouton "Tout"
+      var allBtn = document.createElement('button');
+      allBtn.className = 'boutique-filter-btn boutique-filter-btn--active';
+      allBtn.setAttribute('type', 'button');
+      allBtn.setAttribute('data-filter-cat', '__all__');
+      allBtn.innerHTML = 'Tout <span class="boutique-filter-btn__count">' + totalVisible + '</span>';
+      filtersBar.appendChild(allBtn);
+
+      // Icônes par catégorie
+      var catIcons = {
+        'bijoux': '\uD83D\uDC8E', 'lithoth\u00e9rapie': '\uD83D\uDC8E', 'bijoux & lithoth\u00e9rapie': '\uD83D\uDC8E',
+        'cristaux': '\uD83D\uDD2E', 'encens': '\uD83C\uDF3F', 'encens & purification': '\uD83C\uDF3F',
+        'purification': '\uD83C\uDF3F', 'accessoires': '\u2728', 'pendules': '\uD83D\uDD2E',
+        'm\u00e9ditation': '\uD83E\uDDD8', 'supports': '\uD83D\uDCD6', 'livres': '\uD83D\uDCD6',
+        'huiles': '\uD83E\uDED7', 'bougies': '\uD83D\uDD6F\uFE0F'
+      };
+
+      function getCatIcon(catName) {
+        var lower = catName.toLowerCase();
+        for (var key in catIcons) {
+          if (lower.indexOf(key) !== -1) return catIcons[key];
+        }
+        return '\uD83C\uDFF7\uFE0F';
+      }
+
+      // Trier les catégories par nombre de produits (décroissant)
+      categoryNames.sort(function(a, b) { return categoriesMap[b] - categoriesMap[a]; });
+
+      // Créer un bouton par catégorie
+      categoryNames.forEach(function(cat) {
+        var btn = document.createElement('button');
+        btn.className = 'boutique-filter-btn';
+        btn.setAttribute('type', 'button');
+        btn.setAttribute('data-filter-cat', cat);
+        btn.innerHTML = getCatIcon(cat) + ' ' + sanitizeForHtml(cat) + ' <span class="boutique-filter-btn__count">' + categoriesMap[cat] + '</span>';
+        filtersBar.appendChild(btn);
+      });
+
+      // Compteur de résultats
+      var resultsCount = document.createElement('span');
+      resultsCount.className = 'boutique-results-count';
+      resultsCount.id = 'boutique-results-count';
+      resultsCount.textContent = totalVisible + ' produit' + (totalVisible > 1 ? 's' : '');
+      filtersBar.appendChild(resultsCount);
+
+      // Insérer AVANT la grille
+      prodGrid.parentNode.insertBefore(filtersBar, prodGrid);
+
+      // Conseils par catégorie (tips e-commerce)
+      var categoryTips = {
+        'bijoux & lithoth\u00e9rapie': {
+          icon: '\uD83D\uDC8E',
+          title: 'Conseil lithoth\u00e9rapie',
+          text: 'Portez votre bracelet au poignet gauche (c\u00f4t\u00e9 r\u00e9ceptif) pour absorber les bienfaits de la pierre. Nettoyez-le r\u00e9guli\u00e8rement sous l\u2019eau claire ou avec de la fum\u00e9e de sauge.'
+        },
+        'cristaux': {
+          icon: '\uD83D\uDD2E',
+          title: 'Bien choisir son cristal',
+          text: 'Laissez-vous guider par votre intuition\u00a0: la pierre qui vous attire est souvent celle dont vous avez besoin. Rechargez vos cristaux \u00e0 la lumi\u00e8re de la lune ou sur une druse d\u2019am\u00e9thyste.'
+        },
+        'encens & purification': {
+          icon: '\uD83C\uDF3F',
+          title: 'Purifier son espace',
+          text: 'Pour purifier votre int\u00e9rieur, allumez la sauge et laissez la fum\u00e9e se diffuser dans chaque pi\u00e8ce en ouvrant une fen\u00eatre. Id\u00e9al avant une m\u00e9ditation ou un tirage de cartes.'
+        },
+        'accessoires': {
+          icon: '\u2728',
+          title: 'Outils de divination',
+          text: 'Un pendule peut r\u00e9pondre \u00e0 vos questions par oui ou non. Tenez-le immobile et posez des questions claires. Avec la pratique, vous affinerez votre connexion intuitive.'
+        }
+      };
+
+      // Zone de conseil contextuel
+      var tipContainer = document.createElement('div');
+      tipContainer.id = 'boutique-category-tip';
+      tipContainer.style.display = 'none';
+      prodGrid.parentNode.insertBefore(tipContainer, prodGrid);
+
+      // Section \u00ab Vous pourriez aussi aimer \u00bb
+      var suggestionsSection = document.createElement('div');
+      suggestionsSection.className = 'boutique-suggestions';
+      suggestionsSection.id = 'boutique-suggestions';
+      suggestionsSection.style.display = 'none';
+      suggestionsSection.innerHTML =
+        '<div class="boutique-suggestions__header">' +
+          '<div class="boutique-suggestions__icon">' +
+            '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+              '<path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>' +
+            '</svg>' +
+          '</div>' +
+          '<div>' +
+            '<div class="boutique-suggestions__title">Vous pourriez aussi aimer</div>' +
+            '<div class="boutique-suggestions__subtitle">D\u2019autres produits pour accompagner votre pratique</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="boutique-suggestions__track" id="boutique-suggestions-track"></div>';
+      prodGrid.parentNode.insertBefore(suggestionsSection, prodGrid.nextSibling);
+
+      // Logique de filtrage
+      var currentFilter = '__all__';
+
+      function filterProducts(category) {
+        currentFilter = category;
+        var cards = prodGrid.querySelectorAll('.boutique-product-card');
+        var visibleCount = 0;
+
+        cards.forEach(function(card) {
+          var cardSlug = card.getAttribute('data-product-slug');
+          var productData = _loadedProducts[cardSlug];
+          if (!productData) return;
+
+          var cardCat = (productData.category || 'Autre').trim();
+          var shouldShow = (category === '__all__') || (cardCat === category);
+
+          if (shouldShow) {
+            card.classList.remove('boutique-product-card--filtered-out');
+            card.classList.add('boutique-product-card--filter-in');
+            card.style.display = '';
+            visibleCount++;
+          } else {
+            card.classList.add('boutique-product-card--filtered-out');
+            card.classList.remove('boutique-product-card--filter-in');
+            setTimeout(function() {
+              if (card.classList.contains('boutique-product-card--filtered-out')) {
+                card.style.display = 'none';
+              }
+            }, 350);
+          }
+        });
+
+        // Mettre \u00e0 jour le compteur
+        var countEl = document.getElementById('boutique-results-count');
+        if (countEl) {
+          countEl.textContent = visibleCount + ' produit' + (visibleCount > 1 ? 's' : '');
+        }
+
+        // Mettre \u00e0 jour les boutons actifs
+        filtersBar.querySelectorAll('.boutique-filter-btn').forEach(function(btn) {
+          btn.classList.toggle('boutique-filter-btn--active', btn.getAttribute('data-filter-cat') === category);
+        });
+
+        // Afficher le conseil contextuel
+        showCategoryTip(category);
+
+        // Afficher les suggestions (produits des AUTRES catégories)
+        showSuggestions(category);
+
+        // \u00c9tat vide
+        var emptyState = prodGrid.querySelector('.boutique-empty-state');
+        if (visibleCount === 0 && category !== '__all__') {
+          if (!emptyState) {
+            emptyState = document.createElement('div');
+            emptyState.className = 'boutique-empty-state';
+            emptyState.innerHTML =
+              '<div class="boutique-empty-state__icon">' +
+                '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">' +
+                  '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>' +
+                '</svg>' +
+              '</div>' +
+              '<h3 class="boutique-empty-state__title">Aucun produit dans cette cat\u00e9gorie</h3>' +
+              '<p class="boutique-empty-state__text">De nouveaux produits arrivent bient\u00f4t. Inscrivez-vous \u00e0 la newsletter pour \u00eatre pr\u00e9venu\u00a0!</p>';
+            prodGrid.appendChild(emptyState);
+          }
+          emptyState.style.display = '';
+        } else if (emptyState) {
+          emptyState.style.display = 'none';
+        }
+      }
+
+      function showCategoryTip(category) {
+        var tipEl = document.getElementById('boutique-category-tip');
+        if (!tipEl) return;
+
+        if (category === '__all__') {
+          tipEl.style.display = 'none';
+          return;
+        }
+
+        var tipKey = category.toLowerCase();
+        var tipData = categoryTips[tipKey];
+        if (!tipData) {
+          for (var key in categoryTips) {
+            if (tipKey.indexOf(key) !== -1 || key.indexOf(tipKey) !== -1) {
+              tipData = categoryTips[key];
+              break;
+            }
+          }
+        }
+
+        if (tipData) {
+          tipEl.innerHTML =
+            '<div class="boutique-category-tip">' +
+              '<div class="boutique-category-tip__icon">' + tipData.icon + '</div>' +
+              '<div class="boutique-category-tip__content">' +
+                '<div class="boutique-category-tip__title">' + tipData.title + '</div>' +
+                '<p class="boutique-category-tip__text">' + tipData.text + '</p>' +
+              '</div>' +
+              '<button class="boutique-category-tip__close" type="button" aria-label="Fermer">&times;</button>' +
+            '</div>';
+          tipEl.style.display = '';
+
+          var closeBtn = tipEl.querySelector('.boutique-category-tip__close');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', function(e) {
+              e.stopPropagation();
+              tipEl.style.display = 'none';
+            });
+          }
+        } else {
+          tipEl.style.display = 'none';
+        }
+      }
+
+      function showSuggestions(category) {
+        var suggestionsEl = document.getElementById('boutique-suggestions');
+        var trackEl = document.getElementById('boutique-suggestions-track');
+        if (!suggestionsEl || !trackEl) return;
+
+        if (category === '__all__') {
+          suggestionsEl.style.display = 'none';
+          return;
+        }
+
+        // Trouver les produits des AUTRES catégories (cross-selling)
+        var seenSugSlugs = {};
+        var otherProducts = visibleProductsList.filter(function(p) {
+          if (seenSugSlugs[p.slug]) return false;
+          seenSugSlugs[p.slug] = true;
+          return (p.category || 'Autre').trim() !== category && p.visible !== false;
+        });
+
+        if (otherProducts.length === 0) {
+          suggestionsEl.style.display = 'none';
+          return;
+        }
+
+        trackEl.innerHTML = '';
+        otherProducts.forEach(function(p) {
+          var miniCard = document.createElement('div');
+          miniCard.className = 'boutique-suggestion-card';
+          miniCard.setAttribute('data-suggestion-slug', p.slug);
+          miniCard.innerHTML =
+            '<div class="boutique-suggestion-card__image">' +
+              '<img src="' + (p.image_url || 'crystals-nature.png') + '" alt="' + sanitizeForHtml(p.name || '') + '" width="320" height="213" loading="lazy">' +
+            '</div>' +
+            '<div class="boutique-suggestion-card__body">' +
+              '<div class="boutique-suggestion-card__cat">' + sanitizeForHtml(p.category || '') + '</div>' +
+              '<div class="boutique-suggestion-card__name">' + sanitizeForHtml(p.name || '') + '</div>' +
+              '<div class="boutique-suggestion-card__price">' + parseFloat(p.price).toFixed(2) + ' \u20ac</div>' +
+            '</div>';
+
+          miniCard.addEventListener('click', function() {
+            if (_loadedProducts[p.slug]) {
+              openProductDetail(_loadedProducts[p.slug]);
+            }
+          });
+
+          trackEl.appendChild(miniCard);
+        });
+
+        suggestionsEl.style.display = '';
+      }
+
+      // Attacher les \u00e9v\u00e9nements de clic sur les filtres
+      filtersBar.addEventListener('click', function(e) {
+        var btn = e.target.closest('.boutique-filter-btn');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var cat = btn.getAttribute('data-filter-cat');
+        if (cat) filterProducts(cat);
+      });
+
+      // Exposer la fonction de filtrage
+      window.__boutiqueFilterProducts = filterProducts;
+    })();
+
     // Add admin "+" buttons (admin only) — skip if already present
     if (isAdmin) {
       // Blog add button - prepend to blog-grid

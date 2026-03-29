@@ -4497,9 +4497,15 @@ function getComments(articleId) {
         date_publication: fd.get('date_publication').trim()
       };
 
+      // Indicateur de sauvegarde en cours
+      var submitBtnBlog = blogForm.querySelector('.admin-modal__submit');
+      var origBtnBlogText = submitBtnBlog ? submitBtnBlog.textContent : '';
+      if (submitBtnBlog) { submitBtnBlog.textContent = 'Sauvegarde en cours\u2026'; submitBtnBlog.disabled = true; }
+
       var result = await supabase.from('blog_articles').insert([data]);
       if (result.error) {
         showAdminMsg('admin-blog-msg', 'Erreur : ' + result.error.message, true);
+        if (submitBtnBlog) { submitBtnBlog.textContent = origBtnBlogText; submitBtnBlog.disabled = false; }
         return;
       }
 
@@ -4535,7 +4541,8 @@ function getComments(articleId) {
       if (feedGrid) { feedGrid.innerHTML = ''; }
       if (typeof window.__populateNouveautes === 'function') window.__populateNouveautes();
 
-      showAdminMsg('admin-blog-msg', 'Article publi\u00e9 avec succ\u00e8s !', false);
+      showAdminMsg('admin-blog-msg', '\u2705 Article sauvegard\u00e9 avec succ\u00e8s !', false);
+      if (submitBtnBlog) { submitBtnBlog.textContent = origBtnBlogText; submitBtnBlog.disabled = false; }
       // Envoyer newsletter aux abonnes
       envoyerNewsletterAbonnes('blog', data.title);
       setTimeout(function() { closeModal('admin-modal-blog'); }, 1500);
@@ -4984,9 +4991,15 @@ function getComments(articleId) {
         stripe_link: stripeLink
       };
 
+      // Indicateur de sauvegarde en cours
+      var submitBtnProd = boutiqueForm.querySelector('.admin-modal__submit');
+      var origBtnProdText = submitBtnProd ? submitBtnProd.textContent : '';
+      if (submitBtnProd) { submitBtnProd.textContent = 'Sauvegarde en cours\u2026'; submitBtnProd.disabled = true; }
+
       var result = await supabase.from('boutique_products').insert([data]);
       if (result.error) {
         showAdminMsg('admin-boutique-msg', 'Erreur : ' + result.error.message, true);
+        if (submitBtnProd) { submitBtnProd.textContent = origBtnProdText; submitBtnProd.disabled = false; }
         return;
       }
 
@@ -5041,7 +5054,8 @@ function getComments(articleId) {
       if (feedGrid) { feedGrid.innerHTML = ''; }
       if (typeof window.__populateNouveautes === 'function') window.__populateNouveautes();
 
-      showAdminMsg('admin-boutique-msg', isVisible ? 'Produit publi\u00e9 avec succ\u00e8s !' : 'Produit enregistr\u00e9 (masqu\u00e9)', false);
+      showAdminMsg('admin-boutique-msg', isVisible ? '\u2705 Produit sauvegard\u00e9 avec succ\u00e8s !' : '\u2705 Produit enregistr\u00e9 (masqu\u00e9)', false);
+      if (submitBtnProd) { submitBtnProd.textContent = origBtnProdText; submitBtnProd.disabled = false; }
       // Envoyer newsletter seulement si visible
       if (isVisible) envoyerNewsletterAbonnes('boutique', data.name);
       // Reset extra images input
@@ -6607,21 +6621,37 @@ function getComments(articleId) {
             date_publication: fd.get('date_publication').trim()
           };
 
+          // Indicateur de sauvegarde en cours
+          var submitBtn = origBlogForm.querySelector('.admin-modal__submit');
+          var origBtnText = submitBtn ? submitBtn.textContent : '';
+          if (submitBtn) { submitBtn.textContent = 'Sauvegarde en cours\u2026'; submitBtn.disabled = true; }
+
           var res = await supabase.from('blog_articles').update(updateData).eq('slug', editSlug);
           if (res.error) {
             showAdminMsg('admin-blog-msg', 'Erreur : ' + res.error.message, true);
+            if (submitBtn) { submitBtn.textContent = origBtnText; submitBtn.disabled = false; }
             return;
           }
-          showAdminMsg('admin-blog-msg', 'Article mis \u00e0 jour !', false);
+          // Mettre \u00e0 jour le cache JS pour l'overlay article
+          if (typeof blogArticles !== 'undefined') {
+            blogArticles[editSlug] = {
+              category: updateData.category,
+              title: updateData.title,
+              date: updateData.date_publication,
+              content: updateData.content
+            };
+          }
+          showAdminMsg('admin-blog-msg', '\u2705 Article sauvegard\u00e9 avec succ\u00e8s !', false);
           origBlogForm.removeAttribute('data-edit-slug');
           setTimeout(function() {
             closeModal('admin-modal-blog');
             chargerAdminBlog();
+            // Rafra\u00eechir aussi les cartes blog publiques
+            if (typeof initDynamicContent === 'function') initDynamicContent(true);
             // Reset modal title
             var titleEl = document.querySelector('#admin-modal-blog .admin-modal__title');
             if (titleEl) titleEl.textContent = 'Nouvel article';
-            var submitBtn = origBlogForm.querySelector('.admin-modal__submit');
-            if (submitBtn) submitBtn.textContent = 'Publier l\u2019article';
+            if (submitBtn) { submitBtn.textContent = 'Publier l\u2019article'; submitBtn.disabled = false; }
           }, 1200);
         })();
       }
@@ -6662,9 +6692,15 @@ function getComments(articleId) {
             stripe_link: (fd.get('stripe_link') || '').trim()
           };
 
+          // Indicateur de sauvegarde en cours
+          var submitBtn = origBoutiqueForm.querySelector('.admin-modal__submit');
+          var origBtnText = submitBtn ? submitBtn.textContent : '';
+          if (submitBtn) { submitBtn.textContent = 'Sauvegarde en cours\u2026'; submitBtn.disabled = true; }
+
           var res = await supabase.from('boutique_products').update(updateData).eq('slug', editSlug);
           if (res.error) {
             showAdminMsg('admin-boutique-msg', 'Erreur : ' + res.error.message, true);
+            if (submitBtn) { submitBtn.textContent = origBtnText; submitBtn.disabled = false; }
             return;
           }
 
@@ -6692,7 +6728,11 @@ function getComments(articleId) {
             }
           }
 
-          showAdminMsg('admin-boutique-msg', 'Produit mis \u00e0 jour !', false);
+          // Mettre \u00e0 jour le cache JS pour l'overlay produit
+          if (typeof _loadedProducts !== 'undefined' && _loadedProducts[editSlug]) {
+            for (var uk in updateData) { _loadedProducts[editSlug][uk] = updateData[uk]; }
+          }
+          showAdminMsg('admin-boutique-msg', '\u2705 Produit sauvegard\u00e9 avec succ\u00e8s !', false);
           origBoutiqueForm.removeAttribute('data-edit-slug');
           // Reset extra images input and gallery
           var editExtraPreview = document.getElementById('admin-boutique-extra-preview');
@@ -6708,8 +6748,7 @@ function getComments(articleId) {
             // Reset modal title
             var titleEl = document.querySelector('#admin-modal-boutique .admin-modal__title');
             if (titleEl) titleEl.textContent = 'Nouveau produit';
-            var submitBtn = origBoutiqueForm.querySelector('.admin-modal__submit');
-            if (submitBtn) submitBtn.textContent = 'Publier le produit';
+            if (submitBtn) { submitBtn.textContent = 'Publier le produit'; submitBtn.disabled = false; }
           }, 1200);
         })();
       }

@@ -195,3 +195,33 @@ CREATE POLICY "Admin gère les disponibilités"
   ON disponibilites FOR ALL
   USING (auth.jwt() ->> 'email' = 'philippe.medium45@gmail.com')
   WITH CHECK (auth.jwt() ->> 'email' = 'philippe.medium45@gmail.com');
+
+-- ================================================
+-- Table des paniers (sauvegarde côté serveur)
+-- Chaque client connecté a un panier persistant
+-- ================================================
+CREATE TABLE IF NOT EXISTS paniers (
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE PRIMARY KEY,
+  contenu JSONB NOT NULL DEFAULT '[]',
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
+ALTER TABLE paniers ENABLE ROW LEVEL SECURITY;
+
+-- Chaque client ne peut lire / modifier que son propre panier
+CREATE POLICY "Les clients voient leur panier"
+  ON paniers FOR SELECT
+  USING (auth.uid() = user_id);
+
+CREATE POLICY "Les clients créent leur panier"
+  ON paniers FOR INSERT
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Les clients mettent à jour leur panier"
+  ON paniers FOR UPDATE
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Les clients suppriment leur panier"
+  ON paniers FOR DELETE
+  USING (auth.uid() = user_id);

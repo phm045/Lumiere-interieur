@@ -1594,10 +1594,17 @@ function getComments(articleId) {
           }
         } catch(dynErr) { console.warn('[Auth] Rechargement boutique admin:', dynErr); }
       }
+      // Charger et fusionner le panier Supabase à la connexion
+      try { loadAndMergeCartFromSupabase(); } catch(cartErr) { console.warn('[Auth] Panier merge:', cartErr); }
     } else {
       window.__isAdmin = false;
       afficherEtatDeconnecte();
     }
+  });
+
+  // Charger le panier Supabase au chargement de la page si connecté
+  verifierStatutAuth().then(function() {
+    try { loadAndMergeCartFromSupabase(); } catch(e) { console.warn('[Init] Panier merge:', e); }
   });
 
   function afficherEtatConnecte(client) {
@@ -2285,8 +2292,9 @@ function getComments(articleId) {
 
       console.log('[Stripe] Commande enregistr\u00e9e:', serviceName, montant + '\u20ac');
 
-      // Vider le panier apr\u00e8s paiement r\u00e9ussi
+      // Vider le panier apr\u00e8s paiement r\u00e9ussi (local + Supabase)
       try { localStorage.removeItem('lumiere_cart'); } catch(ce) {}
+      try { clearCartSupabase(); } catch(cse) {}
 
       // Naviguer vers Mon compte > Commandes
       showPage('mon-compte');
@@ -4698,6 +4706,7 @@ function getComments(articleId) {
 
   // ─── PANIER (CART SYSTEM) ───
   var CART_KEY = 'lumiere_cart';
+  var _cartSyncTimer = null;
 
   function getCart() {
     try { return JSON.parse(localStorage.getItem(CART_KEY)) || []; }
@@ -4707,6 +4716,71 @@ function getComments(articleId) {
   function saveCart(cart) {
     localStorage.setItem(CART_KEY, JSON.stringify(cart));
     updateCartUI();
+    // Synchroniser avec Supabase (débounced, 1.5s après le dernier changement)
+    if (_cartSyncTimer) clearTimeout(_cartSyncTimer);
+    _cartSyncTimer = setTimeout(function() { syncCartToSupabase(cart); }, 1500);
+  }
+
+  // --- Sauvegarder le panier en base Supabase pour les clients connectés ---
+  async function syncCartToSupabase(cart) {
+    if (!supabase) return;
+    try {
+      var { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) return;
+      var userId = session.user.id;
+      await supabase.from('paniers').upsert({
+        user_id: userId,
+        contenu: cart,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+      console.log('[Panier] Synchronisé avec Supabase (' + cart.length + ' articles)');
+    } catch(e) {
+      // Table paniers peut ne pas encore exister — fallback silencieux sur localStorage
+      console.log('[Panier] Sync Supabase non disponible (localStorage utilisé)');
+    }
+  }
+
+  // --- Charger le panier depuis Supabase et fusionner avec le local ---
+  async function loadAndMergeCartFromSupabase() {
+    if (!supabase) return;
+    try {
+      var { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) return;
+      var userId = session.user.id;
+      var result = await supabase.from('paniers').select('contenu').eq('user_id', userId).single();
+      if (result.error || !result.data || !result.data.contenu) return;
+      var remoteCart = result.data.contenu;
+      if (!Array.isArray(remoteCart) || remoteCart.length === 0) return;
+      var localCart = getCart();
+      // Fusionner : le panier local a priorité, les articles distants absents sont ajoutés
+      var localSlugs = {};
+      for (var i = 0; i < localCart.length; i++) localSlugs[localCart[i].slug] = true;
+      var merged = localCart.slice();
+      var added = 0;
+      for (var r = 0; r < remoteCart.length; r++) {
+        if (!localSlugs[remoteCart[r].slug]) {
+          merged.push(remoteCart[r]);
+          added++;
+        }
+      }
+      if (added > 0 || localCart.length === 0) {
+        localStorage.setItem(CART_KEY, JSON.stringify(merged));
+        updateCartUI();
+        console.log('[Panier] Fusionné depuis Supabase (+' + added + ' articles distants)');
+      }
+    } catch(e) {
+      console.log('[Panier] Chargement Supabase non disponible');
+    }
+  }
+
+  // --- Vider le panier Supabase (après paiement) ---
+  async function clearCartSupabase() {
+    if (!supabase) return;
+    try {
+      var { data: { session } } = await supabase.auth.getSession();
+      if (!session || !session.user) return;
+      await supabase.from('paniers').delete().eq('user_id', session.user.id);
+    } catch(e) { /* silencieux */ }
   }
 
   function addToCart(product) {

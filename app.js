@@ -4044,6 +4044,12 @@ function getComments(articleId) {
       imageHTML = '<img src="' + allImages[0] + '" alt="' + data.name + '" width="640" height="400" loading="lazy">';
     }
 
+    // Tronquer la description si trop longue (seuil : 100 caract\u00e8res)
+    var descText = data.description || '';
+    var descMax = 100;
+    var isTruncated = descText.length > descMax;
+    var descShort = isTruncated ? descText.substring(0, descMax).replace(/\s+\S*$/, '') + '\u2026' : descText;
+
     card.innerHTML =
       '<div class="boutique-product-card__image">' +
         (isAdmin ? '<button class="admin-delete-btn" data-delete-type="boutique" data-delete-slug="' + data.slug + '" title="Supprimer">\ud83d\uddd1\ufe0f</button>' : '') +
@@ -4053,12 +4059,56 @@ function getComments(articleId) {
       '<div class="boutique-product-card__content">' +
         '<p class="boutique-product-card__category">' + data.category + '</p>' +
         '<h3 class="boutique-product-card__name">' + data.name + '</h3>' +
-        '<p class="boutique-product-card__desc">' + data.description + '</p>' +
-        '<p class="boutique-product-card__price">' + parseFloat(data.price).toFixed(2) + ' \u20ac</p>' +
+        '<div class="boutique-product-card__desc-wrap">' +
+          '<p class="boutique-product-card__desc boutique-product-card__desc--short">' + descShort + '</p>' +
+          '<p class="boutique-product-card__desc boutique-product-card__desc--full" hidden>' + descText + '</p>' +
+          (isTruncated ? '<button class="boutique-product-card__more" type="button">Afficher plus</button>' : '') +
+        '</div>' +
+        '<div class="boutique-product-card__footer">' +
+          '<p class="boutique-product-card__price">' + parseFloat(data.price).toFixed(2) + ' \u20ac</p>' +
+          '<button class="boutique-product-card__add-cart" type="button" data-add-cart>' +
+            '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' +
+            ' Ajouter au panier' +
+          '</button>' +
+        '</div>' +
       '</div>';
 
     // Initialize carousel if present
     initProductCarousel(card);
+
+    // Bouton "Afficher plus" : bascule description courte/compl\u00e8te
+    var moreBtn = card.querySelector('.boutique-product-card__more');
+    if (moreBtn) {
+      moreBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var wrap = card.querySelector('.boutique-product-card__desc-wrap');
+        var shortP = wrap.querySelector('.boutique-product-card__desc--short');
+        var fullP = wrap.querySelector('.boutique-product-card__desc--full');
+        var isExpanded = !fullP.hidden;
+        shortP.hidden = !isExpanded;
+        fullP.hidden = isExpanded;
+        moreBtn.textContent = isExpanded ? 'Afficher plus' : 'Afficher moins';
+      });
+    }
+
+    // Bouton "Ajouter au panier"
+    var addCartBtn = card.querySelector('[data-add-cart]');
+    if (addCartBtn) {
+      addCartBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        addToCart({
+          slug: data.slug,
+          name: data.name,
+          price: data.price,
+          image_url: data.image_url || 'crystals-nature.png',
+          category: data.category || '',
+          stripe_link: data.stripe_link || ''
+        });
+      });
+    }
+
     return card;
   }
 

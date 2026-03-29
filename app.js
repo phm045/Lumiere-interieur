@@ -4279,11 +4279,17 @@ function getComments(articleId) {
     var allProducts;
     if (productsFromDB.length > 0) {
       allProducts = productsFromDB.slice();
-      // Ajouter les produits démo visibles qui ne sont pas encore en base
       var dbSlugs = productsFromDB.map(function(p) { return p.slug; });
       DEMO_PRODUCTS.forEach(function(dp) {
-        if (dp.visible && dbSlugs.indexOf(dp.slug) === -1) {
-          allProducts.push(dp);
+        if (dp.visible) {
+          var idx = dbSlugs.indexOf(dp.slug);
+          if (idx === -1) {
+            // Produit démo visible absent de la base : l'ajouter en mémoire
+            allProducts.push(dp);
+          } else if (allProducts[idx].visible === false) {
+            // Produit en base marqué invisible mais démo dit visible : forcer la visibilité
+            allProducts[idx] = Object.assign({}, allProducts[idx], { visible: true });
+          }
         }
       });
     } else {

@@ -2098,7 +2098,8 @@ function getComments(articleId) {
     'sauge-blanche-baton-de-purification': 'https://buy.stripe.com/7sY3co7EP4j7goS99TeAg0d',
     'quartz-rose-pierre-brute': 'https://buy.stripe.com/4gMdR21grbLzfkO2LveAg0e',
     'tourmaline-noire-pierre-de-protection': 'https://buy.stripe.com/6oUcMY6AL3f3c8CeudeAg0c',
-    'bracelet-elastique-6mm': ''
+    'bracelet-elastique-6mm': '',
+    'bracelet-pierre-de-lave-6mm': ''
   };
 
   // Map des liens Stripe vers les noms de services
@@ -4228,6 +4229,12 @@ function getComments(articleId) {
         description: 'Bracelet en perles de pierres naturelles de 6\u00a0mm monté sur élastique résistant. Léger et confortable, il s\u2019adapte à tous les poignets. Idéal pour bénéficier des bienfaits de la lithothérapie au quotidien. Pierre au choix selon disponibilité (améthyste, quartz rose, œil de tigre…).',
         price: 12.90, category: 'Bijoux & Lithothérapie', image_url: 'crystals-nature.png',
         stripe_link: BOUTIQUE_STRIPE_LINKS['bracelet-elastique-6mm'], visible: true, _demo: true
+      },
+      {
+        slug: 'bracelet-pierre-de-lave-6mm', name: 'Bracelet Élastique Pierre de Lave — 6mm',
+        description: 'Bracelet en perles de pierre de lave naturelle de 6\u00a0mm sur élastique résistant. Pierre volcanique d\u2019ancrage et de protection, la lave apporte force intérieure et stabilité émotionnelle. Poreuse, elle peut servir de diffuseur d\u2019huiles essentielles. Léger et discret, il se porte au quotidien.',
+        price: 10.90, category: 'Bijoux & Lithothérapie', image_url: 'crystals-nature.png',
+        stripe_link: BOUTIQUE_STRIPE_LINKS['bracelet-pierre-de-lave-6mm'], visible: true, _demo: true
       }
     ];
 

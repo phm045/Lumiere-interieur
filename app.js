@@ -4945,6 +4945,162 @@ function getComments(articleId) {
   // --- Product Detail Overlay (fiche produit + paiement) ---
   var _loadedProducts = {}; // Cache: slug -> product data with extra_images
 
+  // --- Utility: parse a long product description into structured sections ---
+  function parseProductDescription(rawText) {
+    if (!rawText) return { intro: '', sections: [] };
+    var text = rawText.trim();
+    // Known section headers that appear in product descriptions
+    var sectionPatterns = [
+      /(?:^|\n)\s*\u2728\s*/,  // ✨ emoji marker
+      /(?:^|\n)\s*\ud83d\udd2e\s*/,  // 🔮 emoji marker
+      /(?:^|\n)\s*\u2764\ufe0f?\s*/,  // ❤ emoji marker
+    ];
+    // Common section keywords in lithotherapy/wellness product descriptions
+    var headingKeywords = [
+      'Plan physique', 'Plan \u00e9motionnel', 'Plan spirituel', 'Plan mental',
+      'Syst\u00e8me musculaire', 'Syst\u00e8me immunitaire', 'Syst\u00e8me digestif', 'Syst\u00e8me nerveux',
+      'Circulation', 'D\u00e9toxification', 'Peau', 'Sommeil',
+      'Diffuseur naturel', 'Propri\u00e9t\u00e9s', 'Vertus', 'Bienfaits',
+      'Associations courantes', 'Associations', 'Chakra', 'Chakras',
+      'Signes astrologiques', 'Signe astrologique', 'Astrologie',
+      'Entretien', 'Rechargement', 'Purification', 'Nettoyage',
+      'Pierres compl\u00e9mentaires', 'Pierres associ\u00e9es', 'Combinaisons',
+      'Origine', 'Histoire', 'Composition', 'Caract\u00e9ristiques',
+      'Dimensions', 'Taille', 'Mat\u00e9riaux', 'Mati\u00e8re',
+      'Utilisation', 'Conseils', 'Mode d\'emploi', 'Comment utiliser',
+      'Avertissement', 'Disclaimer', 'Remarque', 'Note importante', 'Important',
+      '\u00c9l\u00e9ment', '\u00c9l\u00e9ments'
+    ];
+    // Build a regex that matches lines starting with known headings
+    var escapedKeywords = headingKeywords.map(function(k) {
+      return k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    });
+    var headingRegex = new RegExp(
+      '(?:^|\\n)\\s*(?:[\u2728\ud83d\udd2e\u2764\ufe0f\ud83d\udc8e\u2b50\u2734\ufe0f\ud83c\udf1f\u2022\u25cf\u25cb\u2013\u2014\u27a4]\\s*)?(' +
+      escapedKeywords.join('|') +
+      ')\\s*[:：\u2014\u2013\u2012-]?\\s*',
+      'gi'
+    );
+
+    var lines = text.split('\n');
+    var intro = '';
+    var sections = [];
+    var currentSection = null;
+    var introDone = false;
+
+    for (var li = 0; li < lines.length; li++) {
+      var line = lines[li].trim();
+      if (!line) {
+        if (currentSection) currentSection.lines.push('');
+        continue;
+      }
+      // Check if this line is a heading
+      var isHeading = false;
+      var headingTitle = '';
+      // Reset and test
+      headingRegex.lastIndex = 0;
+      var match = headingRegex.exec(line);
+      if (match && match.index < 5) {
+        isHeading = true;
+        headingTitle = match[1].trim();
+        // Remainder of the line after the heading
+        var remainder = line.substring(match.index + match[0].length).trim();
+        introDone = true;
+        currentSection = { title: headingTitle, lines: [] };
+        if (remainder) currentSection.lines.push(remainder);
+        sections.push(currentSection);
+      } else if (!introDone) {
+        intro += (intro ? '\n' : '') + line;
+        // After 2-3 sentences of intro, switch to collecting
+        if (intro.split(/[.!?]/).length > 4) introDone = true;
+      } else {
+        if (!currentSection) {
+          // Create a generic first section
+          currentSection = { title: 'Description', lines: [] };
+          sections.push(currentSection);
+        }
+        currentSection.lines.push(line);
+      }
+    }
+
+    // If no sections were detected, put everything after intro into one section
+    if (sections.length === 0 && introDone) {
+      // All remaining text goes into a "Description d\u00e9taill\u00e9e" section
+      var remaining = text.substring(intro.length).trim();
+      if (remaining) {
+        sections.push({ title: 'Description d\u00e9taill\u00e9e', lines: remaining.split('\n') });
+      }
+    }
+
+    // If no sections and no intro separation, use first ~2 sentences as intro
+    if (sections.length === 0 && !intro) {
+      var sentences = text.split(/(?<=[.!?])\s+/);
+      intro = sentences.slice(0, 2).join(' ');
+      var rest = sentences.slice(2).join(' ').trim();
+      if (rest) {
+        sections.push({ title: 'Description d\u00e9taill\u00e9e', lines: rest.split('\n') });
+      }
+    }
+
+    return { intro: intro, sections: sections };
+  }
+
+  function buildDescSectionsHTML(sections) {
+    var chevronSVG = '<svg class="product-desc-section__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>';
+    var html = '';
+    for (var si = 0; si < sections.length; si++) {
+      var sec = sections[si];
+      var bodyContent = '';
+      var inList = false;
+      for (var li = 0; li < sec.lines.length; li++) {
+        var line = sec.lines[li].trim();
+        if (!line) {
+          if (inList) { bodyContent += '</ul>'; inList = false; }
+          continue;
+        }
+        // Detect list-like lines (starting with -, ·, •, ▸, ★, etc.)
+        var listMatch = line.match(/^[\-\u2022\u2023\u25cf\u25cb\u25b8\u25ba\u25aa\u2013\u2014\u27a4\u2605\u2606\u2734\ufe0f\u2728\*]\s*(.*)/);
+        if (listMatch) {
+          if (!inList) { bodyContent += '<ul>'; inList = true; }
+          bodyContent += '<li>' + sanitizeDescText(listMatch[1]) + '</li>';
+        } else {
+          if (inList) { bodyContent += '</ul>'; inList = false; }
+          bodyContent += '<p>' + sanitizeDescText(line) + '</p>';
+        }
+      }
+      if (inList) bodyContent += '</ul>';
+      // First section open by default
+      var openClass = si === 0 ? ' product-desc-section--open' : '';
+      html += '<div class="product-desc-section' + openClass + '">' +
+        '<button class="product-desc-section__toggle" type="button">' +
+          '<span class="product-desc-section__title">' + sanitizeForHtml(sec.title) + '</span>' +
+          chevronSVG +
+        '</button>' +
+        '<div class="product-desc-section__body">' + bodyContent + '</div>' +
+      '</div>';
+    }
+    return html;
+  }
+
+  function sanitizeDescText(text) {
+    // Escape HTML, then bold text between ** or __ and italic between * or _
+    var escaped = sanitizeForHtml(text);
+    // Bold: **text** or __text__
+    escaped = escaped.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    escaped = escaped.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    return escaped;
+  }
+
+  function initDescAccordion(container) {
+    var toggles = container.querySelectorAll('.product-desc-section__toggle');
+    toggles.forEach(function(toggle) {
+      toggle.addEventListener('click', function() {
+        var section = toggle.closest('.product-desc-section');
+        if (section) section.classList.toggle('product-desc-section--open');
+      });
+    });
+  }
+
   function openProductDetail(productData) {
     var overlay = document.getElementById('product-detail-overlay');
     if (!overlay) return;
@@ -4952,13 +5108,26 @@ function getComments(articleId) {
     // Fill product info
     var nameEl = document.getElementById('product-detail-name');
     var catEl = document.getElementById('product-detail-category');
+    var shortDescEl = document.getElementById('product-detail-short-desc');
     var descEl = document.getElementById('product-detail-desc');
     var priceEl = document.getElementById('product-detail-price');
     var galleryEl = document.getElementById('product-detail-gallery');
 
     if (nameEl) nameEl.textContent = productData.name;
     if (catEl) catEl.textContent = productData.category;
-    if (descEl) descEl.textContent = productData.description;
+
+    // Parse and structure the description
+    var parsed = parseProductDescription(productData.description || '');
+    if (shortDescEl) shortDescEl.textContent = parsed.intro;
+    if (descEl) {
+      if (parsed.sections.length > 0) {
+        descEl.innerHTML = buildDescSectionsHTML(parsed.sections);
+        initDescAccordion(descEl);
+      } else {
+        descEl.innerHTML = '<p style="font-size:0.92rem;line-height:1.7;color:var(--color-text-muted)">' + sanitizeForHtml(productData.description || '') + '</p>';
+      }
+    }
+
     if (priceEl) priceEl.textContent = parseFloat(productData.price).toFixed(2) + ' \u20ac';
 
     // Build gallery with all images
@@ -5000,8 +5169,9 @@ function getComments(articleId) {
     overlay.setAttribute('data-product-image', productData.image_url || 'crystals-nature.png');
     overlay.setAttribute('data-product-stripe-link', productData.stripe_link || '');
 
-    // Show overlay
+    // Show overlay and scroll to top
     overlay.hidden = false;
+    overlay.scrollTop = 0;
     document.body.style.overflow = 'hidden';
   }
 

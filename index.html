@@ -3099,18 +3099,21 @@ Cal("init", "consultations", { origin: "https://app.cal.eu" });
       <div class="product-overlay__info">
         <p class="product-overlay__category" id="product-detail-category"></p>
         <h2 class="product-overlay__name" id="product-detail-name"></h2>
-        <p class="product-overlay__desc" id="product-detail-desc"></p>
-        <p class="product-overlay__price" id="product-detail-price"></p>
-        <div class="product-overlay__actions">
-          <button class="btn btn--primary product-overlay__add-cart" id="product-detail-add-cart">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:0.4rem"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
-            Ajouter au panier
-          </button>
+        <p class="product-overlay__short-desc" id="product-detail-short-desc"></p>
+        <div class="product-overlay__purchase-block">
+          <p class="product-overlay__price" id="product-detail-price"></p>
+          <div class="product-overlay__actions">
+            <button class="btn btn--primary product-overlay__add-cart" id="product-detail-add-cart">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:0.4rem"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+              Ajouter au panier
+            </button>
+          </div>
+          <p class="product-overlay__secure">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:0.3rem"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+            Paiement sécurisé via Stripe — Visa, Mastercard, CB
+          </p>
         </div>
-        <p class="product-overlay__secure">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:0.3rem"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          Paiement sécurisé via Stripe — Visa, Mastercard, CB
-        </p>
+        <div class="product-overlay__desc-sections" id="product-detail-desc"></div>
       </div>
     </div>
   </div>

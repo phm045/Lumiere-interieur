@@ -4359,23 +4359,31 @@ function getComments(articleId) {
           console.warn('[Boutique] Auto-seed exception:', seedErr.message);
         }
       }
-      // Admin auto-update : mettre à jour les descriptions courtes avec les versions enrichies
+      // Admin auto-sync : synchroniser tous les champs des produits DEMO avec la base
       var demoBySlug = {};
       DEMO_PRODUCTS.forEach(function(p) { demoBySlug[p.slug] = p; });
       var toUpdate = productsFromDB.filter(function(dbp) {
         var demo = demoBySlug[dbp.slug];
-        return demo && demo.description.length > dbp.description.length + 50;
+        if (!demo) return false;
+        // Mettre à jour si le nom, le prix, la description, la catégorie ou l'image diffèrent
+        return demo.name !== dbp.name
+          || Math.abs(demo.price - (parseFloat(dbp.price) || 0)) > 0.01
+          || demo.description.length !== (dbp.description || '').length
+          || demo.category !== dbp.category
+          || (demo.image_url && demo.image_url !== 'crystals-nature.png' && demo.image_url !== dbp.image_url);
       });
       if (toUpdate.length > 0) {
-        console.log('[Boutique] Auto-update: mise à jour de', toUpdate.length, 'descriptions enrichies...');
+        console.log('[Boutique] Auto-sync:', toUpdate.length, 'produits à mettre à jour...');
         for (var ui = 0; ui < toUpdate.length; ui++) {
           var dbp = toUpdate[ui];
           var demo = demoBySlug[dbp.slug];
+          var updFields = { name: demo.name, description: demo.description, price: demo.price, category: demo.category };
+          if (demo.image_url && demo.image_url !== 'crystals-nature.png') updFields.image_url = demo.image_url;
           try {
-            await supabase.from('boutique_products').update({ name: demo.name, description: demo.description }).eq('slug', dbp.slug);
-            console.log('[Boutique] Mis à jour:', dbp.slug);
+            await supabase.from('boutique_products').update(updFields).eq('slug', dbp.slug);
+            console.log('[Boutique] Synchro OK:', dbp.slug, '(nom, prix, desc, catégorie)');
           } catch(updErr) {
-            console.warn('[Boutique] Update erreur pour', dbp.slug, ':', updErr.message);
+            console.warn('[Boutique] Sync erreur pour', dbp.slug, ':', updErr.message);
           }
         }
       }

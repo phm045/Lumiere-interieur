@@ -2808,7 +2808,7 @@ function getComments(articleId) {
       var sectionLabels = { 'blog': 'Nouveau sur le blog', 'boutique': 'Nouveaut\u00e9 boutique', 'service': 'Mise \u00e0 jour des services' };
       var sectionLabel = sectionLabels[type] || 'Nouveaut\u00e9';
       var sujet = sectionLabel + ' : ' + titre;
-      var siteUrl = 'https://phm045.github.io/Lumiere-interieur';
+      var siteUrl = 'https://phm045.github.io/Lumiere-interieure';
       var sectionUrl = siteUrl + '/#' + (type === 'blog' ? 'blog' : 'boutique');
 
       var htmlContent = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>'
@@ -4061,6 +4061,10 @@ function getComments(articleId) {
     var descMax = 100;
     var isTruncated = descText.length > descMax;
     var descShort = isTruncated ? descText.substring(0, descMax).replace(/\s+\S*$/, '') + '\u2026' : descText;
+    // Formater la description complète avec des paragraphes (séparer sur les retours à la ligne)
+    var descFullFormatted = descText.split(/\n+/).filter(function(p) { return p.trim(); }).map(function(p) {
+      return '<p style="margin:0.4rem 0;line-height:1.5">' + sanitizeForHtml(p.trim()) + '</p>';
+    }).join('');
 
     var addCartBtnHTML = isInStock
       ? '<button class="boutique-product-card__add-cart" type="button" data-add-cart>' +
@@ -4083,7 +4087,7 @@ function getComments(articleId) {
         '<h3 class="boutique-product-card__name">' + data.name + '</h3>' +
         '<div class="boutique-product-card__desc-wrap">' +
           '<p class="boutique-product-card__desc boutique-product-card__desc--short">' + descShort + '</p>' +
-          '<p class="boutique-product-card__desc boutique-product-card__desc--full" hidden>' + descText + '</p>' +
+          '<div class="boutique-product-card__desc boutique-product-card__desc--full" hidden>' + (descFullFormatted || sanitizeForHtml(descText)) + '</div>' +
           (isTruncated ? '<button class="boutique-product-card__more" type="button">Afficher plus</button>' : '') +
         '</div>' +
         '<div class="boutique-product-card__footer">' +
@@ -5568,7 +5572,7 @@ function getComments(articleId) {
           // Multiple products: open each Payment Link in sequence
           // (Stripe Payment Links don't support multi-product in one link)
           // Use Edge Function to create a combined Checkout Session
-          var siteUrl = 'https://phm045.github.io/Lumiere-interieur';
+          var siteUrl = 'https://phm045.github.io/Lumiere-interieure';
           var slugs = cart.map(function(item) { return item.slug; }).join(',');
           var successUrl = siteUrl + '?session_id={CHECKOUT_SESSION_ID}&service=boutique_' + encodeURIComponent(slugs);
           var cancelUrl = siteUrl + '/#boutique';

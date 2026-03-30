@@ -208,24 +208,24 @@
   color: var(--color-text);
 }
 
-/* Halo lumineux derrière le logo */
+/* Halo lumineux derrière l'œil du logo */
 .header__logo::before {
   content: '';
   position: absolute;
-  top: 50%;
-  left: 32px;
-  width: 70px;
-  height: 70px;
+  top: 28%;
+  left: 50%;
+  width: 50px;
+  height: 50px;
   transform: translate(-50%, -50%);
   background: radial-gradient(
     circle,
-    rgba(184, 149, 46, 0.55) 0%,
-    rgba(212, 175, 55, 0.28) 35%,
-    rgba(107, 127, 78, 0.12) 60%,
+    rgba(212, 175, 55, 0.6) 0%,
+    rgba(184, 149, 46, 0.35) 30%,
+    rgba(212, 175, 55, 0.15) 55%,
     transparent 100%
   );
   border-radius: 50%;
-  filter: blur(12px);
+  filter: blur(10px);
   animation: logo-glow 4s ease-in-out infinite;
   pointer-events: none;
   z-index: 0;
@@ -234,7 +234,7 @@
 .header__logo-img {
   position: relative;
   z-index: 1;
-  height: 64px;
+  height: 72px;
   width: auto;
   max-width: 280px;
   display: block;
@@ -259,10 +259,12 @@
 }
 
 .footer__brand .header__logo::before {
-  left: 38px;
-  width: 80px;
-  height: 80px;
-  filter: blur(14px);
+  left: 50%;
+  top: 30%;
+  width: 100px;
+  height: 100px;
+  filter: blur(16px);
+  transform: translate(-50%, -50%);
 }
 
 .header__logo-text {
@@ -368,12 +370,13 @@
     justify-content: center;
   }
   .header__logo-img {
-    height: 48px;
+    height: 56px;
   }
   .header__logo::before {
-    left: 22px;
-    width: 50px;
-    height: 50px;
+    left: 50%;
+    top: 28%;
+    width: 40px;
+    height: 40px;
     filter: blur(8px);
   }
 }
@@ -1863,10 +1866,11 @@ section {
   }
   .footer__brand .header__logo::before {
     left: 50%;
-    width: 70px;
-    height: 70px;
-    filter: blur(12px);
-    transform: translate(calc(-50% - 60px), -50%);
+    top: 30%;
+    width: 80px;
+    height: 80px;
+    filter: blur(14px);
+    transform: translate(-50%, -50%);
   }
   .footer__col h4 {
     font-size: var(--text-xs);

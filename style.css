@@ -271,7 +271,9 @@
   font-family: var(--font-display);
   font-size: var(--text-lg);
   font-weight: 500;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.08em;
+  color: var(--color-text);
+  white-space: nowrap;
 }
 
 .header__nav {
@@ -371,6 +373,9 @@
   }
   .header__logo-img {
     height: 56px;
+  }
+  .header__logo-text {
+    display: none;
   }
   .header__logo::before {
     left: 50%;

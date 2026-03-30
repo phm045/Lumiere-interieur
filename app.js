@@ -4354,6 +4354,27 @@ function getComments(articleId) {
             console.warn('[Boutique] Auto-seed erreur:', seedResult.error.message);
           } else {
             console.log('[Boutique] Auto-seed réussi :', toSeed.length, 'produits insérés');
+            // Uploader les images des nouveaux produits dans Supabase Storage
+            for (var si = 0; si < toSeed.length; si++) {
+              var sp = toSeed[si];
+              if (sp.image_url && sp.image_url !== 'crystals-nature.png' && sp.image_url.indexOf('http') !== 0) {
+                try {
+                  var seedImgResp = await fetch(sp.image_url);
+                  if (seedImgResp.ok) {
+                    var seedImgBlob = await seedImgResp.blob();
+                    var seedStoragePath = 'boutique/' + sp.slug + '/' + sp.image_url;
+                    var seedUpResult = await supabase.storage.from('images').upload(seedStoragePath, seedImgBlob, { cacheControl: '3600', upsert: true });
+                    if (!seedUpResult.error) {
+                      var seedPubUrl = supabase.storage.from('images').getPublicUrl(seedStoragePath);
+                      await supabase.from('boutique_products').update({ image_url: seedPubUrl.data.publicUrl }).eq('slug', sp.slug);
+                      console.log('[Boutique] Image seed uploadée:', sp.slug);
+                    }
+                  }
+                } catch(seedImgErr) {
+                  console.warn('[Boutique] Seed image erreur:', sp.slug, seedImgErr.message);
+                }
+              }
+            }
           }
         } catch(seedErr) {
           console.warn('[Boutique] Auto-seed exception:', seedErr.message);
@@ -4378,10 +4399,33 @@ function getComments(articleId) {
           var dbp = toUpdate[ui];
           var demo = demoBySlug[dbp.slug];
           var updFields = { name: demo.name, description: demo.description, price: demo.price, category: demo.category };
-          if (demo.image_url && demo.image_url !== 'crystals-nature.png') updFields.image_url = demo.image_url;
+          // Upload l'image dans Supabase Storage si c'est un fichier local
+          if (demo.image_url && demo.image_url !== 'crystals-nature.png' && demo.image_url.indexOf('http') !== 0) {
+            try {
+              var imgResp = await fetch(demo.image_url);
+              if (imgResp.ok) {
+                var imgBlob = await imgResp.blob();
+                var storagePath = 'boutique/' + demo.slug + '/' + demo.image_url;
+                var upResult = await supabase.storage.from('images').upload(storagePath, imgBlob, { cacheControl: '3600', upsert: true });
+                if (!upResult.error) {
+                  var pubUrl = supabase.storage.from('images').getPublicUrl(storagePath);
+                  updFields.image_url = pubUrl.data.publicUrl;
+                  console.log('[Boutique] Image uploadée:', demo.slug, '->', updFields.image_url);
+                } else {
+                  console.warn('[Boutique] Upload image erreur:', upResult.error.message);
+                  updFields.image_url = demo.image_url;
+                }
+              }
+            } catch(imgErr) {
+              console.warn('[Boutique] Fetch image erreur:', imgErr.message);
+              updFields.image_url = demo.image_url;
+            }
+          } else if (demo.image_url && demo.image_url.indexOf('http') === 0) {
+            updFields.image_url = demo.image_url;
+          }
           try {
             await supabase.from('boutique_products').update(updFields).eq('slug', dbp.slug);
-            console.log('[Boutique] Synchro OK:', dbp.slug, '(nom, prix, desc, catégorie)');
+            console.log('[Boutique] Synchro OK:', dbp.slug, '(nom, prix, desc, catégorie, image)');
           } catch(updErr) {
             console.warn('[Boutique] Sync erreur pour', dbp.slug, ':', updErr.message);
           }

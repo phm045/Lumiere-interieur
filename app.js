@@ -3960,7 +3960,11 @@ function getComments(articleId) {
       }
       // Admin modal cleanup
       var form = modal.querySelector('form');
-      if (form) form.reset();
+      if (form) {
+        form.reset();
+        // Remove dynamically added image URL options from edit mode
+        form.querySelectorAll('option[data-dynamic-url]').forEach(function(o) { o.remove(); });
+      }
       var msg = modal.querySelector('.admin-modal__message');
       if (msg) msg.hidden = true;
       var fileInput = modal.querySelector('input[type="file"]');
@@ -4386,12 +4390,13 @@ function getComments(articleId) {
       var toUpdate = productsFromDB.filter(function(dbp) {
         var demo = demoBySlug[dbp.slug];
         if (!demo) return false;
-        // Mettre à jour si le nom, le prix, la description, la catégorie ou l'image diffèrent
+        // Mettre à jour si le nom, le prix, la description ou la catégorie diffèrent
+        // NB: on ne compare plus l'image ici car si l'admin a uploadé une image custom
+        // (URL Supabase Storage), la synchro démo ne doit pas l'écraser
         return demo.name !== dbp.name
           || Math.abs(demo.price - (parseFloat(dbp.price) || 0)) > 0.01
           || demo.description.length !== (dbp.description || '').length
-          || demo.category !== dbp.category
-          || (demo.image_url && demo.image_url !== 'crystals-nature.png' && demo.image_url !== dbp.image_url);
+          || demo.category !== dbp.category;
       });
       if (toUpdate.length > 0) {
         console.log('[Boutique] Auto-sync:', toUpdate.length, 'produits à mettre à jour...');
@@ -4399,8 +4404,10 @@ function getComments(articleId) {
           var dbp = toUpdate[ui];
           var demo = demoBySlug[dbp.slug];
           var updFields = { name: demo.name, description: demo.description, price: demo.price, category: demo.category };
-          // Upload l'image dans Supabase Storage si c'est un fichier local
-          if (demo.image_url && demo.image_url !== 'crystals-nature.png' && demo.image_url.indexOf('http') !== 0) {
+          // Ne pas toucher à l'image si le produit en base a déjà une URL custom (uploadée par l'admin)
+          var dbHasCustomImage = dbp.image_url && dbp.image_url.indexOf('http') === 0;
+          if (!dbHasCustomImage && demo.image_url && demo.image_url !== 'crystals-nature.png' && demo.image_url.indexOf('http') !== 0) {
+            // Upload l'image démo dans Supabase Storage uniquement si le produit n'a pas déjà une image custom
             try {
               var imgResp = await fetch(demo.image_url);
               if (imgResp.ok) {
@@ -4420,9 +4427,8 @@ function getComments(articleId) {
               console.warn('[Boutique] Fetch image erreur:', imgErr.message);
               updFields.image_url = demo.image_url;
             }
-          } else if (demo.image_url && demo.image_url.indexOf('http') === 0) {
-            updFields.image_url = demo.image_url;
           }
+          // Si le produit en base a déjà une image custom, on la conserve (pas de updFields.image_url)
           try {
             await supabase.from('boutique_products').update(updFields).eq('slug', dbp.slug);
             console.log('[Boutique] Synchro OK:', dbp.slug, '(nom, prix, desc, catégorie, image)');
@@ -6556,12 +6562,31 @@ function getComments(articleId) {
       }
       var imgSelect = form.querySelector('[name="image_url"]');
       if (imgSelect) {
+        // Remove any previously added dynamic options from a prior edit
+        imgSelect.querySelectorAll('option[data-dynamic-url]').forEach(function(o) { o.remove(); });
         var opts = imgSelect.options;
         var found = false;
         for (var i = 0; i < opts.length; i++) {
           if (opts[i].value === a.image_url) { imgSelect.selectedIndex = i; found = true; break; }
         }
-        if (!found) imgSelect.selectedIndex = 0;
+        if (!found && a.image_url) {
+          // The image is a custom URL (e.g. uploaded to Supabase Storage) — add it as a selectable option
+          var customOpt = document.createElement('option');
+          customOpt.value = a.image_url;
+          customOpt.textContent = '\u2705 Image actuelle (téléchargée)';
+          customOpt.setAttribute('data-dynamic-url', 'true');
+          imgSelect.insertBefore(customOpt, imgSelect.firstChild);
+          imgSelect.selectedIndex = 0;
+        }
+      }
+      // Show current image preview when editing
+      if (a.image_url) {
+        var editPreview = document.getElementById('admin-blog-image-preview');
+        var editPreviewImg = document.getElementById('admin-blog-preview-img');
+        if (editPreview && editPreviewImg) {
+          editPreviewImg.src = a.image_url;
+          editPreview.style.display = 'block';
+        }
       }
       // Set edit mode flag
       form.setAttribute('data-edit-slug', slug);
@@ -6671,12 +6696,31 @@ function getComments(articleId) {
       if (visibleSelect) visibleSelect.value = (p.visible !== false) ? 'true' : 'false';
       var imgSelect = form.querySelector('[name="image_url"]');
       if (imgSelect) {
+        // Remove any previously added dynamic options from a prior edit
+        imgSelect.querySelectorAll('option[data-dynamic-url]').forEach(function(o) { o.remove(); });
         var opts = imgSelect.options;
         var found = false;
         for (var i = 0; i < opts.length; i++) {
           if (opts[i].value === p.image_url) { imgSelect.selectedIndex = i; found = true; break; }
         }
-        if (!found) imgSelect.selectedIndex = 0;
+        if (!found && p.image_url) {
+          // The image is a custom URL (e.g. uploaded to Supabase Storage) — add it as a selectable option
+          var customOpt = document.createElement('option');
+          customOpt.value = p.image_url;
+          customOpt.textContent = '\u2705 Image actuelle (téléchargée)';
+          customOpt.setAttribute('data-dynamic-url', 'true');
+          imgSelect.insertBefore(customOpt, imgSelect.firstChild);
+          imgSelect.selectedIndex = 0;
+        }
+      }
+      // Show current image preview when editing
+      if (p.image_url) {
+        var editPreview = document.getElementById('admin-boutique-image-preview');
+        var editPreviewImg = document.getElementById('admin-boutique-preview-img');
+        if (editPreview && editPreviewImg) {
+          editPreviewImg.src = p.image_url;
+          editPreview.style.display = 'block';
+        }
       }
 
       // Load and display existing extra images

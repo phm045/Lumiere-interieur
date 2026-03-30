@@ -4993,19 +4993,25 @@ function getComments(articleId) {
       /(?:^|\n)\s*\u2764\ufe0f?\s*/,  // ❤ emoji marker
     ];
     // Common section keywords in lithotherapy/wellness product descriptions
+    // Sections principales (deviennent des accordéons)
     var headingKeywords = [
-      'Plan physique', 'Plan \u00e9motionnel', 'Plan spirituel', 'Plan mental',
+      'Plan physique', 'Plan \u00e9motionnel et mental', 'Plan \u00e9motionnel', 'Plan spirituel', 'Plan mental',
+      'Propri\u00e9t\u00e9s', 'Vertus', 'Bienfaits',
+      'Associations courantes', 'Associations',
+      'Origine', 'Histoire', 'Composition', 'Caract\u00e9ristiques',
+      'Utilisation', 'Conseils', 'Mode d\'emploi', 'Comment utiliser',
+      'Avertissement', 'Disclaimer', 'Remarque', 'Note importante', 'Important'
+    ];
+    // Sous-items qui doivent rester dans la section parente (pas de section séparée)
+    var subItemKeywords = [
       'Syst\u00e8me musculaire', 'Syst\u00e8me immunitaire', 'Syst\u00e8me digestif', 'Syst\u00e8me nerveux',
-      'Circulation', 'D\u00e9toxification', 'Peau', 'Sommeil',
-      'Diffuseur naturel', 'Propri\u00e9t\u00e9s', 'Vertus', 'Bienfaits',
-      'Associations courantes', 'Associations', 'Chakra', 'Chakras',
-      'Signes astrologiques', 'Signe astrologique', 'Astrologie',
+      'Syst\u00e8me circulatoire', 'Syst\u00e8me reproducteur',
+      'Circulation', 'Circulation sanguine', 'D\u00e9toxification', 'Peau', 'Sommeil',
+      'Diffuseur naturel', 'Vitalit\u00e9', 'Ancrage corporel', 'Maux de t\u00eate',
+      'Chakra', 'Chakras', 'Signes astrologiques', 'Signe astrologique', 'Astrologie',
       'Entretien', 'Rechargement', 'Purification', 'Nettoyage',
       'Pierres compl\u00e9mentaires', 'Pierres associ\u00e9es', 'Combinaisons',
-      'Origine', 'Histoire', 'Composition', 'Caract\u00e9ristiques',
       'Dimensions', 'Taille', 'Mat\u00e9riaux', 'Mati\u00e8re',
-      'Utilisation', 'Conseils', 'Mode d\'emploi', 'Comment utiliser',
-      'Avertissement', 'Disclaimer', 'Remarque', 'Note importante', 'Important',
       '\u00c9l\u00e9ment', '\u00c9l\u00e9ments'
     ];
     // Build a regex that matches lines starting with known headings
@@ -5017,6 +5023,16 @@ function getComments(articleId) {
       escapedKeywords.join('|') +
       ')\\s*[:：\u2014\u2013\u2012-]?\\s*',
       'gi'
+    );
+    // Build a regex for sub-items (these stay inside the current section as bullet points)
+    var escapedSubItems = subItemKeywords.map(function(k) {
+      return k.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    });
+    var subItemRegex = new RegExp(
+      '^\\s*(?:[\u2728\ud83d\udd2e\u2764\ufe0f\ud83d\udc8e\u2b50\u2734\ufe0f\ud83c\udf1f\u2022\u25cf\u25cb\u2013\u2014\u27a4]\\s*)?(' +
+      escapedSubItems.join('|') +
+      ')\\s*[:：\u2014\u2013\u2012-]?\\s*',
+      'i'
     );
 
     var lines = text.split('\n');
@@ -5031,28 +5047,36 @@ function getComments(articleId) {
         if (currentSection) currentSection.lines.push('');
         continue;
       }
-      // Check if this line is a heading
+      // Check if this line is a main heading
       var isHeading = false;
       var headingTitle = '';
-      // Reset and test
       headingRegex.lastIndex = 0;
       var match = headingRegex.exec(line);
       if (match && match.index < 5) {
-        isHeading = true;
-        headingTitle = match[1].trim();
-        // Remainder of the line after the heading
-        var remainder = line.substring(match.index + match[0].length).trim();
-        introDone = true;
-        currentSection = { title: headingTitle, lines: [] };
-        if (remainder) currentSection.lines.push(remainder);
-        sections.push(currentSection);
+        // Vérifier que ce n'est pas un sub-item déguisé en heading
+        var subCheck = subItemRegex.exec(line);
+        if (subCheck) {
+          // C'est un sous-item : l'ajouter comme contenu de la section courante
+          if (currentSection) {
+            currentSection.lines.push('- ' + line);
+          } else if (!introDone) {
+            intro += (intro ? '\n' : '') + line;
+          }
+        } else {
+          isHeading = true;
+          headingTitle = match[1].trim();
+          var remainder = line.substring(match.index + match[0].length).trim();
+          introDone = true;
+          currentSection = { title: headingTitle, lines: [] };
+          if (remainder) currentSection.lines.push(remainder);
+          sections.push(currentSection);
+        }
       } else if (!introDone) {
         intro += (intro ? '\n' : '') + line;
         // After 2-3 sentences of intro, switch to collecting
         if (intro.split(/[.!?]/).length > 4) introDone = true;
       } else {
         if (!currentSection) {
-          // Create a generic first section
           currentSection = { title: 'Description', lines: [] };
           sections.push(currentSection);
         }

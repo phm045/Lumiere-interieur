@@ -259,7 +259,7 @@
 }
 
 .footer__brand .header__logo::before {
-  left: 50%;
+  left: 90px;
   top: 30%;
   width: 100px;
   height: 100px;

@@ -9171,7 +9171,6 @@ function getComments(articleId) {
 
   // ==================== RESTOCK ALERT SYSTEM ====================
   (function initRestockSystem() {
-    var EDGE_FN = 'https://dhbbwzpfwtdtdiuixrmq.supabase.co/functions/v1';
     var modal = document.getElementById('restock-modal');
     var formView = document.getElementById('restock-modal-form-view');
     var successView = document.getElementById('restock-modal-success-view');
@@ -9194,7 +9193,7 @@ function getComments(articleId) {
       if (successView) successView.hidden = true;
       if (errorEl) { errorEl.hidden = true; errorEl.textContent = ''; }
       if (emailInput) emailInput.value = '';
-      if (submitBtn) submitBtn.disabled = false;
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'M\u2019alerter du restock'; }
       if (modal) modal.classList.add('restock-modal--open');
       document.body.style.overflow = 'hidden';
     }
@@ -9232,43 +9231,41 @@ function getComments(articleId) {
         submitBtn.textContent = 'Inscription en cours...';
         errorEl.hidden = true;
 
-        // 1. Save to Supabase
+        // 1. Save to Supabase (insert, ignore duplicate error)
         var insertPromise = supabase
-          ? supabase.from('restock_subscribers').upsert(
-              { email: email, product_slug: currentSlug, product_name: currentName },
-              { onConflict: 'email,product_slug' }
-            )
+          ? supabase.from('restock_subscribers').insert(
+              { email: email, product_slug: currentSlug, product_name: currentName }
+            ).then(function(result) {
+              // Ignore unique constraint violation (23505) — means already subscribed
+              if (result.error && result.error.code !== '23505') {
+                throw new Error(result.error.message || 'Erreur lors de l\u2019inscription');
+              }
+              return result;
+            })
           : Promise.resolve({ error: null });
 
-        insertPromise.then(function(result) {
-          if (result.error) {
-            throw new Error(result.error.message || 'Erreur lors de l\u2019inscription');
-          }
-
+        insertPromise.then(function() {
           // 2. Send notification email to admin via Brevo proxy
-          return fetch(EDGE_FN + '/brevo-proxy', {
+          return fetch(BREVO_PROXY, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               endpoint: '/v3/smtp/email',
               method: 'POST',
               body: {
-                sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'noreply@lumiere-interieure.fr' },
+                sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
                 to: [{ email: 'philippe.medium45@gmail.com', name: 'Philippe' }],
                 subject: '\ud83d\udd14 Nouvelle alerte restock : ' + currentName,
-                htmlContent: '<div style="font-family:Segoe UI,sans-serif;max-width:500px;margin:0 auto;padding:20px;">' +
-                  '<div style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);padding:25px;border-radius:12px 12px 0 0;text-align:center;">' +
-                    '<h2 style="color:#d4a574;margin:0;font-weight:300;letter-spacing:1px;">Lumi\u00e8re Int\u00e9rieure</h2>' +
-                  '</div>' +
-                  '<div style="background:#fff;padding:25px;border:1px solid #eee;border-radius:0 0 12px 12px;">' +
-                    '<h3 style="color:#8b5e3c;margin:0 0 15px;">\ud83d\udd14 Nouvelle demande de restock</h3>' +
-                    '<p style="margin:8px 0;"><strong>Produit :</strong> ' + currentName + '</p>' +
-                    '<p style="margin:8px 0;"><strong>Email du client :</strong> ' + email + '</p>' +
-                    '<p style="margin:8px 0;"><strong>Date :</strong> ' + new Date().toLocaleString('fr-FR') + '</p>' +
-                    '<hr style="border:none;border-top:1px solid #eee;margin:20px 0;">' +
-                    '<p style="font-size:13px;color:#999;">Ce client souhaite \u00eatre pr\u00e9venu quand le produit sera de nouveau disponible.</p>' +
-                  '</div>' +
-                '</div>'
+                htmlContent: '<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px;color:#2c1f1a;">'
+                  + '<div style="text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e8e2d5;">'
+                  + '<strong style="color:#b5704a;font-size:18px;">Lumi\u00e8re Int\u00e9rieure</strong></div>'
+                  + '<h3 style="color:#8b5e3c;margin:0 0 15px;">\ud83d\udd14 Nouvelle demande d\u2019alerte restock</h3>'
+                  + '<p style="margin:8px 0;"><strong>Produit :</strong> ' + currentName + '</p>'
+                  + '<p style="margin:8px 0;"><strong>Email du client :</strong> ' + email + '</p>'
+                  + '<p style="margin:8px 0;"><strong>Date :</strong> ' + new Date().toLocaleString('fr-FR') + '</p>'
+                  + '<hr style="border:none;border-top:1px solid #e8e2d5;margin:24px 0;">'
+                  + '<p style="font-size:13px;color:#999;">Ce client souhaite \u00eatre pr\u00e9venu quand le produit sera de nouveau disponible.</p>'
+                  + '</div>'
               }
             })
           });
@@ -9276,7 +9273,6 @@ function getComments(articleId) {
           // Show success
           if (formView) formView.hidden = true;
           if (successView) successView.hidden = false;
-          // Auto close after 3 seconds
           setTimeout(closeModal, 3000);
         }).catch(function(err) {
           console.error('Restock subscribe error:', err);

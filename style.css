@@ -8373,3 +8373,258 @@ a, button, [role="button"] {
 [data-theme="dark"] .restock-modal__close:hover {
   color: #ccc;
 }
+
+
+/* ========================================
+   MOBILE OPTIMISATION — BOUTIQUE (2026-03-30)
+   Comprehensive mobile enhancements for the
+   boutique page and related components.
+   ======================================== */
+
+/* ─── 1. Nouveautés filters: ensure last tab is accessible ─── */
+@media (max-width: 768px) {
+  .nouveautes-filters {
+    /* Override the existing padding to add right space for the last item */
+    padding: 0 1rem 0.5rem;
+    mask-image: linear-gradient(to right, #000 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 85%, transparent 100%);
+  }
+  /* Add an invisible spacer after the last filter to ensure full scroll */
+  .nouveautes-filter:last-child {
+    margin-right: 2rem;
+  }
+}
+
+/* ─── 2. Nouveautés badge: prevent clipping on small thumbnails ─── */
+@media (max-width: 768px) {
+  .nouveautes-card__badge {
+    max-width: calc(100% - 0.7rem);
+    font-size: 0.48rem;
+    padding: 0.12rem 0.3rem;
+    letter-spacing: 0.01em;
+    gap: 0.15rem;
+    /* Hide the SVG icon on small thumbnails to save space */
+  }
+  .nouveautes-card__badge svg {
+    display: none;
+  }
+}
+
+/* ─── 3. Boutique filters: horizontal scroll on mobile ─── */
+@media (max-width: 768px) {
+  .boutique-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.75rem;
+    position: relative;
+  }
+  .boutique-filters::-webkit-scrollbar {
+    display: none;
+  }
+  .boutique-filters__label {
+    flex-shrink: 0;
+  }
+  .boutique-filter-btn {
+    flex-shrink: 0;
+  }
+}
+
+/* ─── 4. Boutique product cards: mobile polish ─── */
+@media (max-width: 768px) {
+  .boutique-product-card {
+    border-radius: 0.625rem;
+  }
+  .boutique-product-card__image {
+    aspect-ratio: 4/3;
+  }
+  .boutique-product-card__content {
+    padding: 1rem 0.875rem;
+  }
+  .boutique-product-card__name {
+    font-size: 1rem;
+    margin: 0.35rem 0;
+  }
+  .boutique-product-card__desc {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  /* Stack price + button when space is tight */
+  .boutique-product-card__footer {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .boutique-product-card__price {
+    font-size: 1.05rem;
+  }
+  .boutique-product-card__add-cart {
+    flex: 1;
+    justify-content: center;
+    padding: 0.6rem 1rem;
+    min-height: 44px;
+    font-size: 0.85rem;
+  }
+  /* Restock button same treatment */
+  .boutique-product-card__restock-btn {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+  }
+  /* Stock badge smaller on mobile */
+  .boutique-product-card__stock-badge {
+    font-size: 0.62rem;
+    padding: 0.2rem 0.5rem;
+  }
+  /* Disable hover transform on touch devices */
+  .boutique-product-card:hover {
+    transform: none;
+  }
+}
+
+/* ─── 5. Boutique suggestions: improve mobile sizing ─── */
+@media (max-width: 768px) {
+  .boutique-suggestions {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+  }
+  .boutique-suggestions__header {
+    margin-bottom: var(--space-4);
+  }
+  .boutique-suggestions__title {
+    font-size: var(--text-base);
+  }
+  .boutique-suggestion-card {
+    flex: 0 0 160px;
+  }
+  .boutique-suggestion-card__body {
+    padding: 0.6rem;
+  }
+  .boutique-suggestion-card__name {
+    font-size: 0.8rem;
+  }
+  .boutique-suggestion-card__price {
+    font-size: 0.82rem;
+  }
+}
+
+/* ─── 6. Cart FAB: safe positioning on mobile ─── */
+@media (max-width: 768px) {
+  .cart-fab {
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    right: 1rem;
+    width: 50px;
+    height: 50px;
+  }
+  /* Ensure last product card isn't hidden behind FAB */
+  .boutique-products-grid {
+    padding-bottom: 1rem;
+  }
+}
+
+/* ─── 7. Product overlay: better mobile experience ─── */
+@media (max-width: 768px) {
+  .product-overlay {
+    padding: 0;
+  }
+  .product-overlay__body {
+    border-radius: 0.75rem;
+  }
+  .product-overlay__gallery {
+    border-radius: 0.75rem 0.75rem 0 0;
+  }
+  .product-overlay__name {
+    font-size: 1.15rem;
+  }
+  .product-overlay__price {
+    font-size: 1.25rem;
+  }
+  .product-overlay__add-cart,
+  .product-overlay__add-cart.btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    font-size: 0.95rem;
+  }
+  .product-overlay__desc-sections {
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+  .product-overlay__close {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ─── 8. Boutique hero: tighter on mobile ─── */
+@media (max-width: 768px) {
+  #boutique .services-hero {
+    padding-block: clamp(var(--space-8), 8vw, var(--space-16));
+  }
+  #boutique .section-header__title {
+    font-size: var(--text-xl);
+  }
+  #boutique .section-header__desc {
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    max-width: 90%;
+    margin-inline: auto;
+  }
+}
+
+/* ─── 9. Cart drawer: full-width on mobile ─── */
+@media (max-width: 768px) {
+  .cart-drawer__panel {
+    width: 100vw;
+  }
+  .cart-drawer__items {
+    padding: 0.75rem 1rem;
+  }
+  .cart-drawer__footer {
+    padding: 1rem;
+  }
+  .cart-item__img {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* ─── 10. Newsletter in boutique: touch-friendly ─── */
+@media (max-width: 768px) {
+  .boutique-coming .newsletter-inline {
+    max-width: 100%;
+    padding: 0;
+  }
+  .boutique-coming .newsletter-form__input {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+  .boutique-coming .newsletter-form__btn {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+}
+
+/* ─── 11. Extra-small screens (iPhone SE, 375px and below) ─── */
+@media (max-width: 380px) {
+  .boutique-product-card__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .boutique-product-card__add-cart {
+    width: 100%;
+  }
+  .boutique-filter-btn {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.65rem;
+  }
+  .boutique-product-card__content {
+    padding: 0.75rem;
+  }
+  .product-overlay__info {
+    padding: 1.25rem 1rem;
+  }
+}

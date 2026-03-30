@@ -4075,8 +4075,9 @@ function getComments(articleId) {
           '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>' +
           ' Ajouter au panier' +
         '</button>'
-      : '<button class="boutique-product-card__add-cart boutique-product-card__add-cart--disabled" type="button" disabled>' +
-          '\u00c9puis\u00e9' +
+      : '<button class="boutique-product-card__restock-btn" type="button" data-restock-btn data-product-slug="' + data.slug + '" data-product-name="' + sanitizeForHtml(data.name) + '">' +
+          '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' +
+          ' M\u2019alerter du restock' +
         '</button>';
 
     card.innerHTML =
@@ -5273,9 +5274,13 @@ function getComments(articleId) {
         addCartBtn.classList.remove('product-overlay__add-cart--disabled');
         addCartBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:0.4rem"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Ajouter au panier';
       } else {
-        addCartBtn.disabled = true;
-        addCartBtn.classList.add('product-overlay__add-cart--disabled');
-        addCartBtn.innerHTML = '\u00c9puis\u00e9';
+        addCartBtn.disabled = false;
+        addCartBtn.classList.remove('product-overlay__add-cart--disabled');
+        addCartBtn.className = 'restock-btn';
+        addCartBtn.setAttribute('data-restock-btn', '');
+        addCartBtn.setAttribute('data-product-slug', productData.slug);
+        addCartBtn.setAttribute('data-product-name', productData.name);
+        addCartBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:middle;margin-right:0.4rem"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>M\u2019alerter du restock';
       }
     }
 
@@ -9163,5 +9168,125 @@ function getComments(articleId) {
 
   // Vérifier au chargement de la page
   verifierAbsenceEnCours();
+
+  // ==================== RESTOCK ALERT SYSTEM ====================
+  (function initRestockSystem() {
+    var EDGE_FN = 'https://dhbbwzpfwtdtdiuixrmq.supabase.co/functions/v1';
+    var modal = document.getElementById('restock-modal');
+    var formView = document.getElementById('restock-modal-form-view');
+    var successView = document.getElementById('restock-modal-success-view');
+    var form = document.getElementById('restock-form');
+    var emailInput = document.getElementById('restock-email');
+    var submitBtn = document.getElementById('restock-submit-btn');
+    var errorEl = document.getElementById('restock-error');
+    var productNameEl = document.getElementById('restock-modal-product-name');
+    var closeBtn = modal ? modal.querySelector('.restock-modal__close') : null;
+    var backdrop = modal ? modal.querySelector('.restock-modal__backdrop') : null;
+
+    var currentSlug = '';
+    var currentName = '';
+
+    function openModal(slug, name) {
+      currentSlug = slug;
+      currentName = name;
+      if (productNameEl) productNameEl.textContent = name;
+      if (formView) formView.hidden = false;
+      if (successView) successView.hidden = true;
+      if (errorEl) { errorEl.hidden = true; errorEl.textContent = ''; }
+      if (emailInput) emailInput.value = '';
+      if (submitBtn) submitBtn.disabled = false;
+      if (modal) modal.classList.add('restock-modal--open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeModal() {
+      if (modal) modal.classList.remove('restock-modal--open');
+      document.body.style.overflow = '';
+    }
+
+    // Delegate click on restock buttons (works for dynamically created cards)
+    document.addEventListener('click', function(e) {
+      var btn = e.target.closest('[data-restock-btn]');
+      if (btn) {
+        e.preventDefault();
+        e.stopPropagation();
+        var slug = btn.getAttribute('data-product-slug');
+        var name = btn.getAttribute('data-product-name');
+        if (slug && name) openModal(slug, name);
+      }
+    });
+
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (backdrop) backdrop.addEventListener('click', closeModal);
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && modal && modal.classList.contains('restock-modal--open')) closeModal();
+    });
+
+    if (form) {
+      form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        var email = (emailInput.value || '').trim();
+        if (!email) return;
+
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Inscription en cours...';
+        errorEl.hidden = true;
+
+        // 1. Save to Supabase
+        var insertPromise = supabase
+          ? supabase.from('restock_subscribers').upsert(
+              { email: email, product_slug: currentSlug, product_name: currentName },
+              { onConflict: 'email,product_slug' }
+            )
+          : Promise.resolve({ error: null });
+
+        insertPromise.then(function(result) {
+          if (result.error) {
+            throw new Error(result.error.message || 'Erreur lors de l\u2019inscription');
+          }
+
+          // 2. Send notification email to admin via Brevo proxy
+          return fetch(EDGE_FN + '/brevo-proxy', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              endpoint: '/v3/smtp/email',
+              method: 'POST',
+              body: {
+                sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'noreply@lumiere-interieure.fr' },
+                to: [{ email: 'philippe.medium45@gmail.com', name: 'Philippe' }],
+                subject: '\ud83d\udd14 Nouvelle alerte restock : ' + currentName,
+                htmlContent: '<div style="font-family:Segoe UI,sans-serif;max-width:500px;margin:0 auto;padding:20px;">' +
+                  '<div style="background:linear-gradient(135deg,#1a1a2e,#2d1b4e);padding:25px;border-radius:12px 12px 0 0;text-align:center;">' +
+                    '<h2 style="color:#d4a574;margin:0;font-weight:300;letter-spacing:1px;">Lumi\u00e8re Int\u00e9rieure</h2>' +
+                  '</div>' +
+                  '<div style="background:#fff;padding:25px;border:1px solid #eee;border-radius:0 0 12px 12px;">' +
+                    '<h3 style="color:#8b5e3c;margin:0 0 15px;">\ud83d\udd14 Nouvelle demande de restock</h3>' +
+                    '<p style="margin:8px 0;"><strong>Produit :</strong> ' + currentName + '</p>' +
+                    '<p style="margin:8px 0;"><strong>Email du client :</strong> ' + email + '</p>' +
+                    '<p style="margin:8px 0;"><strong>Date :</strong> ' + new Date().toLocaleString('fr-FR') + '</p>' +
+                    '<hr style="border:none;border-top:1px solid #eee;margin:20px 0;">' +
+                    '<p style="font-size:13px;color:#999;">Ce client souhaite \u00eatre pr\u00e9venu quand le produit sera de nouveau disponible.</p>' +
+                  '</div>' +
+                '</div>'
+              }
+            })
+          });
+        }).then(function() {
+          // Show success
+          if (formView) formView.hidden = true;
+          if (successView) successView.hidden = false;
+          // Auto close after 3 seconds
+          setTimeout(closeModal, 3000);
+        }).catch(function(err) {
+          console.error('Restock subscribe error:', err);
+          errorEl.textContent = err.message || 'Une erreur est survenue. Veuillez r\u00e9essayer.';
+          errorEl.hidden = false;
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'M\u2019alerter du restock';
+        });
+      });
+    }
+  })();
 
 })();

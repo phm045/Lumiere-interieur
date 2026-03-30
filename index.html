@@ -3087,6 +3087,32 @@ Cal("init", "consultations", { origin: "https://app.cal.eu" });
   </div>
 </div>
 
+<!-- ==================== MODALE ALERTE RESTOCK ==================== -->
+<div id="restock-modal" class="restock-modal">
+  <div class="restock-modal__backdrop"></div>
+  <div class="restock-modal__content">
+    <button class="restock-modal__close" aria-label="Fermer">&times;</button>
+    <div id="restock-modal-form-view">
+      <div class="restock-modal__icon">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8b5e3c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </div>
+      <h3 class="restock-modal__title">Alerte de réapprovisionnement</h3>
+      <p class="restock-modal__product-name" id="restock-modal-product-name"></p>
+      <p class="restock-modal__text">Recevez un email dès que ce produit sera de nouveau disponible.</p>
+      <form class="restock-modal__form" id="restock-form">
+        <input type="email" class="restock-modal__input" id="restock-email" placeholder="Votre adresse email" required>
+        <button type="submit" class="restock-modal__submit" id="restock-submit-btn">M'alerter du restock</button>
+        <p class="restock-modal__error" id="restock-error" hidden></p>
+      </form>
+    </div>
+    <div id="restock-modal-success-view" class="restock-modal__success" hidden>
+      <div class="restock-modal__success-icon">&#10003;</div>
+      <h3 class="restock-modal__success-title">Inscription confirmée !</h3>
+      <p class="restock-modal__success-text">Vous serez prévenu(e) par email dès que ce produit sera de nouveau en stock.</p>
+    </div>
+  </div>
+</div>
+
 <!-- ==================== OVERLAY FICHE PRODUIT ==================== -->
 <div id="product-detail-overlay" class="product-overlay" hidden>
   <div class="product-overlay__backdrop"></div>

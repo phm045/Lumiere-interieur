@@ -8163,3 +8163,213 @@ a, button, [role="button"] {
   font-family: var(--font-body);
   line-height: 1.4;
 }
+
+/* ==================== RESTOCK ALERT SYSTEM ==================== */
+.restock-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #8b5e3c, #d4a574);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+.restock-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.restock-btn svg {
+  flex-shrink: 0;
+}
+/* Restock button on product cards (replaces disabled add-to-cart) */
+.boutique-product-card__restock-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #8b5e3c, #d4a574);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+.boutique-product-card__restock-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Restock Modal */
+.restock-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+.restock-modal--open {
+  opacity: 1;
+  visibility: visible;
+}
+.restock-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+.restock-modal__content {
+  position: relative;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  transform: translateY(20px);
+  transition: transform 0.3s;
+}
+.restock-modal--open .restock-modal__content {
+  transform: translateY(0);
+}
+.restock-modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #999;
+  line-height: 1;
+  padding: 0.25rem;
+}
+.restock-modal__close:hover {
+  color: #333;
+}
+.restock-modal__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(139, 94, 60, 0.12), rgba(212, 165, 116, 0.12));
+  margin-bottom: 1rem;
+}
+.restock-modal__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 0.4rem;
+}
+.restock-modal__product-name {
+  font-size: 0.9rem;
+  color: #8b5e3c;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+.restock-modal__text {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.5;
+  margin: 0 0 1.2rem;
+}
+.restock-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.restock-modal__input {
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #e0d8d0;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.restock-modal__input:focus {
+  border-color: #8b5e3c;
+}
+.restock-modal__submit {
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #8b5e3c, #d4a574);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.restock-modal__submit:hover {
+  opacity: 0.9;
+}
+.restock-modal__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.restock-modal__success {
+  text-align: center;
+  padding: 1rem 0;
+}
+.restock-modal__success-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+.restock-modal__success-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #3a7a38;
+  margin: 0 0 0.5rem;
+}
+.restock-modal__success-text {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.5;
+  margin: 0;
+}
+.restock-modal__error {
+  font-size: 0.82rem;
+  color: #a33a30;
+  margin: 0;
+  text-align: center;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .restock-modal__content {
+  background: #1a1a2e;
+}
+[data-theme="dark"] .restock-modal__title {
+  color: #f0ebe4;
+}
+[data-theme="dark"] .restock-modal__text {
+  color: #b0a898;
+}
+[data-theme="dark"] .restock-modal__input {
+  background: #2d2d44;
+  border-color: #3d3d55;
+  color: #f0ebe4;
+}
+[data-theme="dark"] .restock-modal__close {
+  color: #777;
+}
+[data-theme="dark"] .restock-modal__close:hover {
+  color: #ccc;
+}

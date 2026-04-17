@@ -237,7 +237,7 @@
 
 .header__nav a,
 .nav-auth {
-  white-space: nowrap;
+  white-space: nowrap !important;
 }
 
 @media (max-width: 768px) {

@@ -52,10 +52,6 @@
       <img src="./logo-horizontal.png" alt="Une voix intérieure" class="header__logo-img">
     </a>
 
-    <button class="hamburger" aria-label="Menu" aria-expanded="false">
-      <span></span><span></span><span></span>
-    </button>
-
     <nav class="header__nav" role="navigation" aria-label="Navigation principale">
       <a href="#accueil" class="active" data-page="accueil">Accueil</a>
       <a href="#services" data-page="services">Services</a>
@@ -64,18 +60,28 @@
       <a href="#boutique" data-page="boutique">Boutique</a>
       <a href="#blog" data-page="blog">Blog</a>
       <a href="#contact" data-page="contact">Contact</a>
-      <a href="#connexion" data-page="connexion" class="nav-auth nav-auth--guest" id="nav-connexion">Se connecter</a>
-      <a href="#mon-compte" data-page="mon-compte" class="nav-auth nav-auth--client" id="nav-compte" hidden>Mon compte</a>
-      <button class="cart-toggle" id="cart-toggle" aria-label="Panier" title="Panier">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+    </nav>
+
+    <div class="header__actions">
+      <a href="#connexion" data-page="connexion" class="nav-auth nav-auth--guest header__icon-btn" id="nav-connexion" aria-label="Se connecter" title="Se connecter">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      </a>
+      <a href="#mon-compte" data-page="mon-compte" class="nav-auth nav-auth--client header__icon-btn" id="nav-compte" aria-label="Mon compte" title="Mon compte" hidden>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-8 8-8s8 3.6 8 8"/></svg>
+      </a>
+      <button class="cart-toggle header__icon-btn" id="cart-toggle" aria-label="Panier" title="Panier">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         <span class="cart-toggle__count" id="cart-count" hidden>0</span>
       </button>
-      <button class="theme-toggle" data-theme-toggle aria-label="Changer le thème">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <button class="theme-toggle header__icon-btn" data-theme-toggle aria-label="Changer le thème">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
         </svg>
       </button>
-    </nav>
+      <button class="hamburger" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
   </div>
 </header>
 

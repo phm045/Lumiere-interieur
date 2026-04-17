@@ -1,7 +1,7 @@
 {
   "name": "lumiere-interieur",
   "version": "1.0.0",
-  "description": "Lumière Intérieure — Site web avec authentification client",
+  "description": "Une voix intérieure — Site web avec authentification client",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

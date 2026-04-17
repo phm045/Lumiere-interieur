@@ -139,7 +139,7 @@ async function demarrer() {
 
   // --- Démarrage du serveur ---
   app.listen(PORT, () => {
-    console.log(`\n✦ Lumière Intérieure — Serveur démarré`);
+    console.log(`\n✦ Une voix intérieure — Serveur démarré`);
     console.log(`  → http://localhost:${PORT}`);
     console.log(`  → Environnement : ${process.env.NODE_ENV || 'development'}\n`);
   });

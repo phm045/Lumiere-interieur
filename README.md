@@ -1,6 +1,6 @@
-# Lumière Intérieure
+# Une voix intérieure
 
-Site web du salon de bien-être Lumière Intérieure avec système d'authentification client.
+Site web du salon de bien-être Une voix intérieure avec système d'authentification client.
 
 ## Prérequis
 

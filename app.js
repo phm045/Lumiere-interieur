@@ -6392,6 +6392,7 @@ function getComments(articleId) {
       if (tabId === 'newsletter') chargerAdminNewsletter();
       if (tabId === 'temoignages') chargerAdminTemoignages();
       if (tabId === 'visiteurs') chargerAdminVisiteurs();
+      if (tabId === 'therapie') chargerAdminTherapie();
     });
   })();
 
@@ -9424,5 +9425,151 @@ function getComments(articleId) {
       });
     }
   })();
+
+  // ============================================================
+  // ADMIN — Thérapie : visibilité des services
+  // ============================================================
+
+  var THERAPIE_NOMS = {
+    'soin-energetique': 'Soin énergétique',
+    'accompagnement-holistique': 'Accompagnement holistique'
+  };
+
+  async function appliquerVisibiliteTherapie() {
+    if (!supabase) return;
+    try {
+      var result = await supabase.from('therapie_services').select('slug, visible');
+      if (result.error) { console.warn('therapie_services:', result.error.message); return; }
+      var rows = result.data || [];
+      rows.forEach(function(row) {
+        var card = document.querySelector('[data-therapie-slug="' + row.slug + '"]');
+        if (!card) return;
+        if (row.visible) {
+          card.removeAttribute('hidden');
+        } else {
+          card.setAttribute('hidden', '');
+        }
+      });
+    } catch(e) {
+      console.warn('appliquerVisibiliteTherapie:', e);
+    }
+  }
+
+  async function chargerAdminTherapie() {
+    var container = document.getElementById('therapie-services-list');
+    var msgEl = document.getElementById('msg-therapie');
+    var loadingEl = document.getElementById('therapie-loading');
+    if (!container) return;
+    if (loadingEl) { loadingEl.hidden = false; loadingEl.textContent = 'Chargement…'; }
+    if (msgEl) msgEl.hidden = true;
+    try {
+      if (!supabase) throw new Error('Supabase non initialisé');
+      var result = await supabase.from('therapie_services').select('slug, nom, visible').order('slug');
+      if (result.error) throw result.error;
+      var rows = result.data || [];
+      if (loadingEl) loadingEl.hidden = true;
+      var existing = container.querySelectorAll('.therapie-admin-row');
+      existing.forEach(function(el) { el.remove(); });
+      if (rows.length === 0) {
+        container.innerHTML = '<p class="dispo-liste__vide">Aucun service trouvé dans la base.</p>';
+        return;
+      }
+      rows.forEach(function(row) {
+        var rowEl = document.createElement('div');
+        rowEl.className = 'therapie-admin-row';
+        rowEl.style.cssText = 'display:flex;align-items:center;justify-content:space-between;padding:.85rem 1rem;border-radius:8px;background:var(--color-surface-2,rgba(255,255,255,.06));gap:1rem;';
+        var nomEl = document.createElement('span');
+        nomEl.textContent = row.nom || THERAPIE_NOMS[row.slug] || row.slug;
+        nomEl.style.cssText = 'font-size:.95rem;font-weight:500;';
+        var toggleWrap = document.createElement('label');
+        toggleWrap.className = 'dispo-toggle';
+        toggleWrap.title = row.visible ? 'Visible — cliquer pour masquer' : 'Masqué — cliquer pour afficher';
+        var chk = document.createElement('input');
+        chk.type = 'checkbox';
+        chk.className = 'dispo-toggle__input';
+        chk.checked = !!row.visible;
+        chk.dataset.therapieSlug = row.slug;
+        var slider = document.createElement('span');
+        slider.className = 'dispo-toggle__slider';
+        toggleWrap.appendChild(chk);
+        toggleWrap.appendChild(slider);
+        var badge = document.createElement('span');
+        badge.className = 'admin-badge ' + (row.visible ? 'admin-badge--success' : 'admin-badge--warning');
+        badge.textContent = row.visible ? 'Visible' : 'Masqué';
+        badge.style.cssText = 'margin-left:.5rem;font-size:.78rem;min-width:60px;text-align:center;';
+        var right = document.createElement('div');
+        right.style.cssText = 'display:flex;align-items:center;gap:.6rem;';
+        right.appendChild(toggleWrap);
+        right.appendChild(badge);
+        (function(currentRow, currentChk, currentBadge, currentToggleWrap) {
+          currentChk.addEventListener('change', async function() {
+            var newVisible = currentChk.checked;
+            currentChk.disabled = true;
+            currentBadge.textContent = '…';
+            var ok = await toggleTherapieService(currentRow.slug, newVisible, msgEl);
+            currentChk.disabled = false;
+            if (ok) {
+              currentBadge.textContent = newVisible ? 'Visible' : 'Masqué';
+              currentBadge.className = 'admin-badge ' + (newVisible ? 'admin-badge--success' : 'admin-badge--warning');
+              currentBadge.style.cssText = 'margin-left:.5rem;font-size:.78rem;min-width:60px;text-align:center;';
+              currentToggleWrap.title = newVisible ? 'Visible — cliquer pour masquer' : 'Masqué — cliquer pour afficher';
+            } else {
+              currentChk.checked = !newVisible;
+              currentBadge.textContent = !newVisible ? 'Visible' : 'Masqué';
+            }
+          });
+        })(row, chk, badge, toggleWrap);
+        rowEl.appendChild(nomEl);
+        rowEl.appendChild(right);
+        container.appendChild(rowEl);
+      });
+    } catch(e) {
+      if (loadingEl) loadingEl.hidden = true;
+      container.innerHTML = '<p class="dispo-liste__vide" style="color:var(--color-error,#e55);">' + (e.message || 'Erreur de chargement') + '</p>';
+      console.error('chargerAdminTherapie:', e);
+    }
+  }
+
+  async function toggleTherapieService(slug, visible, msgEl) {
+    try {
+      var result = await supabase
+        .from('therapie_services')
+        .upsert(
+          { slug: slug, nom: THERAPIE_NOMS[slug] || slug, visible: visible, updated_at: new Date().toISOString() },
+          { onConflict: 'slug' }
+        );
+      if (result.error) throw result.error;
+      var card = document.querySelector('[data-therapie-slug="' + slug + '"]');
+      if (card) {
+        if (visible) { card.removeAttribute('hidden'); }
+        else { card.setAttribute('hidden', ''); }
+      }
+      if (msgEl) {
+        msgEl.hidden = false;
+        msgEl.textContent = (THERAPIE_NOMS[slug] || slug) + ' : ' + (visible ? 'rendu visible' : 'masqué') + '.';
+        msgEl.className = 'dispo-message dispo-message--success';
+        setTimeout(function() { if (msgEl) msgEl.hidden = true; }, 2500);
+      }
+      return true;
+    } catch(e) {
+      console.error('toggleTherapieService:', e);
+      if (msgEl) {
+        msgEl.hidden = false;
+        msgEl.textContent = 'Erreur : ' + (e.message || 'impossible de mettre à jour');
+        msgEl.className = 'dispo-message dispo-message--error';
+        setTimeout(function() { if (msgEl) msgEl.hidden = true; }, 3500);
+      }
+      return false;
+    }
+  }
+
+  (function() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', appliquerVisibiliteTherapie);
+    } else {
+      appliquerVisibiliteTherapie();
+    }
+  })();
+
 
 })();

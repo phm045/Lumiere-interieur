@@ -653,7 +653,7 @@
       <div class="container">
         <div class="services-grid">
 
-          <div class="service-card fade-in" hidden>
+          <div class="service-card fade-in" data-therapie-slug="soin-energetique" hidden>
             <div class="service-card__content">
               <h3>Soin énergétique</h3>
               <p>Un soin en profondeur pour rééquilibrer vos centres énergétiques. Par le ressenti et l'imposition des mains, je travaille sur les blocages qui perturbent votre harmonie intérieure. Idéal pour soulager le stress, la fatigue émotionnelle ou les tensions accumulées.</p>
@@ -670,7 +670,7 @@
             </div>
           </div>
 
-          <div class="service-card fade-in" hidden>
+          <div class="service-card fade-in" data-therapie-slug="accompagnement-holistique" hidden>
             <div class="service-card__content">
               <h3>Accompagnement holistique</h3>
               <p>Un suivi personnalisé qui combine guidance intuitive, travail énergétique et outils de développement personnel. Ensemble, nous identifions les schémas répétitifs et les croyances limitantes pour libérer votre potentiel et retrouver votre alignement.</p>
@@ -1980,6 +1980,10 @@
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
               <span>Disponibilités</span><span class="admin-tab-badge" id="badge-disponibilites" hidden></span>
             </button>
+            <button class="admin-dash-tab" data-admin-tab="therapie">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Thérapie</span>
+            </button>
           </div>
 
           <!-- TAB: Dashboard Home -->
@@ -2547,6 +2551,16 @@
               </div>
             </div>
 
+          </div>
+
+          <!-- TAB: Thérapie -->
+          <div class="admin-tab-content" id="admin-tab-therapie">
+            <h3 class="admin-section-title">Visibilité des services thérapie</h3>
+            <p style="margin-bottom:1.25rem;font-size:.93rem;color:var(--color-text-muted)">Activez ou désactivez la visibilité de chaque service sur le site pour les visiteurs.</p>
+            <div id="therapie-services-list" style="display:flex;flex-direction:column;gap:.85rem">
+              <p class="dispo-liste__vide" id="therapie-loading">Chargement…</p>
+            </div>
+            <div class="dispo-message" id="msg-therapie" hidden></div>
           </div>
 
           <!-- Admin Logout -->

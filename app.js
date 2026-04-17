@@ -1423,9 +1423,10 @@ function getComments(articleId) {
 
       if (!prenom || !email) return;
 
-      // Cherche .newsletter-success dans le conteneur parent proche (jusqu'à 3 niveaux)
-      var successEl = form.parentElement.querySelector('.newsletter-success')
-                   || (form.parentElement.parentElement && form.parentElement.parentElement.querySelector('.newsletter-success'))
+      // Cherche le div de confirmation dans le conteneur parent proche (jusqu'à 3 niveaux).
+      // Supporte .newsletter-success (accueil, boutique) ET .nl-float__success (FAB popup).
+      var successEl = form.parentElement.querySelector('.newsletter-success, .nl-float__success')
+                   || (form.parentElement.parentElement && form.parentElement.parentElement.querySelector('.newsletter-success, .nl-float__success'))
                    || null;
       var submitBtn = form.querySelector('button[type="submit"]');
       var btnOriginalHTML = submitBtn ? submitBtn.innerHTML : '';

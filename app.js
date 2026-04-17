@@ -950,9 +950,7 @@
   var closeBtn = overlay ? overlay.querySelector('.blog-overlay__close') : null;
   var backdrop = overlay ? overlay.querySelector('.blog-overlay__backdrop') : null;
 
-  // CountAPI supprimé — Supabase est le seul système de comptage (blog_views / blog_likes)
-
-  // --- Likes: Supabase-backed with CountAPI fallback ---
+  // --- Likes: Supabase uniquement ---
   var likesCache = {};
   function hasLiked(articleId) {
     try { return safeLocal.getItem('blog_liked_' + articleId) === '1'; }
@@ -962,24 +960,16 @@
     try { safeLocal.setItem('blog_liked_' + articleId, val ? '1' : '0'); } catch(e) {}
   }
   function fetchLikes(articleId, callback) {
-    // Try Supabase first
     if (supabase) {
       supabase.from('blog_likes').select('count').eq('article_id', articleId).maybeSingle().then(function(result) {
         if (!result.error && result.data && result.data.count !== undefined) {
           likesCache[articleId] = parseInt(result.data.count, 10) || 0;
-          if (callback) callback(likesCache[articleId]);
-        } else {
-          // Fallback to CountAPI
-          fetchLikesFromCountAPI(articleId, callback);
         }
-      }).catch(function() { fetchLikesFromCountAPI(articleId, callback); });
+        if (callback) callback(likesCache[articleId] || 0);
+      }).catch(function() { if (callback) callback(likesCache[articleId] || 0); });
     } else {
-      fetchLikesFromCountAPI(articleId, callback);
+      if (callback) callback(likesCache[articleId] || 0);
     }
-  }
-  // CountAPI hors-service — fallback silencieux
-  function fetchLikesFromCountAPI(articleId, callback) {
-    if (callback) callback(likesCache[articleId] || 0);
   }
   function addLike(articleId, callback) {
     // Increment in Supabase (upsert)
@@ -1002,25 +992,19 @@
   function saveLikes(articleId, data) {
     setLiked(articleId, data.liked);
   }
-  // --- Views: Supabase-backed with CountAPI fallback ---
+  // --- Views: Supabase uniquement ---
   var viewsCache = {};
   function fetchViews(articleId, callback) {
     if (supabase) {
       supabase.from('blog_views').select('count').eq('article_id', articleId).maybeSingle().then(function(result) {
         if (!result.error && result.data && result.data.count !== undefined) {
           viewsCache[articleId] = parseInt(result.data.count, 10) || 0;
-          if (callback) callback(viewsCache[articleId]);
-        } else {
-          fetchViewsFromCountAPI(articleId, callback);
         }
-      }).catch(function() { fetchViewsFromCountAPI(articleId, callback); });
+        if (callback) callback(viewsCache[articleId] || 0);
+      }).catch(function() { if (callback) callback(viewsCache[articleId] || 0); });
     } else {
-      fetchViewsFromCountAPI(articleId, callback);
+      if (callback) callback(viewsCache[articleId] || 0);
     }
-  }
-  // CountAPI hors-service — fallback silencieux
-  function fetchViewsFromCountAPI(articleId, callback) {
-    if (callback) callback(viewsCache[articleId] || 0);
   }
   function addView(articleId, callback) {
     if (supabase) {
@@ -1036,8 +1020,6 @@
       if (callback) callback(viewsCache[articleId] || 0);
     }
   }
-  // addViewCountAPI supprimé — CountAPI hors-service
-  function addViewCountAPI(articleId, callback) { if (callback) callback(viewsCache[articleId] || 0); }
   function updateCardStats(articleId) {
     var card = document.querySelector('.blog-card[data-article="' + articleId + '"]');
     if (!card) return;

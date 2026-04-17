@@ -47,7 +47,7 @@
   const toggle = document.querySelector('[data-theme-toggle]');
   const root = document.documentElement;
   var savedTheme = localStorage.getItem('uviTheme');
-  let theme = savedTheme ? savedTheme : (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  let theme = savedTheme ? savedTheme : 'light';
   root.setAttribute('data-theme', theme);
   updateToggleIcon();
 

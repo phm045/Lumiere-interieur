@@ -3745,16 +3745,41 @@ function getComments(articleId) {
     if (cartBtn) {
       cartBtn.addEventListener('click', function(e) {
         e.stopPropagation();
-        // Appeler openCartDrawer si elle existe
+        // Sur mobile : afficher le popup info relevé d'abord
+        var isMobile = window.innerWidth <= 640;
+        if (isMobile) {
+          var popup = document.getElementById('releve-popup');
+          if (popup) { popup.hidden = false; return; }
+        }
+        // Desktop ou si popup absent : ouvrir le panier normalement
         if (typeof openCartDrawer === 'function') {
           openCartDrawer();
         } else {
-          // Fallback : simuler clic sur cart-toggle de la nav
           var navCart = document.getElementById('cart-toggle');
           if (navCart) navCart.click();
         }
       });
     }
+
+    // ─── Popup relevé bancaire — fermeture ───
+    (function initRelevePopup() {
+      var popup = document.getElementById('releve-popup');
+      if (!popup) return;
+      function closePopup() { popup.hidden = true; }
+      var btnClose = document.getElementById('releve-popup-close');
+      var btnOk = document.getElementById('releve-popup-ok');
+      var overlay = document.getElementById('releve-popup-overlay');
+      if (btnClose) btnClose.addEventListener('click', closePopup);
+      if (btnOk) btnOk.addEventListener('click', closePopup);
+      if (overlay) overlay.addEventListener('click', closePopup);
+      // Fermeture au swipe vers le bas
+      var startY = 0;
+      popup.addEventListener('touchstart', function(e) { startY = e.touches[0].clientY; }, { passive: true });
+      popup.addEventListener('touchend', function(e) {
+        var delta = e.changedTouches[0].clientY - startY;
+        if (delta > 60) closePopup();
+      }, { passive: true });
+    })();
   })();
 
   // ─── Interactive pin/unpin system — admin-only buttons, Supabase persistence ───

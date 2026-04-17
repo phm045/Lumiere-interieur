@@ -9408,3 +9408,117 @@ a, button, [role="button"] {
   background: rgba(0, 0, 0, 0.05);
   color: var(--color-text-faint);
 }
+
+/* ========================================
+   POPUP MOBILE — INFO RELEVÉ BANCAIRE
+======================================== */
+.releve-popup {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.releve-popup[hidden] {
+  display: none;
+}
+
+.releve-popup__overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  animation: releve-fade-in 250ms ease;
+}
+
+.releve-popup__card {
+  position: relative;
+  z-index: 1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 1.25rem 1.25rem 0 0;
+  padding: 2rem 1.5rem 2.5rem;
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  animation: releve-slide-up 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Sur desktop : card centrée comme une modale */
+@media (min-width: 641px) {
+  .releve-popup {
+    align-items: center;
+  }
+  .releve-popup__card {
+    border-radius: 1.25rem;
+    max-width: 420px;
+    padding: 2.5rem 2rem;
+  }
+}
+
+.releve-popup__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-full);
+  transition: color 0.2s, background 0.2s;
+}
+
+.releve-popup__close:hover {
+  color: var(--color-text);
+  background: var(--color-surface-2);
+}
+
+.releve-popup__icon {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 1rem;
+  color: var(--color-accent);
+}
+
+.releve-popup__title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 500;
+  color: var(--color-text);
+  margin: 0 0 1rem;
+}
+
+.releve-popup__text {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.7;
+  margin: 0 0 0.75rem;
+}
+
+.releve-popup__text--muted {
+  color: var(--color-text-faint);
+  font-size: 0.82rem;
+  margin-bottom: 1.5rem;
+}
+
+.releve-popup__btn {
+  width: 100%;
+}
+
+@keyframes releve-fade-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes releve-slide-up {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

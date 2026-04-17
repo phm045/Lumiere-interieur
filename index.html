@@ -38,7 +38,7 @@
 <!-- jsPDF pour generation des rapports -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="./style.css?v=20260417l">
+<link rel="stylesheet" href="./style.css?v=20260417m">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -2599,7 +2599,7 @@
   </div>
 
   <!-- Sub-button: Panier -->
-  <div class="ufab__action ufab__action--cart" id="ufab-cart" data-tooltip="ℹ️ Lumière Intérieure sur votre relevé — c'est normal">
+  <div class="ufab__action ufab__action--cart" id="ufab-cart" data-tooltip="ℹ️ Lumière Intérieure sur votre relevé — en cours de résolution">
     <button class="ufab__action-btn" id="ufab-cart-btn" aria-label="Ouvrir le panier" title="Panier" style="position:relative;">
       <span style="position:absolute;top:-6px;right:-6px;background:#e53935;color:#fff;font-size:10px;font-weight:700;width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;line-height:1;z-index:10;pointer-events:none;">!</span>
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2972,6 +2972,23 @@
     </div>
   </div>
 </footer>
+
+<!-- Popup mobile : info relevé bancaire -->
+<div id="releve-popup" class="releve-popup" hidden aria-modal="true" role="dialog" aria-labelledby="releve-popup-title">
+  <div class="releve-popup__overlay" id="releve-popup-overlay"></div>
+  <div class="releve-popup__card">
+    <button class="releve-popup__close" id="releve-popup-close" aria-label="Fermer">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="releve-popup__icon">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <h3 class="releve-popup__title" id="releve-popup-title">Lumière Intérieure sur votre relevé</h3>
+    <p class="releve-popup__text">Vous avez vu apparaitre <strong>Lumière Intérieure</strong> sur votre relevé bancaire après un paiement sur ce site ? C'est tout à fait normal — il s'agit du nom de la société liée au compte de paiement.</p>
+    <p class="releve-popup__text releve-popup__text--muted">Ce point est <strong>en cours de résolution</strong>. Le nom affiché sera prochainement mis à jour pour correspondre à <em>Une voix intérieure</em>.</p>
+    <button class="btn btn--primary releve-popup__btn" id="releve-popup-ok">J'ai compris</button>
+  </div>
+</div>
 
 <!-- Sons de guérison: intégré dans le bouton flottant unifié (#unified-fab) -->
 

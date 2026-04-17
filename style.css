@@ -195,7 +195,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-block: var(--space-3);
+  padding-block: var(--space-2);
   gap: var(--space-4);
 }
 
@@ -214,8 +214,8 @@
   position: absolute;
   top: 50%;
   left: 20%;
-  width: 120px;
-  height: 120px;
+  width: 85px;
+  height: 85px;
   transform: translate(-50%, -50%);
   background: radial-gradient(
     circle,
@@ -250,7 +250,7 @@
   position: relative;
   z-index: 1;
   height: auto;
-  width: 280px;
+  width: 200px;
   max-width: 100%;
   display: block;
   object-fit: contain;
@@ -464,7 +464,7 @@
 
 @media (max-width: 768px) {
   .header__logo-img {
-    width: 200px;
+    width: 160px;
     height: auto;
   }
   .footer__brand .header__logo-img {

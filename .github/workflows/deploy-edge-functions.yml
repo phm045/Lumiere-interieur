@@ -16,11 +16,24 @@ jobs:
         with:
           version: latest
 
+      - name: Vérifier le token Supabase
+        run: |
+          if [ -z "${{ secrets.SUPABASE_ACCESS_TOKEN }}" ]; then
+            echo "❌ SUPABASE_ACCESS_TOKEN est vide ou manquant"
+            exit 1
+          fi
+          echo "✅ Token présent (longueur: ${#SUPABASE_ACCESS_TOKEN})"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+
       - name: Deploy Edge Functions
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
         run: |
+          set -e
+          echo "🚀 Déploiement de visitor-counter..."
           supabase functions deploy visitor-counter \
             --project-ref dhbbwzpfwtdtdiuixrmq \
-            --no-verify-jwt
-          echo "✅ visitor-counter déployé"
+            --no-verify-jwt \
+            --debug 2>&1 || { echo "❌ Échec du déploiement"; exit 1; }
+          echo "✅ visitor-counter déployé avec succès"

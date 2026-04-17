@@ -4284,6 +4284,11 @@ textarea.blog-comments__input {
   margin-bottom: 1.25rem;
 }
 
+.nouveautes-header .section-header__label,
+.nouveautes-header .section-header__title {
+  text-align: center;
+}
+
 .nouveautes-header__desc {
   color: var(--color-text-muted);
   font-size: 0.95rem;

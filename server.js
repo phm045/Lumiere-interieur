@@ -1,5 +1,5 @@
 // ========================================
-// LUMIÈRE INTÉRIEURE — Serveur Express
+// UNE VOIX INTÉRIEURE — Serveur Express
 // ========================================
 
 require('dotenv').config();

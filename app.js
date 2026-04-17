@@ -1,5 +1,5 @@
 // ========================================
-// LUMIÈRE INTÉRIEURE — App Logic
+// UNE VOIX INTÉRIEURE — App Logic
 // ========================================
 
 (function () {
@@ -309,7 +309,7 @@
       date: '21 mars 2026',
       content: '<h2>Un langage symbolique universel</h2>' +
         '<p>Loin des horoscopes de magazine, l\u2019astrologie est un <strong>langage symbolique</strong> qui relie le mouvement des astres \u00e0 notre vie int\u00e9rieure. Pratiqu\u00e9e depuis des mill\u00e9naires, elle offre une grille de lecture unique pour mieux se comprendre, identifier ses cycles de vie et \u00e9clairer ses choix.</p>' +
-        '<p>Sur <strong>Lumi\u00e8re Int\u00e9rieure</strong>, l\u2019astrologie est envisag\u00e9e comme un art sacr\u00e9 de connaissance de soi, compl\u00e9mentaire \u00e0 la voyance et \u00e0 la cartomancie.</p>' +
+        '<p>Sur <strong>Une voix int\u00e9rieure</strong>, l\u2019astrologie est envisag\u00e9e comme un art sacr\u00e9 de connaissance de soi, compl\u00e9mentaire \u00e0 la voyance et \u00e0 la cartomancie.</p>' +
         '<h2>Votre th\u00e8me natal\u00a0: une carte du ciel unique</h2>' +
         '<p>Le th\u00e8me natal (ou carte du ciel) est calcul\u00e9 \u00e0 partir de votre <strong>date, heure et lieu de naissance</strong>. Il repr\u00e9sente la position exacte des plan\u00e8tes au moment o\u00f9 vous \u00eates n\u00e9(e) et r\u00e9v\u00e8le vos forces, vos d\u00e9fis, vos talents et les grandes dynamiques de votre parcours de vie.</p>' +
         '<p>Chaque plan\u00e8te, chaque signe et chaque maison astrologique raconte une partie de votre histoire int\u00e9rieure.</p>' +
@@ -320,7 +320,7 @@
         '<p>Les cartes captent l\u2019\u00e9nergie du moment pr\u00e9sent. L\u2019astrologie, elle, offre une vision plus large des cycles et des tendances. En combinant les deux, on obtient un accompagnement \u00e0 la fois <strong>pr\u00e9cis et profond</strong>\u00a0: les cartes \u00e9clairent le \u00ab ici et maintenant \u00bb, et l\u2019astrologie met en perspective le \u00ab d\u2019o\u00f9 je viens et vers o\u00f9 je vais \u00bb.</p>' +
         '<h2>L\u2019objectif n\u2019est jamais d\u2019enfermer</h2>' +
         '<p>L\u2019astrologie telle que je la pratique n\u2019a pas pour but de vous enfermer dans un signe ou une \u00e9tiquette, mais au contraire d\u2019<strong>ouvrir des portes</strong>, de vous r\u00e9concilier avec vous-m\u00eame et de vous rappeler que vous faites partie d\u2019un grand mouvement vivant.</p>' +
-        '<p>Si vous ressentez l\u2019appel de mieux comprendre votre th\u00e8me natal ou de combiner astrologie et tirages de cartes, vous pouvez r\u00e9server une consultation sur <strong>Lumi\u00e8re Int\u00e9rieure</strong>. Ensemble, nous lirons le ciel comme une boussole symbolique au service de votre chemin int\u00e9rieur.</p>' +
+        '<p>Si vous ressentez l\u2019appel de mieux comprendre votre th\u00e8me natal ou de combiner astrologie et tirages de cartes, vous pouvez r\u00e9server une consultation sur <strong>Une voix int\u00e9rieure</strong>. Ensemble, nous lirons le ciel comme une boussole symbolique au service de votre chemin int\u00e9rieur.</p>' +
         '<div class="blog-article__cta"><p>Envie de d\u00e9couvrir votre carte du ciel\u00a0? R\u00e9servez votre consultation astrologique.</p></div>'
     },
     'vraie-spiritualite': {
@@ -362,7 +362,7 @@
         '<li>Il respectera votre <strong>rythme</strong> et vos choix, m\u00eame s\u2019ils diff\u00e8rent de ses conseils</li>' +
         '<li>Il sera <strong>transparent</strong> sur ses tarifs, sa formation et son parcours</li>' +
         '</ul>' +
-        '<h2>Mon engagement sur Lumi\u00e8re Int\u00e9rieure</h2>' +
+        '<h2>Mon engagement sur Une voix int\u00e9rieure</h2>' +
         '<p>C\u2019est cette vision de la spiritualit\u00e9 que je porte au quotidien dans ma pratique. Mes consultations ne sont pas l\u00e0 pour vous dire quoi faire, mais pour vous aider \u00e0 <strong>voir plus clair</strong>. Les cartes sont un miroir, pas une v\u00e9rit\u00e9 absolue. Elles \u00e9clairent des \u00e9nergies, des tendances, des possibilit\u00e9s \u2014 mais c\u2019est toujours vous qui d\u00e9cidez.</p>' +
         '<p>Je ne pr\u00e9tends pas d\u00e9tenir la v\u00e9rit\u00e9. Je ne promets ni miracles ni \u00e9veil instantan\u00e9. Ce que je propose, c\u2019est un espace d\u2019\u00e9coute, de sinc\u00e9rit\u00e9 et de respect. Un moment pour vous, o\u00f9 vous pouvez d\u00e9poser vos questions sans \u00eatre jug\u00e9.</p>' +
         '<p>Dans un monde o\u00f9 tout va vite, je crois profond\u00e9ment que la vraie lumi\u00e8re vient de l\u2019int\u00e9rieur. Pas d\u2019un \u00e9cran, pas d\u2019un gourou, pas d\u2019une tendance. <strong>De vous.</strong> De votre capacit\u00e9 \u00e0 vous arr\u00eater, \u00e0 respirer et \u00e0 \u00e9couter ce qui vibre en vous.</p>' +
@@ -401,7 +401,7 @@
         '<p>Par exemple, une Ann\u00e9e Personnelle 1 annonce un nouveau d\u00e9part, une p\u00e9riode de semailles ; une Ann\u00e9e 9 marque la fin d\u2019un cycle, une invitation \u00e0 l\u00e2cher ce qui ne vous correspond plus pour pr\u00e9parer un nouveau commencement. Conna\u00eetre son cycle permet d\u2019agir <strong>en harmonie avec ses propres rythmes</strong>, plut\u00f4t qu\u2019\u00e0 contre-courant.</p>' +
         '<h2>Num\u00e9rologie et voyance : deux lectures compl\u00e9mentaires</h2>' +
         '<p>Comme l\u2019astrologie, la num\u00e9rologie offre une vision \u00e0 plus long terme, une cartographie de fond. Les cartes, elles, s\u2019ancrent dans l\u2019\u00e9nergie du moment pr\u00e9sent. Associer les deux, c\u2019est disposer \u00e0 la fois d\u2019une <strong>boussole de vie</strong> et d\u2019un \u00e9clairage sur le \u00ab ici et maintenant \u00bb.</p>' +
-        '<p>Lors d\u2019une consultation sur <strong>Lumi\u00e8re Int\u00e9rieure</strong>, il m\u2019arrive d\u2019int\u00e9grer des \u00e9l\u00e9ments num\u00e9rologiques pour enrichir la lecture des cartes \u2014 notamment pour comprendre pourquoi certains th\u00e8mes reviennent, ou pour situer une question dans un cycle de vie plus large.</p>' +
+        '<p>Lors d\u2019une consultation sur <strong>Une voix int\u00e9rieure</strong>, il m\u2019arrive d\u2019int\u00e9grer des \u00e9l\u00e9ments num\u00e9rologiques pour enrichir la lecture des cartes \u2014 notamment pour comprendre pourquoi certains th\u00e8mes reviennent, ou pour situer une question dans un cycle de vie plus large.</p>' +
         '<h2>La num\u00e9rologie n\u2019enferme pas, elle \u00e9claire</h2>' +
         '<p>Comme toute approche divinatoire ou symbolique, la num\u00e9rologie n\u2019a pas vocation \u00e0 vous figer dans une \u00e9tiquette. Un Chemin de vie 4 n\u2019est pas \u00ab condamn\u00e9 \u00bb \u00e0 la routine, pas plus qu\u2019un Chemin de vie 5 n\u2019est incapable de stabilit\u00e9. Ces vibrations sont des <strong>tendances, des ressources, des invitations</strong> \u2014 jamais des sentences.</p>' +
         '<p>L\u2019objectif est de mieux vous conna\u00eetre, de comprendre vos forces et vos d\u00e9fis avec bienveillance, et de cheminer vers une vie plus align\u00e9e avec ce que vous \u00eates profond\u00e9ment.</p>' +
@@ -777,7 +777,7 @@
             type: 'boutique', slug: 'boutique-coming',
             pinned: isItemPinned('boutique-coming'),
             img: 'crystals-nature.png',
-            imgAlt: 'Boutique Lumi\u00e8re Int\u00e9rieure',
+            imgAlt: 'Boutique Une voix int\u00e9rieure',
             category: 'Boutique',
             title: 'Boutique bient\u00f4t disponible',
             excerpt: 'Cristaux, encens naturels, supports de m\u00e9ditation\u2026 Inscrivez-vous pour \u00eatre pr\u00e9venu(e) d\u00e8s l\u2019ouverture.',
@@ -2047,7 +2047,7 @@ function getComments(articleId) {
         afficherEtatDeconnecte();
         history.pushState(null, '', '#accueil');
         showPage('accueil');
-        alert('Votre compte a \u00e9t\u00e9 supprim\u00e9. Merci d\u2019avoir fait partie de Lumi\u00e8re Int\u00e9rieure.');
+        alert('Votre compte a \u00e9t\u00e9 supprim\u00e9. Merci d\u2019avoir fait partie de Une voix int\u00e9rieure.');
       } catch (err) {
         console.error('Erreur suppression compte:', err);
         resetBtnSuppr();
@@ -2785,16 +2785,16 @@ function getComments(articleId) {
           endpoint: '/v3/smtp/email',
           method: 'POST',
           body: {
-            sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
+            sender: { name: 'Une voix int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
             to: [{ email: options.destinataire, name: 'Philippe' }],
             replyTo: options.replyTo ? { email: options.replyTo, name: options.replyName || '' } : undefined,
             subject: options.sujet,
             htmlContent: '<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px;color:#2c1f1a;">'
               + '<div style="text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e8e2d5;">'
-              + '<strong style="color:#b5704a;font-size:18px;">Lumi\u00e8re Int\u00e9rieure</strong></div>'
+              + '<strong style="color:#b5704a;font-size:18px;">Une voix int\u00e9rieure</strong></div>'
               + options.contenu
               + '<hr style="border:none;border-top:1px solid #e8e2d5;margin:24px 0;">'
-              + '<p style="font-size:12px;color:#999;">Envoy\u00e9 depuis le site lumiere-interieure.com</p>'
+              + '<p style="font-size:12px;color:#999;">Envoy\u00e9 depuis le site une-voix-interieure.com</p>'
               + '</div>'
           }
         })
@@ -2814,25 +2814,25 @@ function getComments(articleId) {
       var sectionLabels = { 'blog': 'Nouveau sur le blog', 'boutique': 'Nouveaut\u00e9 boutique', 'service': 'Mise \u00e0 jour des services' };
       var sectionLabel = sectionLabels[type] || 'Nouveaut\u00e9';
       var sujet = sectionLabel + ' : ' + titre;
-      var siteUrl = 'https://phm045.github.io/Lumiere-interieure';
+      var siteUrl = 'https://phm045.github.io/une-voix-interieure';
       var sectionUrl = siteUrl + '/#' + (type === 'blog' ? 'blog' : 'boutique');
 
       var htmlContent = '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>'
         + '<body style="margin:0;padding:0;background-color:#faf8f5;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif;">'
         + '<div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">'
         + '<div style="background:linear-gradient(135deg,#1a1a2e 0%,#2d1b4e 100%);padding:40px 30px;text-align:center;">'
-        + '<h1 style="color:#d4a574;font-size:24px;margin:0;font-weight:300;letter-spacing:2px;">Lumi\u00e8re Int\u00e9rieure</h1>'
+        + '<h1 style="color:#d4a574;font-size:24px;margin:0;font-weight:300;letter-spacing:2px;">Une voix int\u00e9rieure</h1>'
         + '<p style="color:#c0b0a0;font-size:14px;margin-top:8px;">Voyance &amp; Guidance</p>'
         + '</div>'
         + '<div style="padding:30px;">'
         + '<p style="font-size:16px;color:#333;line-height:1.6;">Bonjour {{ contact.PRENOM | default: "cher(e) abonn\u00e9(e)" }},</p>'
-        + '<p style="font-size:16px;color:#333;line-height:1.6;">De nouvelles mises \u00e0 jour vous attendent sur <strong>Lumi\u00e8re Int\u00e9rieure</strong> :</p>'
+        + '<p style="font-size:16px;color:#333;line-height:1.6;">De nouvelles mises \u00e0 jour vous attendent sur <strong>Une voix int\u00e9rieure</strong> :</p>'
         + '<h2 style="color:#8b5e3c;margin-top:30px;">' + sectionLabel + '</h2>'
         + '<p style="font-size:16px;color:#333;">' + titre + '</p>'
         + '<div style="text-align:center;margin:35px 0;">'
         + '<a href="' + sectionUrl + '" style="display:inline-block;background:linear-gradient(135deg,#8b5e3c,#d4a574);color:#ffffff;text-decoration:none;padding:14px 35px;border-radius:8px;font-size:16px;font-weight:600;">D\u00e9couvrir</a>'
         + '</div>'
-        + '<p style="font-size:14px;color:#888;line-height:1.5;">\u00c0 tr\u00e8s bient\u00f4t,<br><em>Philippe \u2014 Lumi\u00e8re Int\u00e9rieure</em></p>'
+        + '<p style="font-size:14px;color:#888;line-height:1.5;">\u00c0 tr\u00e8s bient\u00f4t,<br><em>Philippe \u2014 Une voix int\u00e9rieure</em></p>'
         + '</div>'
         + '<div style="background:#f5f0eb;padding:20px 30px;text-align:center;border-top:1px solid #e8e0d8;">'
         + '<p style="font-size:12px;color:#999;margin:0;">Vous recevez cet email car vous \u00eates inscrit(e) \u00e0 la newsletter.<br><a href="{{ unsubscribe }}" style="color:#8b5e3c;">Se d\u00e9sinscrire</a></p>'
@@ -2849,7 +2849,7 @@ function getComments(articleId) {
           endpoint: '/v3/emailCampaigns',
           method: 'POST',
           body: {
-            sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
+            sender: { name: 'Une voix int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
             name: campaignName,
             subject: sujet,
             htmlContent: htmlContent,
@@ -5741,7 +5741,7 @@ function getComments(articleId) {
           // Multiple products: open each Payment Link in sequence
           // (Stripe Payment Links don't support multi-product in one link)
           // Use Edge Function to create a combined Checkout Session
-          var siteUrl = 'https://phm045.github.io/Lumiere-interieure';
+          var siteUrl = 'https://phm045.github.io/une-voix-interieure';
           var slugs = cart.map(function(item) { return item.slug; }).join(',');
           var successUrl = siteUrl + '?session_id={CHECKOUT_SESSION_ID}&service=boutique_' + encodeURIComponent(slugs);
           var cancelUrl = siteUrl + '/#boutique';
@@ -7830,7 +7830,7 @@ function getComments(articleId) {
     // En-tete
     doc.setFontSize(20);
     doc.setFont('helvetica', 'bold');
-    doc.text('Lumi\u00e8re Int\u00e9rieure', pageWidth / 2, 25, { align: 'center' });
+    doc.text('Une voix int\u00e9rieure', pageWidth / 2, 25, { align: 'center' });
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.text('Rapport de chiffre d\'affaires', pageWidth / 2, 33, { align: 'center' });
@@ -7961,10 +7961,10 @@ function getComments(articleId) {
     // Pied de page
     doc.setFontSize(8);
     doc.setTextColor(150);
-    doc.text('Lumi\u00e8re Int\u00e9rieure \u2014 Micro-entreprise \u2014 TVA non applicable, article 293 B du CGI', pageWidth / 2, 285, { align: 'center' });
+    doc.text('Une voix int\u00e9rieure \u2014 Micro-entreprise \u2014 TVA non applicable, article 293 B du CGI', pageWidth / 2, 285, { align: 'center' });
 
     // Telecharger
-    var filename = 'CA-Lumiere-Interieure-' + (data.mois + 1).toString().padStart(2, '0') + '-' + data.annee + '.pdf';
+    var filename = 'CA-Une-Voix-Interieure-' + (data.mois + 1).toString().padStart(2, '0') + '-' + data.annee + '.pdf';
     doc.save(filename);
   }
 
@@ -9295,12 +9295,12 @@ function getComments(articleId) {
               endpoint: '/v3/smtp/email',
               method: 'POST',
               body: {
-                sender: { name: 'Lumi\u00e8re Int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
+                sender: { name: 'Une voix int\u00e9rieure', email: 'philippe.medium45@gmail.com' },
                 to: [{ email: 'philippe.medium45@gmail.com', name: 'Philippe' }],
                 subject: '\ud83d\udd14 Nouvelle alerte restock : ' + currentName,
                 htmlContent: '<div style="font-family:Georgia,serif;max-width:600px;margin:0 auto;padding:24px;color:#2c1f1a;">'
                   + '<div style="text-align:center;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid #e8e2d5;">'
-                  + '<strong style="color:#b5704a;font-size:18px;">Lumi\u00e8re Int\u00e9rieure</strong></div>'
+                  + '<strong style="color:#b5704a;font-size:18px;">Une voix int\u00e9rieure</strong></div>'
                   + '<h3 style="color:#8b5e3c;margin:0 0 15px;">\ud83d\udd14 Nouvelle demande d\u2019alerte restock</h3>'
                   + '<p style="margin:8px 0;"><strong>Produit :</strong> ' + currentName + '</p>'
                   + '<p style="margin:8px 0;"><strong>Email du client :</strong> ' + email + '</p>'

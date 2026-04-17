@@ -4287,6 +4287,9 @@ textarea.blog-comments__input {
 .nouveautes-header .section-header__label,
 .nouveautes-header .section-header__title {
   text-align: center;
+  width: 100%;
+  display: block;
+  margin-inline: auto;
 }
 
 .nouveautes-header__desc {

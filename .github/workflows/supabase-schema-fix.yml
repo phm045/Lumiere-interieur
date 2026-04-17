@@ -1,0 +1,42 @@
+name: Apply Supabase schema fix
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'supabase-schema-fix.sql'
+    branches:
+      - main
+
+jobs:
+  apply-schema:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Apply schema fix via Supabase Management API
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          PROJECT_REF: dhbbwzpfwtdtdiuixrmq
+        run: |
+          SQL=$(cat supabase-schema-fix.sql)
+
+          RESPONSE=$(curl -s -w "\n%{http_code}" \
+            -X POST "https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query" \
+            -H "Authorization: Bearer ${SUPABASE_ACCESS_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d "$(jq -n --arg q "$SQL" '{query: $q}')")
+
+          HTTP_CODE=$(echo "$RESPONSE" | tail -1)
+          BODY=$(echo "$RESPONSE" | head -n -1)
+
+          echo "HTTP status: $HTTP_CODE"
+          echo "Response: $BODY"
+
+          if [ "$HTTP_CODE" -ne 200 ] && [ "$HTTP_CODE" -ne 201 ]; then
+            echo "❌ Échec de l'exécution SQL (HTTP $HTTP_CODE)"
+            exit 1
+          fi
+
+          echo "✅ Schema fix appliqué avec succès"

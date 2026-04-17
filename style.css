@@ -263,10 +263,29 @@
   flex-shrink: 0;
 }
 
+/* Footer brand: centrage du logo et du texte */
+.footer__brand {
+  text-align: center;
+}
+
+.footer__brand .header__logo {
+  justify-content: center;
+  margin-inline: auto;
+}
+
+.footer__brand p {
+  margin-inline: auto;
+}
+
+.footer__brand .footer__socials {
+  justify-content: center;
+}
+
 .footer__brand .header__logo-img {
   height: auto;
   width: 280px;
   max-width: 280px;
+  margin-inline: auto;
   /* Contraste renforcé pour la lisibilité dans le footer */
   filter: saturate(1.4) contrast(1.15);
 }

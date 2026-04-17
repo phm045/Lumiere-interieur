@@ -6332,16 +6332,20 @@ textarea.blog-comments__input {
   display: none;
 }
 
-/* Indicateur visuel de scroll horizontal sur mobile */
+/* Scrollbar fine sur mobile pour la nav admin */
 @media (max-width: 768px) {
   .admin-dash-tabs {
-    position: relative;
-    -webkit-mask-image: linear-gradient(to right, black 80%, transparent 100%);
-    mask-image: linear-gradient(to right, black 80%, transparent 100%);
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212,165,116,.4) transparent;
+    padding-bottom: 6px;
   }
-  .admin-dash-tabs:has(.admin-dash-tab:last-child.admin-dash-tab--active) {
-    -webkit-mask-image: linear-gradient(to left, black 80%, transparent 100%);
-    mask-image: linear-gradient(to left, black 80%, transparent 100%);
+  .admin-dash-tabs::-webkit-scrollbar {
+    display: block;
+    height: 3px;
+  }
+  .admin-dash-tabs::-webkit-scrollbar-thumb {
+    background: rgba(212,165,116,.4);
+    border-radius: 4px;
   }
 }
 

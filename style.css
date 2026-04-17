@@ -232,13 +232,13 @@
 .header__logo-img {
   position: relative;
   z-index: 1;
-  height: 90px;
-  width: auto;
-  max-width: 400px;
+  height: auto;
+  width: 520px;
+  max-width: 100%;
   display: block;
   object-fit: contain;
-  /* Léger renforcement du contraste pour la lisibilité */
-  filter: contrast(1.08) saturate(1.1);
+  /* Renforcement du contraste pour la lisibilité sur fond crème */
+  filter: contrast(1.15) saturate(1.2) brightness(0.96);
 }
 
 [data-theme="dark"] .header__logo-img {
@@ -378,8 +378,8 @@
     justify-content: center;
   }
   .header__logo-img {
-    height: 72px;
-    max-width: 280px;
+    width: 260px;
+    height: auto;
   }
   .header__logo-text {
     display: none;

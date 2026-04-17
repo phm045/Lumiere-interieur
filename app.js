@@ -2756,6 +2756,73 @@ function getComments(articleId) {
   personnaliserLiensCal();
   verifierRetourCal();
   verifierRetourStripe();
+  verifierRetourPayPal();
+
+  // ─── Retour PayPal (?paypal_success=1) ──────────────────────────────────────
+  // PayPal redirige vers return_url avec paypal_success=1 & service & amount.
+  // On enregistre la commande dans Supabase et on redirige vers Mon Compte.
+  async function verifierRetourPayPal() {
+    var params = new URLSearchParams(window.location.search);
+    if (!params.get('paypal_success')) return;
+
+    var serviceKey = params.get('service') || 'paypal';
+    var amount     = parseFloat(params.get('amount') || '0');
+
+    // Noms lisibles par service slug
+    var serviceNames = {
+      'focus-intuitif':       'Focus Intuitif',
+      'revelations-intuitives': 'Révélations Intuitives',
+      'panorama-intuitif':    'Panorama Intuitif',
+      'voyance-mail':         'Voyance par mail - 1 question'
+    };
+    var serviceName = serviceNames[serviceKey] || serviceKey;
+
+    // Nettoyer l'URL
+    history.replaceState(null, '', window.location.pathname + '#mon-compte');
+
+    try {
+      var { data: { session } } = await supabase.auth.getSession();
+      if (!session) return; // Visiteur non connecté : rien à enregistrer
+
+      // Vérifier doublon (au cas où l'utilisateur recharge la page)
+      // PayPal ne renvoie pas de tx_id fiable en redirection simple — on vérifie
+      // par user_id + service + date (dernière minute)
+      var unMinuteAvant = new Date(Date.now() - 60 * 1000).toISOString();
+      var { data: existant } = await supabase
+        .from('commandes')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('service', serviceName)
+        .eq('methode_paiement', 'paypal')
+        .gte('date_creation', unMinuteAvant)
+        .maybeSingle();
+
+      if (existant) {
+        console.log('[PayPal] Commande déjà enregistrée, ignorée');
+        showPage('mon-compte');
+        return;
+      }
+
+      await safeSupabase(function() {
+        return supabase.from('commandes').insert({
+          user_id:          session.user.id,
+          service:          serviceName,
+          montant:          amount,
+          methode_paiement: 'paypal',
+          statut:           'payé'
+        });
+      }, 'enregistrement commande PayPal');
+
+      console.log('[PayPal] Commande enregistrée:', serviceName, amount + '€');
+      showPage('mon-compte');
+      setTimeout(function() {
+        var btnCmd = document.querySelector('[data-tab="commandes"]');
+        if (btnCmd) btnCmd.click();
+      }, 500);
+    } catch (e) {
+      console.error('[PayPal] Erreur retour:', e);
+    }
+  }
 
   // --- Onglets Mon Compte ---
   document.querySelectorAll('.compte-tabs__btn').forEach(function (btn) {

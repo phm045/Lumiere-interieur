@@ -60,4 +60,7 @@ jobs:
           # stripe-checkout : sans JWT (paiement public)
           deploy_fn stripe-checkout true
 
+          # stripe-webhook : avec JWT (appelé par Stripe, signature vérifiée en interne)
+          deploy_fn stripe-webhook false
+
           echo "✅ Toutes les Edge Functions déployées avec succès"

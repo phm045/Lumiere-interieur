@@ -1,0 +1,91 @@
+name: "🩺 Health Check — Edge Functions"
+
+# Vérification toutes les heures + déclenchement manuel
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Vérifier les 4 Edge Functions
+        env:
+          EDGE_BASE: "https://dhbbwzpfwtdtdiuixrmq.supabase.co/functions/v1"
+          ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          set -euo pipefail
+          FAILED=0
+
+          check_fn() {
+            local name="$1"
+            local url="$2"
+            local method="${3:-GET}"
+            local body="${4:-}"
+
+            if [ -n "$body" ]; then
+              HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+                -X "$method" "$url" \
+                -H "Authorization: Bearer ${ANON_KEY}" \
+                -H "Content-Type: application/json" \
+                -d "$body" \
+                --max-time 10)
+            else
+              HTTP=$(curl -s -o /dev/null -w "%{http_code}" \
+                -X "$method" "$url" \
+                -H "Authorization: Bearer ${ANON_KEY}" \
+                --max-time 10)
+            fi
+
+            if [ "$HTTP" -ge 200 ] && [ "$HTTP" -lt 500 ]; then
+              echo "  ✅ ${name} — HTTP ${HTTP}"
+            else
+              echo "  ❌ ${name} — HTTP ${HTTP} (ÉCHEC)"
+              FAILED=$((FAILED + 1))
+            fi
+          }
+
+          echo "=== Health Check $(date -u '+%Y-%m-%d %H:%M UTC') ==="
+
+          # visitor-counter : GET
+          check_fn "visitor-counter" \
+            "${EDGE_BASE}/visitor-counter"
+
+          # brevo-proxy : POST avec JSON invalide → doit retourner 400 (pas 5xx)
+          check_fn "brevo-proxy" \
+            "${EDGE_BASE}/brevo-proxy" "POST" \
+            '{"endpoint":"/v3/contacts?listId=3&limit=1","method":"GET"}'
+
+          # cal-proxy : POST → doit retourner 400 "Missing endpoint" (pas 5xx)
+          check_fn "cal-proxy" \
+            "${EDGE_BASE}/cal-proxy" "POST" \
+            '{"endpoint":"/bookings?status=upcoming&take=1","method":"GET"}'
+
+          # stripe-checkout : POST → doit retourner 400 "Missing endpoint" (pas 5xx)
+          check_fn "stripe-checkout" \
+            "${EDGE_BASE}/stripe-checkout" "POST" \
+            '{"endpoint":"/v1/products?limit=1&active=true","method":"GET"}'
+
+          echo ""
+          if [ "$FAILED" -eq 0 ]; then
+            echo "✅ Toutes les Edge Functions sont opérationnelles"
+          else
+            echo "❌ ${FAILED} Edge Function(s) en échec — vérifier les logs Supabase"
+            exit 1
+          fi
+
+      - name: Vérifier la table visiteurs (compteur)
+        env:
+          SUPABASE_URL: "https://dhbbwzpfwtdtdiuixrmq.supabase.co"
+          ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          RESP=$(curl -s \
+            "${SUPABASE_URL}/rest/v1/visiteurs?select=total&limit=1" \
+            -H "apikey: ${ANON_KEY}" \
+            -H "Authorization: Bearer ${ANON_KEY}")
+          TOTAL=$(echo "$RESP" | jq '.[0].total // 0')
+          echo "  👥 Compteur visiteurs : ${TOTAL}"
+          if [ "$TOTAL" -lt 456 ]; then
+            echo "  ⚠️  Compteur inférieur à la référence de base (456) — possible régression"
+          fi

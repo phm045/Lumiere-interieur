@@ -9164,3 +9164,233 @@ a, button, [role="button"] {
     gap: 1rem;
   }
 }
+
+/* ========================================
+   ADMIN DASHBOARD — MODE CLAIR
+   Surcharge des couleurs hardcodées (rgba blanc)
+   conçues pour le mode sombre
+======================================== */
+
+[data-theme="light"] .admin-dash-header {
+  background: linear-gradient(135deg, rgba(107, 127, 78, 0.12) 0%, rgba(240, 236, 228, 0.9) 100%);
+  border-color: rgba(107, 127, 78, 0.25);
+}
+
+[data-theme="light"] .admin-dash-header__title {
+  color: var(--color-text);
+}
+
+[data-theme="light"] .admin-dash-header__label {
+  color: var(--color-primary);
+}
+
+[data-theme="light"] .admin-dash-header__avatar {
+  background: linear-gradient(135deg, rgba(107, 127, 78, 0.25), rgba(107, 127, 78, 0.08));
+  border-color: rgba(107, 127, 78, 0.4);
+  color: var(--color-primary);
+}
+
+[data-theme="light"] .admin-dash-tabs {
+  border-bottom-color: var(--color-divider);
+}
+
+[data-theme="light"] .admin-dash-tab {
+  color: var(--color-text-muted);
+}
+
+[data-theme="light"] .admin-dash-tab:hover {
+  background: rgba(107, 127, 78, 0.08);
+  color: var(--color-text);
+}
+
+[data-theme="light"] .admin-dash-tab--active {
+  background: rgba(107, 127, 78, 0.12);
+  color: var(--color-primary);
+}
+
+[data-theme="light"] .admin-dash-tab--active svg {
+  stroke: var(--color-primary);
+}
+
+/* Scrollbars en mode clair */
+[data-theme="light"] .admin-tab-content--active::-webkit-scrollbar-track,
+[data-theme="light"] .admin-dash-table::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.04);
+}
+[data-theme="light"] .admin-tab-content--active::-webkit-scrollbar-thumb,
+[data-theme="light"] .admin-dash-table::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.18);
+}
+[data-theme="light"] .admin-tab-content--active::-webkit-scrollbar-thumb:hover,
+[data-theme="light"] .admin-dash-table::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.32);
+}
+
+/* Stat cards */
+[data-theme="light"] .admin-dash-stat-card {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--color-border);
+}
+
+[data-theme="light"] .admin-dash-stat-card--accent {
+  background: linear-gradient(135deg, rgba(107, 127, 78, 0.08), rgba(107, 127, 78, 0.02));
+  border-color: rgba(107, 127, 78, 0.2);
+}
+
+[data-theme="light"] .admin-dash-stat-card__value {
+  color: var(--color-text);
+}
+
+[data-theme="light"] .admin-dash-stat-card__label {
+  color: var(--color-text-muted);
+}
+
+[data-theme="light"] .admin-dash-stat-card__icon {
+  color: var(--color-primary);
+}
+
+/* Barre de recherche */
+[data-theme="light"] .admin-dash-search {
+  background: #fff;
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+[data-theme="light"] .admin-dash-search::placeholder {
+  color: var(--color-text-faint);
+}
+
+[data-theme="light"] .admin-dash-search:focus {
+  border-color: var(--color-primary);
+}
+
+/* Tableau */
+[data-theme="light"] .admin-dash-table__row {
+  border-bottom-color: var(--color-divider);
+}
+
+[data-theme="light"] .admin-dash-table__row:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .admin-dash-table__row--header {
+  color: var(--color-text-muted);
+  border-bottom-color: var(--color-border);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .admin-dash-table__row--header:hover {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+[data-theme="light"] .admin-dash-table__cell {
+  color: var(--color-text);
+}
+
+[data-theme="light"] .admin-dash-table__cell--email {
+  color: var(--color-primary);
+}
+
+/* Badges neutres */
+[data-theme="light"] .admin-dash-badge--neutral {
+  background: rgba(0, 0, 0, 0.06);
+  color: var(--color-text-muted);
+  border-color: var(--color-border);
+}
+
+/* Boutons d'action dans les tableaux */
+[data-theme="light"] .admin-dash-btn-sm {
+  background: #fff;
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+[data-theme="light"] .admin-dash-btn-sm:hover {
+  background: var(--color-surface-2);
+  border-color: var(--color-primary);
+}
+
+[data-theme="light"] .admin-dash-btn-sm--edit {
+  color: var(--color-primary);
+  border-color: rgba(107, 127, 78, 0.35);
+}
+
+[data-theme="light"] .admin-dash-btn-sm--edit:hover {
+  background: rgba(107, 127, 78, 0.08);
+}
+
+/* CA section */
+[data-theme="light"] .admin-ca-section {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--color-border);
+}
+
+[data-theme="light"] .admin-ca-title {
+  color: var(--color-text);
+}
+
+[data-theme="light"] .admin-ca-period {
+  color: var(--color-text-muted);
+}
+
+[data-theme="light"] .admin-ca-card {
+  background: rgba(0, 0, 0, 0.03);
+  border-color: var(--color-border);
+}
+
+[data-theme="light"] .admin-ca-card__label {
+  color: var(--color-text-muted);
+}
+
+[data-theme="light"] .admin-ca-card__value {
+  color: var(--color-text);
+}
+
+[data-theme="light"] .admin-ca-archive-item {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--color-divider);
+}
+
+[data-theme="light"] .admin-ca-archive-item__info {
+  color: var(--color-text-muted);
+}
+
+/* Revenus split */
+[data-theme="light"] .admin-revenus-col {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--color-border);
+}
+
+[data-theme="light"] .admin-revenus-col__header {
+  color: var(--color-text);
+}
+
+[data-theme="light"] .admin-revenus-line {
+  color: var(--color-text-muted);
+}
+
+[data-theme="light"] .admin-revenus-line strong {
+  color: var(--color-text);
+}
+
+[data-theme="light"] .admin-revenus-line--total {
+  border-top-color: var(--color-divider);
+}
+
+[data-theme="light"] .admin-revenus-line--count {
+  color: var(--color-text-faint);
+}
+
+[data-theme="light"] .admin-depense-item {
+  background: rgba(0, 0, 0, 0.02);
+  border-color: var(--color-divider);
+}
+
+[data-theme="light"] .admin-depense-item__info {
+  color: var(--color-text-muted);
+}
+
+[data-theme="light"] .admin-depense-item__cat {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--color-text-faint);
+}

@@ -848,9 +848,9 @@ section {
 
 .hero__cta {
   display: flex;
-  gap: var(--space-4);
-  flex-wrap: wrap;
-  justify-content: center;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: center;
 }
 
 /* ========================================

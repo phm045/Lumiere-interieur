@@ -7001,4 +7001,1970 @@ textarea.blog-comments__input {
 
 /* ═══════════════════════════════════════════════════
    DISPONIBILITÉS — Admin Tab
-   ══════════════════════════�
+   ═══════════════════════════════════════════════════ */
+
+/* Sous-onglets */
+.dispo-subtabs {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  padding-bottom: 0.75rem;
+}
+.dispo-subtab {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.55rem 1rem;
+  border: 1px solid rgba(255,255,255,0.1);
+  background: transparent;
+  color: var(--text-secondary, #999);
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 8px;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+}
+.dispo-subtab:hover {
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary, #fff);
+}
+.dispo-subtab--active {
+  background: rgba(212,165,116,0.15);
+  color: rgba(212,165,116,1);
+  border-color: rgba(212,165,116,0.3);
+}
+.dispo-subtab--active svg {
+  stroke: rgba(212,165,116,1);
+}
+
+/* Panneaux */
+.dispo-panel { display: none; }
+.dispo-panel--active { display: block; }
+
+.dispo-desc {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #999);
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+
+/* ─── Horaires hebdomadaires ─── */
+.dispo-semaine {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.dispo-jour {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  padding: 1rem 1.25rem;
+  transition: background 0.2s;
+}
+.dispo-jour:hover {
+  background: rgba(255,255,255,0.05);
+}
+.dispo-jour__header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.5rem;
+}
+.dispo-jour__nom {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary, #fff);
+  min-width: 80px;
+}
+
+/* Toggle switch */
+.dispo-toggle {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  flex-shrink: 0;
+}
+.dispo-toggle__input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.dispo-toggle__slider {
+  position: absolute;
+  cursor: pointer;
+  inset: 0;
+  background: rgba(255,255,255,0.15);
+  border-radius: 22px;
+  transition: 0.3s;
+}
+.dispo-toggle__slider::before {
+  content: '';
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background: #fff;
+  border-radius: 50%;
+  transition: 0.3s;
+}
+.dispo-toggle__input:checked + .dispo-toggle__slider {
+  background: rgba(212,165,116,0.7);
+}
+.dispo-toggle__input:checked + .dispo-toggle__slider::before {
+  transform: translateX(18px);
+}
+
+/* Créneaux horaires */
+.dispo-jour__creneaux {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 0.5rem;
+  transition: opacity 0.2s;
+}
+.dispo-jour__creneaux--off {
+  opacity: 0.35;
+  pointer-events: none;
+}
+.dispo-creneau {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.dispo-time {
+  padding: 0.4rem 0.6rem;
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 6px;
+  background: rgba(255,255,255,0.06);
+  color: var(--text-primary, #fff);
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.88rem;
+  width: 110px;
+  transition: border-color 0.2s;
+}
+.dispo-time:focus {
+  outline: none;
+  border-color: rgba(212,165,116,0.6);
+  box-shadow: 0 0 0 2px rgba(212,165,116,0.1);
+}
+.dispo-sep {
+  color: var(--text-secondary, #999);
+  font-size: 0.85rem;
+}
+.dispo-creneau__suppr {
+  width: 28px;
+  height: 28px;
+  border: 1px solid rgba(231,76,60,0.3);
+  background: rgba(231,76,60,0.08);
+  color: #e74c3c;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+.dispo-creneau__suppr:hover {
+  background: rgba(231,76,60,0.2);
+  border-color: rgba(231,76,60,0.5);
+}
+
+/* Bouton ajouter créneau */
+.dispo-jour__ajouter {
+  background: none;
+  border: 1px dashed rgba(255,255,255,0.15);
+  color: rgba(212,165,116,0.8);
+  font-size: 0.78rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: 'Work Sans', sans-serif;
+  transition: all 0.2s;
+}
+.dispo-jour__ajouter:hover {
+  border-color: rgba(212,165,116,0.4);
+  background: rgba(212,165,116,0.06);
+  color: rgba(212,165,116,1);
+}
+
+/* Actions et messages */
+.dispo-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.dispo-message {
+  padding: 0.6rem 1rem;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+.dispo-message[hidden] { display: none; }
+.dispo-message--success {
+  background: rgba(39,174,96,0.12);
+  color: #27ae60;
+  border: 1px solid rgba(39,174,96,0.25);
+}
+.dispo-message--error {
+  background: rgba(231,76,60,0.12);
+  color: #e74c3c;
+  border: 1px solid rgba(231,76,60,0.25);
+}
+
+/* ─── Absences / Congés ─── */
+.dispo-absence-form__row,
+.dispo-date-form__row {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.5fr auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+.dispo-absence-form__group,
+.dispo-date-form__group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+.dispo-absence-form__group--btn,
+.dispo-date-form__group--btn {
+  align-self: end;
+}
+
+/* ─── Dates spéciales ─── */
+.dispo-date-form__row {
+  grid-template-columns: 1fr 0.7fr 0.7fr 1.5fr auto;
+}
+
+/* ─── Listes absences / dates ─── */
+.dispo-liste {
+  margin-top: 1rem;
+}
+.dispo-liste__vide {
+  text-align: center;
+  color: var(--text-secondary, #999);
+  font-size: 0.85rem;
+  padding: 2rem 0;
+  opacity: 0.7;
+}
+.dispo-liste__item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1rem;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+  transition: background 0.2s;
+}
+.dispo-liste__item:hover {
+  background: rgba(255,255,255,0.06);
+}
+.dispo-liste__info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.dispo-liste__dates {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+}
+.dispo-liste__motif {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #999);
+}
+.dispo-liste__badge {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.dispo-liste__badge--futur {
+  background: rgba(212,165,116,0.15);
+  color: rgba(212,165,116,1);
+}
+.dispo-liste__badge--passe {
+  background: rgba(255,255,255,0.08);
+  color: var(--text-secondary, #999);
+}
+.dispo-liste__badge--actif {
+  background: rgba(231,76,60,0.12);
+  color: #e74c3c;
+}
+.dispo-liste__suppr {
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(231,76,60,0.3);
+  background: rgba(231,76,60,0.06);
+  color: #e74c3c;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+  margin-left: 0.75rem;
+}
+.dispo-liste__suppr:hover {
+  background: rgba(231,76,60,0.2);
+  border-color: rgba(231,76,60,0.5);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .dispo-subtabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .dispo-subtabs::-webkit-scrollbar { display: none; }
+  .dispo-absence-form__row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .dispo-absence-form__group:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+  .dispo-absence-form__group--btn {
+    grid-column: 1 / -1;
+  }
+  .dispo-date-form__row {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+  .dispo-date-form__group:nth-child(4) {
+    grid-column: 1 / -1;
+  }
+  .dispo-date-form__group--btn {
+    grid-column: 1 / -1;
+  }
+  .dispo-time { width: 100%; }
+}
+@media (max-width: 480px) {
+  .dispo-absence-form__row,
+  .dispo-date-form__row {
+    grid-template-columns: 1fr;
+  }
+  .dispo-creneau {
+    flex-wrap: wrap;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   BANNIÈRE D'ABSENCE — Accueil
+   ═══════════════════════════════════════════════════ */
+.absence-banner {
+  position: relative;
+  z-index: 100;
+  background: linear-gradient(135deg, rgba(212,165,116,0.12) 0%, rgba(180,120,60,0.18) 100%);
+  border-bottom: 1px solid rgba(212,165,116,0.25);
+  animation: absenceBannerSlideIn 0.5s ease-out;
+}
+.absence-banner[hidden] {
+  display: none;
+}
+@keyframes absenceBannerSlideIn {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0); opacity: 1; }
+}
+.absence-banner__inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0.85rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+.absence-banner__icon {
+  flex-shrink: 0;
+  width: 38px;
+  height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(212,165,116,0.15);
+  border-radius: 50%;
+  color: rgba(212,165,116,1);
+}
+.absence-banner__icon svg {
+  stroke: rgba(212,165,116,1);
+}
+.absence-banner__text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+  min-width: 0;
+}
+.absence-banner__title {
+  font-family: 'Work Sans', sans-serif;
+  font-weight: 700;
+  font-size: 0.92rem;
+  color: rgba(212,165,116,1);
+  line-height: 1.3;
+}
+.absence-banner__detail {
+  font-family: 'Work Sans', sans-serif;
+  font-size: 0.82rem;
+  color: var(--text-secondary, #bbb);
+  line-height: 1.4;
+}
+.absence-banner__close {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.05);
+  color: var(--text-secondary, #999);
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  line-height: 1;
+}
+.absence-banner__close:hover {
+  background: rgba(255,255,255,0.12);
+  color: #fff;
+}
+@media (max-width: 600px) {
+  .absence-banner__inner {
+    padding: 0.75rem 1rem;
+    gap: 0.6rem;
+  }
+  .absence-banner__title {
+    font-size: 0.85rem;
+  }
+  .absence-banner__detail {
+    font-size: 0.78rem;
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   BADGES NOTIFICATIONS — Onglets Admin
+   ═══════════════════════════════════════════════════ */
+.admin-dash-tab {
+  position: relative;
+}
+.admin-tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #e74c3c;
+  color: #fff;
+  font-size: 0.68rem;
+  font-weight: 700;
+  font-family: 'Work Sans', sans-serif;
+  line-height: 1;
+  margin-left: 0.3rem;
+  animation: badgePop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  flex-shrink: 0;
+}
+.admin-tab-badge[hidden] {
+  display: none;
+}
+@keyframes badgePop {
+  0% { transform: scale(0); opacity: 0; }
+  70% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+/* Badge accent pour certains onglets */
+.admin-tab-badge--accent {
+  background: rgba(212,165,116,0.9);
+}
+.admin-tab-badge--info {
+  background: #3498db;
+}
+
+/* ═══════════════════════════════════════════════════
+   OPTIMISATIONS iPHONE / MOBILE (≤480px)
+   ═══════════════════════════════════════════════════ */
+
+/* --- Safe area pour les iPhone avec encoche --- */
+@supports (padding: env(safe-area-inset-top)) {
+  .header { padding-top: env(safe-area-inset-top); }
+  .footer__bottom { padding-bottom: env(safe-area-inset-bottom); }
+}
+
+/* --- iPhone SE / petits écrans (≤380px) --- */
+@media (max-width: 380px) {
+  .admin-dash-stat-card__label {
+    font-size: 0.65rem;
+  }
+  .admin-dash-stat-card__value {
+    font-size: 1.1rem;
+  }
+  .admin-ca-card__label {
+    font-size: 0.68rem;
+  }
+  .admin-ca-card__value {
+    font-size: 1rem;
+  }
+  .hero__title {
+    font-size: 1.6rem;
+  }
+  .hero__desc {
+    font-size: 0.88rem;
+  }
+}
+
+/* --- Mobile standard iPhone (≤480px) --- */
+@media (max-width: 480px) {
+
+  /* Admin stats : 2 colonnes sur mobile */
+  .admin-dash-stats {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 0.5rem;
+  }
+  .admin-dash-stat-card {
+    padding: 0.7rem;
+  }
+  .admin-dash-stat-card__label {
+    font-size: 0.7rem;
+    word-break: break-word;
+    hyphens: auto;
+  }
+
+  /* Admin CA grids : 1 colonne sur mobile */
+  .admin-ca-grid,
+  .admin-ca-grid--3col {
+    grid-template-columns: 1fr !important;
+    gap: 0.5rem;
+  }
+  .admin-ca-card {
+    padding: 0.75rem 0.5rem;
+  }
+  .admin-ca-card__label {
+    font-size: 0.72rem;
+    word-break: break-word;
+  }
+
+  /* Revenus split : empiler */
+  .admin-revenus-split {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem;
+  }
+
+  /* Bénéfices grid */
+  .admin-benef-section .admin-ca-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Dépenses grid */
+  #form-depense > div {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Admin tabs : badges positionnement mobile */
+  .admin-dash-tab {
+    padding: 0.5rem 0.55rem;
+    gap: 0.2rem;
+  }
+  .admin-dash-tabs {
+    gap: 0.25rem;
+    justify-content: flex-start;
+  }
+
+  /* Bannière absence : safe padding */
+  .absence-banner__inner {
+    padding: 0.7rem 0.75rem;
+    gap: 0.6rem;
+  }
+  .absence-banner__icon {
+    width: 32px;
+    height: 32px;
+  }
+  .absence-banner__icon svg {
+    width: 18px;
+    height: 18px;
+  }
+  .absence-banner__title {
+    font-size: 0.82rem;
+  }
+  .absence-banner__detail {
+    font-size: 0.75rem;
+  }
+
+  /* Footer : zone tactile minimum 44px */
+  .footer__col a {
+    display: block;
+    padding: 0.55rem 0;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    font-size: 0.85rem;
+  }
+  .footer__col {
+    padding-left: 0.5rem;
+  }
+  .footer__socials {
+    gap: 1rem;
+  }
+  .footer__social-link {
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .footer__social-link svg {
+    width: 24px;
+    height: 24px;
+  }
+
+  /* Filtres nouveautés : scroll horizontal avec indicateur de fade */
+  .nouveautes-filters {
+    padding: 0 0.75rem 0.5rem;
+    gap: 0.3rem;
+    position: relative;
+  }
+  .nouveautes-filter {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.76rem;
+  }
+  /* Indicateur de scroll à droite */
+  .nouveautes-filters::after {
+    content: '';
+    position: sticky;
+    right: 0;
+    top: 0;
+    flex-shrink: 0;
+    width: 2rem;
+    height: 100%;
+    background: linear-gradient(to right, transparent, var(--color-bg, #1a1a2e));
+    pointer-events: none;
+  }
+
+  /* Contact page : réduire le whitespace */
+  .contact-page .section-header,
+  #contact .section-header {
+    margin-bottom: 1rem;
+  }
+  .contact-cards {
+    gap: 0.75rem;
+  }
+
+  /* Boutons flottants : plus petits et mieux positionnés */
+  .floating-btn,
+  .btn-mute,
+  [class*="floating"],
+  [class*="mute-btn"],
+  .audio-mute-btn {
+    width: 38px !important;
+    height: 38px !important;
+    bottom: 12px !important;
+  }
+
+  /* Services : améliorations cartes */
+  .service-card {
+    margin: 0 0.25rem;
+  }
+
+  /* Compte tabs (client) : scroll horizontal fluide */
+  .compte-tabs {
+    gap: 0.15rem;
+  }
+  .compte-tabs__btn {
+    padding: 0.5rem 0.6rem;
+    font-size: 0.72rem;
+  }
+
+  /* Disponibilités : formulaires mobiles */
+  .dispo-absence-form__row,
+  .dispo-date-form__row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  .dispo-time {
+    width: 100%;
+  }
+  .dispo-creneau {
+    gap: 0.35rem;
+  }
+  .dispo-subtabs {
+    gap: 0.3rem;
+  }
+  .dispo-subtab {
+    padding: 0.45rem 0.7rem;
+    font-size: 0.76rem;
+  }
+}
+
+/* --- Correctifs iPhone spécifiques --- */
+
+/* Empêcher le zoom sur les inputs (iOS zoom quand font-size < 16px) */
+@media screen and (max-width: 768px) {
+  input[type="text"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="password"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="url"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Smooth momentum scrolling pour les zones scrollables */
+.admin-dash-tabs,
+.compte-tabs,
+.nouveautes-filters,
+.dispo-subtabs {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Tap highlight sur iOS */
+a, button, [role="button"] {
+  -webkit-tap-highlight-color: rgba(212, 165, 116, 0.15);
+}
+
+/* Fix pour le safe-area-inset en mode paysage iPhone */
+@media (max-width: 812px) and (orientation: landscape) {
+  .absence-banner__inner {
+    padding-left: max(0.75rem, env(safe-area-inset-left));
+    padding-right: max(0.75rem, env(safe-area-inset-right));
+  }
+  .footer__bottom {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+}
+
+/* Newsletter section mobile */
+@media (max-width: 480px) {
+  .newsletter-section__inner {
+    padding: var(--space-8) var(--space-4);
+  }
+  .newsletter-section__title {
+    font-size: var(--text-xl);
+  }
+  .newsletter-form__fields {
+    flex-direction: column;
+  }
+  .newsletter-form__input {
+    width: 100%;
+  }
+}
+
+/* Blog cards grid mobile fix */
+@media (max-width: 480px) {
+  .blog-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+}
+
+/* Admin tabs overflow on mobile */
+@media (max-width: 768px) {
+  .admin-dash-tabs {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    flex-wrap: nowrap;
+    gap: var(--space-1);
+  }
+  .admin-dash-tab {
+    white-space: nowrap;
+    flex-shrink: 0;
+    font-size: var(--text-xs);
+    padding: var(--space-2) var(--space-3);
+  }
+}
+
+/* Admin expense form grid mobile */
+@media (max-width: 640px) {
+  #form-depense {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Contact section email overflow */
+@media (max-width: 480px) {
+  .contact-card {
+    word-break: break-all;
+  }
+}
+
+/* Floating newsletter mobile positioning */
+@media (max-width: 480px) {
+  .nl-float {
+    bottom: var(--space-3);
+    right: var(--space-3);
+  }
+  .nl-float__card {
+    right: 0;
+    width: calc(100vw - var(--space-6));
+    max-width: 340px;
+  }
+}
+
+/* Hero CTA buttons stack on very small screens */
+@media (max-width: 380px) {
+  .hero__cta {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+  .hero__cta .btn {
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* ========================================
+   UNIFIED FLOATING ACTION BUTTON (uFAB)
+   ======================================== */
+.ufab {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: center;
+  gap: 0;
+}
+
+/* Backdrop */
+.ufab__backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.18);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+  z-index: -1;
+}
+.ufab--open .ufab__backdrop {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Main toggle button */
+.ufab__main {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-full, 50%);
+  border: 1.5px solid var(--color-primary, #6b7f4e);
+  background: var(--color-surface, #fff);
+  color: var(--color-primary, #6b7f4e);
+  cursor: pointer;
+  transition: all 320ms cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.10);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  z-index: 10;
+}
+.ufab__main:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 28px rgba(107, 127, 78, 0.25);
+  background: var(--color-primary, #6b7f4e);
+  color: #fff;
+}
+.ufab__main:active {
+  transform: scale(0.96);
+}
+
+/* Icon toggle */
+.ufab__icon--close {
+  display: none;
+}
+.ufab--open .ufab__icon--menu {
+  display: none;
+}
+.ufab--open .ufab__icon--close {
+  display: block;
+}
+.ufab--open .ufab__main {
+  background: var(--color-primary, #6b7f4e);
+  color: #fff;
+  border-color: var(--color-primary, #6b7f4e);
+  transform: rotate(0deg);
+}
+
+/* Main badge */
+.ufab__main-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full, 50%);
+  background: var(--color-accent, #b8952e);
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ufab--open .ufab__main-badge {
+  transform: scale(0);
+}
+
+/* Sub-action buttons container */
+.ufab__action {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.4) translateY(0);
+  transition: all 280ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Stagger positions when open — vertical stack above main button */
+.ufab--open .ufab__action {
+  opacity: 1;
+  pointer-events: auto;
+  transform: scale(1) translateY(0);
+}
+.ufab--open .ufab__action--cart {
+  bottom: 68px;
+  transition-delay: 40ms;
+}
+.ufab--open .ufab__action--sound {
+  bottom: 126px;
+  transition-delay: 80ms;
+}
+.ufab--open .ufab__action--newsletter {
+  bottom: 184px;
+  transition-delay: 120ms;
+}
+
+/* Closing stagger (reverse) */
+.ufab:not(.ufab--open) .ufab__action--newsletter {
+  transition-delay: 0ms;
+}
+.ufab:not(.ufab--open) .ufab__action--sound {
+  transition-delay: 40ms;
+}
+.ufab:not(.ufab--open) .ufab__action--cart {
+  transition-delay: 80ms;
+}
+
+/* Sub-button style */
+.ufab__action-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full, 50%);
+  border: 1.5px solid var(--color-divider, rgba(0,0,0,0.1));
+  background: var(--color-surface, #fff);
+  color: var(--color-text, #333);
+  cursor: pointer;
+  transition: all 240ms ease;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+}
+.ufab__action-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+}
+.ufab__action-btn:active {
+  transform: scale(0.94);
+}
+
+/* Newsletter sub-button accent */
+.ufab__action--newsletter .ufab__action-btn {
+  border-color: var(--color-primary, #6b7f4e);
+  color: var(--color-primary, #6b7f4e);
+}
+.ufab__action--newsletter .ufab__action-btn:hover {
+  background: var(--color-primary, #6b7f4e);
+  color: #fff;
+}
+
+/* Sound sub-button accent */
+.ufab__action--sound .ufab__action-btn {
+  border-color: var(--color-accent, #b8952e);
+  color: var(--color-accent, #b8952e);
+}
+.ufab__action--sound .ufab__action-btn:hover {
+  background: var(--color-accent, #b8952e);
+  color: #fff;
+}
+
+/* Sound playing state */
+.ufab__action--sound.ufab-sound--playing .ufab__action-btn {
+  background: var(--color-accent, #b8952e);
+  color: #fff;
+  border-color: var(--color-accent, #b8952e);
+  animation: ufab-sound-glow 2.4s ease-out infinite;
+}
+@keyframes ufab-sound-glow {
+  0%   { box-shadow: 0 2px 12px rgba(184, 149, 46, 0.2); }
+  50%  { box-shadow: 0 2px 20px rgba(184, 149, 46, 0.5); }
+  100% { box-shadow: 0 2px 12px rgba(184, 149, 46, 0.2); }
+}
+
+/* Cart sub-button accent */
+.ufab__action--cart .ufab__action-btn {
+  border-color: var(--color-accent, #b8952e);
+  color: var(--color-accent, #b8952e);
+}
+.ufab__action--cart .ufab__action-btn:hover {
+  background: var(--color-accent, #b8952e);
+  color: #fff;
+}
+
+/* Sub-button badges */
+.ufab__badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 16px;
+  height: 16px;
+  border-radius: var(--radius-full, 50%);
+  background: var(--color-accent, #b8952e);
+  color: #fff;
+  font-size: 0.55rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  pointer-events: none;
+  border: 1.5px solid var(--color-surface, #fff);
+}
+/* FIX: hidden badge must not display */
+.ufab__badge[hidden] {
+  display: none !important;
+}
+.ufab__badge--cart {
+  background: #dc2626;
+}
+
+/* Tooltip labels */
+.ufab__action::before {
+  content: attr(data-tooltip);
+  position: absolute;
+  right: calc(100% + 0.6rem);
+  white-space: nowrap;
+  font-family: var(--font-body, sans-serif);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--color-text, #333);
+  background: var(--color-surface, #fff);
+  border: 1px solid var(--color-divider, rgba(0,0,0,0.1));
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-md, 6px);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  opacity: 0;
+  transform: translateX(4px);
+  transition: all 200ms ease;
+  pointer-events: none;
+}
+.ufab--open .ufab__action:hover::before {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+/* Newsletter card repositioned for ufab */
+.ufab .nl-float__card {
+  position: absolute;
+  bottom: 120px;
+  right: calc(100% + 0.75rem);
+  left: auto;
+  width: 300px;
+  z-index: 20;
+}
+
+/* Mobile adjustments */
+@media (max-width: 640px) {
+  .ufab {
+    bottom: calc(1.25rem + env(safe-area-inset-bottom, 0px));
+    right: 1rem;
+  }
+  .ufab__main {
+    width: 48px;
+    height: 48px;
+  }
+  .ufab__main svg {
+    width: 20px;
+    height: 20px;
+  }
+  .ufab__action-btn {
+    width: 42px;
+    height: 42px;
+  }
+  .ufab__action-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+  .ufab--open .ufab__action--cart {
+    bottom: 60px;
+    transition-delay: 40ms;
+  }
+  .ufab--open .ufab__action--sound {
+    bottom: 114px;
+    transition-delay: 80ms;
+  }
+  .ufab--open .ufab__action--newsletter {
+    bottom: 168px;
+    transition-delay: 120ms;
+  }
+  .ufab .nl-float__card {
+    bottom: auto;
+    right: 0;
+    top: auto;
+    position: fixed;
+    bottom: 5rem;
+    right: 1rem;
+    width: calc(100vw - 2rem);
+    max-width: 340px;
+  }
+  /* Hide tooltips on mobile (touch devices) */
+  .ufab__action::before {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .ufab {
+    bottom: var(--space-3, 0.75rem);
+    right: var(--space-3, 0.75rem);
+  }
+  .ufab .nl-float__card {
+    width: calc(100vw - 1.5rem);
+    right: var(--space-3, 0.75rem);
+  }
+}
+
+/* Save error toast animation */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.save-error-toast {
+  font-family: var(--font-body);
+  line-height: 1.4;
+}
+
+/* ==================== RESTOCK ALERT SYSTEM ==================== */
+.restock-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.6rem 1.2rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #8b5e3c, #d4a574);
+  color: #fff;
+  font-size: 0.88rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+.restock-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+.restock-btn svg {
+  flex-shrink: 0;
+}
+/* Restock button on product cards (replaces disabled add-to-cart) */
+.boutique-product-card__restock-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #8b5e3c, #d4a574);
+  color: #fff;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+  width: 100%;
+  justify-content: center;
+}
+.boutique-product-card__restock-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* Restock Modal */
+.restock-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.3s, visibility 0.3s;
+}
+.restock-modal--open {
+  opacity: 1;
+  visibility: visible;
+}
+.restock-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+}
+.restock-modal__content {
+  position: relative;
+  background: #fff;
+  border-radius: 1rem;
+  padding: 2rem;
+  max-width: 420px;
+  width: 100%;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  transform: translateY(20px);
+  transition: transform 0.3s;
+}
+.restock-modal--open .restock-modal__content {
+  transform: translateY(0);
+}
+.restock-modal__close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #999;
+  line-height: 1;
+  padding: 0.25rem;
+}
+.restock-modal__close:hover {
+  color: #333;
+}
+.restock-modal__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: linear-gradient(135deg, rgba(139, 94, 60, 0.12), rgba(212, 165, 116, 0.12));
+  margin-bottom: 1rem;
+}
+.restock-modal__title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 0.4rem;
+}
+.restock-modal__product-name {
+  font-size: 0.9rem;
+  color: #8b5e3c;
+  font-weight: 600;
+  margin: 0 0 0.75rem;
+}
+.restock-modal__text {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.5;
+  margin: 0 0 1.2rem;
+}
+.restock-modal__form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+.restock-modal__input {
+  padding: 0.7rem 1rem;
+  border: 1.5px solid #e0d8d0;
+  border-radius: 0.5rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.restock-modal__input:focus {
+  border-color: #8b5e3c;
+}
+.restock-modal__submit {
+  padding: 0.7rem 1.5rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #8b5e3c, #d4a574);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.restock-modal__submit:hover {
+  opacity: 0.9;
+}
+.restock-modal__submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.restock-modal__success {
+  text-align: center;
+  padding: 1rem 0;
+}
+.restock-modal__success-icon {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+}
+.restock-modal__success-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #3a7a38;
+  margin: 0 0 0.5rem;
+}
+.restock-modal__success-text {
+  font-size: 0.85rem;
+  color: #666;
+  line-height: 1.5;
+  margin: 0;
+}
+.restock-modal__error {
+  font-size: 0.82rem;
+  color: #a33a30;
+  margin: 0;
+  text-align: center;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .restock-modal__content {
+  background: #1a1a2e;
+}
+[data-theme="dark"] .restock-modal__title {
+  color: #f0ebe4;
+}
+[data-theme="dark"] .restock-modal__text {
+  color: #b0a898;
+}
+[data-theme="dark"] .restock-modal__input {
+  background: #2d2d44;
+  border-color: #3d3d55;
+  color: #f0ebe4;
+}
+[data-theme="dark"] .restock-modal__close {
+  color: #777;
+}
+[data-theme="dark"] .restock-modal__close:hover {
+  color: #ccc;
+}
+
+
+/* ========================================
+   MOBILE OPTIMISATION — BOUTIQUE (2026-03-30)
+   Comprehensive mobile enhancements for the
+   boutique page and related components.
+   ======================================== */
+
+/* ─── 1. Nouveautés filters: ensure last tab is accessible ─── */
+@media (max-width: 768px) {
+  .nouveautes-filters {
+    /* Override the existing padding to add right space for the last item */
+    padding: 0 1rem 0.5rem;
+    mask-image: linear-gradient(to right, #000 85%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, #000 85%, transparent 100%);
+  }
+  /* Add an invisible spacer after the last filter to ensure full scroll */
+  .nouveautes-filter:last-child {
+    margin-right: 2rem;
+  }
+}
+
+/* ─── 2. Nouveautés badge: prevent clipping on small thumbnails ─── */
+@media (max-width: 768px) {
+  .nouveautes-card__badge {
+    max-width: calc(100% - 0.7rem);
+    font-size: 0.48rem;
+    padding: 0.12rem 0.3rem;
+    letter-spacing: 0.01em;
+    gap: 0.15rem;
+    /* Hide the SVG icon on small thumbnails to save space */
+  }
+  .nouveautes-card__badge svg {
+    display: none;
+  }
+}
+
+/* ─── 3. Boutique filters: horizontal scroll on mobile ─── */
+@media (max-width: 768px) {
+  .boutique-filters {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding-bottom: 0.75rem;
+    position: relative;
+  }
+  .boutique-filters::-webkit-scrollbar {
+    display: none;
+  }
+  .boutique-filters__label {
+    flex-shrink: 0;
+  }
+  .boutique-filter-btn {
+    flex-shrink: 0;
+  }
+}
+
+/* ─── 4. Boutique product cards: mobile polish ─── */
+@media (max-width: 768px) {
+  .boutique-product-card {
+    border-radius: 0.625rem;
+  }
+  .boutique-product-card__image {
+    aspect-ratio: 4/3;
+  }
+  .boutique-product-card__content {
+    padding: 1rem 0.875rem;
+  }
+  .boutique-product-card__name {
+    font-size: 1rem;
+    margin: 0.35rem 0;
+  }
+  .boutique-product-card__desc {
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  /* Stack price + button when space is tight */
+  .boutique-product-card__footer {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+  .boutique-product-card__price {
+    font-size: 1.05rem;
+  }
+  .boutique-product-card__add-cart {
+    flex: 1;
+    justify-content: center;
+    padding: 0.6rem 1rem;
+    min-height: 44px;
+    font-size: 0.85rem;
+  }
+  /* Restock button same treatment */
+  .boutique-product-card__restock-btn {
+    flex: 1;
+    justify-content: center;
+    min-height: 44px;
+  }
+  /* Stock badge smaller on mobile */
+  .boutique-product-card__stock-badge {
+    font-size: 0.62rem;
+    padding: 0.2rem 0.5rem;
+  }
+  /* Disable hover transform on touch devices */
+  .boutique-product-card:hover {
+    transform: none;
+  }
+}
+
+/* ─── 5. Boutique suggestions: improve mobile sizing ─── */
+@media (max-width: 768px) {
+  .boutique-suggestions {
+    margin-top: var(--space-8);
+    padding-top: var(--space-6);
+  }
+  .boutique-suggestions__header {
+    margin-bottom: var(--space-4);
+  }
+  .boutique-suggestions__title {
+    font-size: var(--text-base);
+  }
+  .boutique-suggestion-card {
+    flex: 0 0 160px;
+  }
+  .boutique-suggestion-card__body {
+    padding: 0.6rem;
+  }
+  .boutique-suggestion-card__name {
+    font-size: 0.8rem;
+  }
+  .boutique-suggestion-card__price {
+    font-size: 0.82rem;
+  }
+}
+
+/* ─── 6. Cart FAB: safe positioning on mobile ─── */
+@media (max-width: 768px) {
+  .cart-fab {
+    bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+    right: 1rem;
+    width: 50px;
+    height: 50px;
+  }
+  /* Ensure last product card isn't hidden behind FAB */
+  .boutique-products-grid {
+    padding-bottom: 1rem;
+  }
+}
+
+/* ─── 7. Product overlay: better mobile experience ─── */
+@media (max-width: 768px) {
+  .product-overlay {
+    padding: 0;
+  }
+  .product-overlay__body {
+    border-radius: 0.75rem;
+  }
+  .product-overlay__gallery {
+    border-radius: 0.75rem 0.75rem 0 0;
+  }
+  .product-overlay__name {
+    font-size: 1.15rem;
+  }
+  .product-overlay__price {
+    font-size: 1.25rem;
+  }
+  .product-overlay__add-cart,
+  .product-overlay__add-cart.btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+    font-size: 0.95rem;
+  }
+  .product-overlay__desc-sections {
+    font-size: 0.9rem;
+    line-height: 1.65;
+  }
+  .product-overlay__close {
+    top: 0.5rem;
+    right: 0.5rem;
+    width: 36px;
+    height: 36px;
+  }
+}
+
+/* ─── 8. Boutique hero: tighter on mobile ─── */
+@media (max-width: 768px) {
+  #boutique .services-hero {
+    padding-block: clamp(var(--space-8), 8vw, var(--space-16));
+  }
+  #boutique .section-header__title {
+    font-size: var(--text-xl);
+  }
+  #boutique .section-header__desc {
+    font-size: var(--text-sm);
+    line-height: 1.6;
+    max-width: 90%;
+    margin-inline: auto;
+  }
+}
+
+/* ─── 9. Cart drawer: full-width on mobile ─── */
+@media (max-width: 768px) {
+  .cart-drawer__panel {
+    width: 100vw;
+  }
+  .cart-drawer__items {
+    padding: 0.75rem 1rem;
+  }
+  .cart-drawer__footer {
+    padding: 1rem;
+  }
+  .cart-item__img {
+    width: 60px;
+    height: 60px;
+  }
+}
+
+/* ─── 10. Newsletter in boutique: touch-friendly ─── */
+@media (max-width: 768px) {
+  .boutique-coming .newsletter-inline {
+    max-width: 100%;
+    padding: 0;
+  }
+  .boutique-coming .newsletter-form__input {
+    min-height: 44px;
+    font-size: 1rem;
+  }
+  .boutique-coming .newsletter-form__btn {
+    width: 100%;
+    min-height: 48px;
+    justify-content: center;
+  }
+}
+
+/* ─── 11. Extra-small screens (iPhone SE, 375px and below) ─── */
+@media (max-width: 380px) {
+  .boutique-product-card__footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .boutique-product-card__add-cart {
+    width: 100%;
+  }
+  .boutique-filter-btn {
+    font-size: 0.72rem;
+    padding: 0.35rem 0.65rem;
+  }
+  .boutique-product-card__content {
+    padding: 0.75rem;
+  }
+  .product-overlay__info {
+    padding: 1.25rem 1rem;
+  }
+}
+
+
+/* ========================================
+   DESKTOP OPTIMISATION — BOUTIQUE & SITE (2026-03-30)
+   Comprehensive desktop enhancements for spacing,
+   alignment, hover effects, and visual polish.
+   ======================================== */
+
+/* ─── 1. Boutique: reduce gap between hero and filters ─── */
+@media (min-width: 769px) {
+  #boutique > section:nth-child(2) {
+    padding-top: var(--space-8);
+  }
+}
+
+/* ─── 2. Boutique product cards: consistent heights ─── */
+@media (min-width: 769px) {
+  .boutique-product-card__content {
+    padding: 1.25rem 1.25rem;
+  }
+  .boutique-product-card__name {
+    font-size: 1.05rem;
+    min-height: 2.85em;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .boutique-product-card__desc--short {
+    min-height: 3.9em;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  /* Ensure footer always sits at bottom of card */
+  .boutique-product-card__footer {
+    margin-top: auto;
+  }
+  /* Refine hover effect */
+  .boutique-product-card {
+    transition:
+      transform 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+      box-shadow 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+      border-color 0.35s ease;
+  }
+  .boutique-product-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+    border-color: var(--color-accent);
+  }
+}
+
+/* ─── 3. Product overlay: desktop polish ─── */
+@media (min-width: 769px) {
+  .product-overlay__content {
+    max-width: 1000px;
+    margin-inline: auto;
+    padding: 3rem 2rem;
+  }
+  .product-overlay__body {
+    border-radius: 1rem;
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.1);
+  }
+  .product-overlay__gallery {
+    border-radius: 1rem 0 0 1rem;
+  }
+  .product-overlay__info {
+    padding: 2.5rem 2.25rem;
+  }
+  .product-overlay__name {
+    font-size: 1.6rem;
+    line-height: 1.25;
+    margin-bottom: 0.75rem;
+  }
+  .product-overlay__short-desc {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--color-text-muted);
+  }
+  .product-overlay__purchase-block {
+    padding: 1.5rem;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface);
+    margin-top: 1.25rem;
+  }
+  .product-overlay__price {
+    font-size: 1.5rem;
+  }
+  .product-overlay__add-cart {
+    font-size: 1rem;
+    padding: 1rem 2rem;
+    border-radius: var(--radius-lg);
+  }
+  .product-overlay__close {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, color 0.2s;
+  }
+  .product-overlay__close:hover {
+    background: var(--color-surface-2);
+  }
+}
+
+/* ─── 4. Boutique hero: improve text readability on desktop ─── */
+@media (min-width: 769px) {
+  #boutique .services-hero {
+    min-height: 360px;
+    display: flex;
+    align-items: center;
+  }
+  #boutique .services-hero__bg::after {
+    background: linear-gradient(
+      to right,
+      oklch(from var(--color-bg) l c h / 0.92) 0%,
+      oklch(from var(--color-bg) l c h / 0.7) 50%,
+      oklch(from var(--color-bg) l c h / 0.25) 100%
+    );
+  }
+  #boutique .section-header {
+    max-width: 560px;
+  }
+  #boutique .section-header__title {
+    font-size: var(--text-3xl);
+    margin-bottom: var(--space-4);
+  }
+  #boutique .section-header__desc {
+    font-size: var(--text-lg);
+    max-width: 480px;
+    line-height: 1.6;
+  }
+}
+
+/* ─── 5. Navigation header: subtle underline hover ─── */
+@media (min-width: 769px) {
+  .header__nav a::after {
+    content: '';
+    position: absolute;
+    bottom: -2px;
+    left: 0;
+    width: 0;
+    height: 1.5px;
+    background: var(--color-primary);
+    transition: width 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .header__nav a:hover::after,
+  .header__nav a.active::after {
+    width: 100%;
+  }
+  /* Exclude non-text links from underline */
+  .header__nav .cart-toggle::after,
+  .header__nav .theme-toggle::after {
+    display: none;
+  }
+}
+
+/* ─── 6. Nouveautés cards: desktop polish ─── */
+@media (min-width: 769px) {
+  .nouveautes-grid {
+    gap: 1.5rem;
+  }
+  .nouveautes-card {
+    transition:
+      transform 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+      box-shadow 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+      border-color 0.3s ease;
+  }
+  .nouveautes-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+    border-color: var(--color-accent);
+  }
+  .nouveautes-card__title {
+    min-height: 2.6em;
+  }
+  .nouveautes-card__excerpt {
+    min-height: 2.8em;
+  }
+}
+
+/* ─── 7. Boutique filters: desktop alignment ─── */
+@media (min-width: 769px) {
+  .boutique-filters {
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 2.5rem;
+    padding-bottom: 1.5rem;
+  }
+  .boutique-filter-btn {
+    transition:
+      background 0.25s cubic-bezier(0.23, 1, 0.32, 1),
+      border-color 0.25s ease,
+      color 0.25s ease,
+      box-shadow 0.25s ease,
+      transform 0.2s ease;
+  }
+  .boutique-filter-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  }
+  .boutique-filter-btn--active {
+    box-shadow: 0 2px 12px rgba(184, 149, 46, 0.2);
+  }
+}
+
+/* ─── 8. Blog cards: desktop grid consistency ─── */
+@media (min-width: 769px) {
+  .blog-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(340px, 100%), 1fr));
+    gap: 2rem;
+  }
+  .blog-card {
+    transition:
+      transform 0.35s cubic-bezier(0.23, 1, 0.32, 1),
+      box-shadow 0.35s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+  .blog-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 28px rgba(0, 0, 0, 0.08);
+  }
+}
+
+/* ─── 9. Service cards: desktop hover refinement ─── */
+@media (min-width: 769px) {
+  .service-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    border-color: oklch(from var(--color-accent) l c h / 0.2);
+  }
+}
+
+/* ─── 10. Newsletter section: tighter desktop layout ─── */
+@media (min-width: 769px) {
+  .newsletter-section__inner {
+    padding: var(--space-16) var(--space-8);
+  }
+  .newsletter-form__fields {
+    max-width: 420px;
+    margin-inline: auto;
+  }
+  .newsletter-form__btn {
+    margin-inline: auto;
+  }
+}
+
+/* ─── 11. Footer: desktop spacing refinement ─── */
+@media (min-width: 769px) {
+  .footer {
+    padding-block: var(--space-16);
+  }
+  .footer__grid {
+    gap: var(--space-10);
+  }
+  .footer__col a {
+    transition: color 0.2s ease, padding-left 0.25s ease;
+  }
+  .footer__col a:hover {
+    color: var(--color-primary);
+    padding-left: 0.25rem;
+  }
+}
+
+/* ─── 12. CTA section: desktop spacing ─── */
+@media (min-width: 769px) {
+  .cta-section__inner {
+    padding: var(--space-12) var(--space-8);
+    max-width: 640px;
+    margin-inline: auto;
+  }
+}
+
+/* ─── 13. Cart drawer: desktop refinement ─── */
+@media (min-width: 769px) {
+  .cart-drawer__panel {
+    width: 440px;
+    border-radius: var(--radius-xl) 0 0 var(--radius-xl);
+  }
+  .cart-drawer__checkout {
+    font-size: 1.05rem;
+    padding: 1rem 2rem;
+    border-radius: var(--radius-lg);
+  }
+}
+
+/* ─── 14. Scroll animations: smoother on desktop ─── */
+@media (min-width: 769px) {
+  .fade-in {
+    transition: opacity 0.6s cubic-bezier(0.23, 1, 0.32, 1),
+                transform 0.6s cubic-bezier(0.23, 1, 0.32, 1);
+  }
+}
+
+/* ─── 15. Wide screens (1600px+): prevent overly stretched layouts ─── */
+@media (min-width: 1600px) {
+  .boutique-products-grid {
+    grid-template-columns: repeat(4, 1fr);
+    max-width: 1400px;
+    margin-inline: auto;
+  }
+  .nouveautes-grid {
+    max-width: 1400px;
+    margin-inline: auto;
+  }
+  .blog-grid {
+    max-width: 1400px;
+    margin-inline: auto;
+  }
+}
+
+/* ─── 16. Tablet (769px–1024px): 2 columns for products ─── */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .boutique-products-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .nouveautes-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}

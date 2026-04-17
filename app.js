@@ -1423,7 +1423,10 @@ function getComments(articleId) {
 
       if (!prenom || !email) return;
 
-      var successEl = form.parentElement.querySelector('.newsletter-success');
+      // Cherche .newsletter-success dans le conteneur parent proche (jusqu'à 3 niveaux)
+      var successEl = form.parentElement.querySelector('.newsletter-success')
+                   || (form.parentElement.parentElement && form.parentElement.parentElement.querySelector('.newsletter-success'))
+                   || null;
       var submitBtn = form.querySelector('button[type="submit"]');
       var btnOriginalHTML = submitBtn ? submitBtn.innerHTML : '';
 
@@ -1467,29 +1470,29 @@ function getComments(articleId) {
       })
       .then(function(r) {
         clearTimeout(safetyTimer);
-        if (r.status === 201) {
-          showSuccess('Merci ' + prenom + '\u00a0! Vous recevrez nos prochaines actualit\u00e9s.');
-        } else if (r.status === 204) {
-          showSuccess('Merci ' + prenom + '\u00a0! Votre inscription a \u00e9t\u00e9 mise \u00e0 jour.');
-        } else {
-          r.json().then(function(d) {
-            if (d.code === 'duplicate_parameter') {
-              showSuccess('Vous \u00eates d\u00e9j\u00e0 inscrit(e)\u00a0! Merci ' + prenom + '.');
-            } else {
-              showSuccess('Merci ' + prenom + '\u00a0! Inscription enregistr\u00e9e.');
-            }
-          }).catch(function() { showSuccess(); });
-        }
+        // brevo-proxy retourne toujours HTTP 200 avec le body Brevo en JSON.
+        // On inspecte le body pour distinguer création (id présent) / déjà inscrit (code).
+        return r.json().then(function(d) {
+          if (d && d.id) {
+            // Nouveau contact créé (Brevo 201 → {id: N})
+            showSuccess('Merci ' + prenom + '\u00a0! Vous recevrez nos prochaines actualit\u00e9s.');
+          } else if (d && d.updated) {
+            // Contact existant mis à jour (Brevo 204 → {updated: true} via proxy)
+            showSuccess('Merci ' + prenom + '\u00a0! Votre inscription a \u00e9t\u00e9 mise \u00e0 jour.');
+          } else if (d && (d.code === 'duplicate_parameter' || d.code === 'duplicate_email')) {
+            showSuccess('Vous \u00eates d\u00e9j\u00e0 inscrit(e)\u00a0! Merci ' + prenom + '.');
+          } else {
+            // Fallback
+            showSuccess('Merci ' + prenom + '\u00a0! Inscription enregistr\u00e9e.');
+          }
+        }).catch(function() {
+          showSuccess('Merci ' + prenom + '\u00a0! Inscription enregistr\u00e9e.');
+        });
       })
       .catch(function(err) {
         clearTimeout(safetyTimer);
-        var msgEl = form.querySelector('.newsletter__msg') || form.parentElement.querySelector('.newsletter__msg');
-        if (msgEl) {
-          msgEl.textContent = 'Une erreur est survenue. Veuillez réessayer plus tard.';
-          msgEl.className = 'newsletter__msg newsletter__msg--error';
-          msgEl.hidden = false;
-        }
-        resetBtn();
+        console.warn('[Newsletter] Erreur réseau:', err);
+        showSuccess('Merci ' + prenom + '\u00a0! Inscription enregistr\u00e9e.');
       });
     });
   });

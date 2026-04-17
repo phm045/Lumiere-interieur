@@ -103,54 +103,25 @@ jobs:
             exit 0
           fi
 
-          # ── 4. Construire le HTML de l'email ────────────────────────────
-          HTML_BODY=$(cat << HTMLEOF
-<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-<body style="margin:0;padding:0;background:#faf8f5;font-family:Georgia,serif;">
-<div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);">
-  <div style="background:linear-gradient(135deg,#1a1a2e 0%,#2d1b4e 100%);padding:40px 30px;text-align:center;">
-    <h1 style="color:#d4a574;font-size:22px;margin:0;font-weight:300;letter-spacing:3px;">Une Voix Intérieure</h1>
-    <p style="color:#c0b0a0;font-size:13px;margin:8px 0 0;">Voyance &amp; Guidance</p>
-  </div>
-  <div style="padding:32px 30px;">
-    <p style="font-size:16px;color:#333;line-height:1.7;">Bonjour,</p>
-    <p style="font-size:16px;color:#333;line-height:1.7;">De nouvelles mises à jour vous attendent sur <strong>Une Voix Intérieure</strong>&nbsp;:</p>
-    BODY_SECTIONS_PLACEHOLDER
-    <div style="text-align:center;margin:36px 0 24px;">
-      <a href="SITE_URL_PLACEHOLDER" style="display:inline-block;background:linear-gradient(135deg,#8b5e3c,#d4a574);color:#fff;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:600;">Découvrir les nouveautés</a>
-    </div>
-    <p style="font-size:14px;color:#888;line-height:1.6;">À très bientôt,<br><em>Philippe — Une Voix Intérieure</em></p>
-  </div>
-  <div style="background:#f5f0eb;padding:18px 30px;text-align:center;border-top:1px solid #e8e0d8;">
-    <p style="font-size:12px;color:#999;margin:0;">
-      Vous recevez cet email car vous êtes inscrit(e) à la newsletter.<br>
-      <a href="{{ unsubscribe }}" style="color:#8b5e3c;">Se désinscrire</a>
-    </p>
-  </div>
-</div>
-</body>
-</html>
-HTMLEOF
-)
-          # Injecter les sections dynamiques
-          HTML_BODY="${HTML_BODY//BODY_SECTIONS_PLACEHOLDER/$BODY_SECTIONS}"
-          HTML_BODY="${HTML_BODY//SITE_URL_PLACEHOLDER/$SITE_URL}"
+          # ── 4. Construire le template HTML de l'email ────────────────────
+          # Note: on construit le HTML avec printf pour éviter les problèmes YAML
+          build_html() {
+            local PRENOM="$1"
+            local SECTIONS="$2"
+            local SITE="$3"
+            printf '%s' '<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head><body style="margin:0;padding:0;background:#faf8f5;font-family:Georgia,serif;"><div style="max-width:600px;margin:0 auto;background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,0.08);"><div style="background:linear-gradient(135deg,#1a1a2e 0%,#2d1b4e 100%);padding:40px 30px;text-align:center;"><h1 style="color:#d4a574;font-size:22px;margin:0;font-weight:300;letter-spacing:3px;">Une Voix Int&eacute;rieure</h1><p style="color:#c0b0a0;font-size:13px;margin:8px 0 0;">Voyance &amp; Guidance</p></div><div style="padding:32px 30px;"><p style="font-size:16px;color:#333;line-height:1.7;">Bonjour '"$PRENOM"',</p><p style="font-size:16px;color:#333;line-height:1.7;">De nouvelles mises &agrave; jour vous attendent sur <strong>Une Voix Int&eacute;rieure</strong>&nbsp;:</p>'"$SECTIONS"'<div style="text-align:center;margin:36px 0 24px;"><a href="'"$SITE"'" style="display:inline-block;background:linear-gradient(135deg,#8b5e3c,#d4a574);color:#fff;text-decoration:none;padding:14px 36px;border-radius:8px;font-size:16px;font-weight:600;">D&eacute;couvrir les nouveaut&eacute;s</a></div><p style="font-size:14px;color:#888;line-height:1.6;">&Agrave; tr&egrave;s bient&ocirc;t,<br><em>Philippe &mdash; Une Voix Int&eacute;rieure</em></p></div><div style="background:#f5f0eb;padding:18px 30px;text-align:center;border-top:1px solid #e8e0d8;"><p style="font-size:12px;color:#999;margin:0;">Vous recevez cet email car vous &ecirc;tes inscrit(e) &agrave; la newsletter.<br><a href="{{ unsubscribe }}" style="color:#8b5e3c;">Se d&eacute;sinscrire</a></p></div></div></body></html>'
+          }
 
           # ── 5. Envoyer via sendTransacEmail (1 appel par abonné) ────────
-          # Plus fiable que createCampaign+sendNow (pas de délai, pas d'état "draft")
-
           echo "$CONTACTS_RESP" | jq -r '.contacts[] | [.email, (.attributes.PRENOM // "")] | @tsv' \
           | while IFS=$'\t' read -r EMAIL PRENOM; do
-            # Personnaliser le prénom
-            PERSONAL_HTML="${HTML_BODY//Bonjour,/Bonjour ${PRENOM:-},}"
+            HTML_BODY=$(build_html "${PRENOM:-}" "$BODY_SECTIONS" "$SITE_URL")
 
             PAYLOAD=$(jq -n \
-              --arg subject  "$SUBJECT" \
-              --arg html     "$PERSONAL_HTML" \
-              --arg to_email "$EMAIL" \
-              --arg to_name  "${PRENOM:-Abonné(e)}" \
+              --arg subject   "$SUBJECT" \
+              --arg html      "$HTML_BODY" \
+              --arg to_email  "$EMAIL" \
+              --arg to_name   "${PRENOM:-Abonné(e)}" \
               --arg from_email "$SENDER_EMAIL" \
               --arg from_name  "$SENDER_NAME" \
               '{

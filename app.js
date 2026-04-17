@@ -12,6 +12,7 @@
   var EDGE_FN_BASE = 'https://dhbbwzpfwtdtdiuixrmq.supabase.co/functions/v1';
   var BREVO_PROXY = EDGE_FN_BASE + '/brevo-proxy';
   var CAL_PROXY = EDGE_FN_BASE + '/cal-proxy';
+  var VISITOR_COUNTER = EDGE_FN_BASE + '/visitor-counter';
 
   // --- Safe storage wrappers (fallback to in-memory when sandboxed) ---
   var _memStore = {};
@@ -8359,54 +8360,81 @@ function getComments(articleId) {
   // ========================================
   (async function initCompteurVisiteurs() {
     var el = document.getElementById('compteur-visiteurs');
-    if (!window.supabase) return;
+    var sessionKey = 'li_visite_comptee';
+    var dejaCompte = false;
+    try { dejaCompte = !!safeSession.getItem(sessionKey); } catch(e) {}
 
+    var edgeFnSuccess = false;
+
+    // --- Priorité 1 : Edge Function visitor-counter ---
     try {
-      var sb = supabase;
-      var sessionKey = 'li_visite_comptee';
-      var dejaCompte = false;
-      try { dejaCompte = !!safeSession.getItem(sessionKey); } catch(e) {}
+      var edgeMethod = dejaCompte ? 'GET' : 'POST';
+      var edgeResp = await fetch(VISITOR_COUNTER, {
+        method: edgeMethod,
+        headers: { 'Content-Type': 'application/json' }
+      });
+      if (edgeResp.ok) {
+        var edgeData = await edgeResp.json();
+        if (!dejaCompte) {
+          try { safeSession.setItem(sessionKey, '1'); } catch(e) {}
+        }
+        if (el && edgeData && edgeData.count != null) {
+          el.textContent = Number(edgeData.count).toLocaleString('fr-FR');
+        }
+        edgeFnSuccess = true;
+      } else {
+        console.warn('[VisiteurCounter] Edge Function réponse non-ok:', edgeResp.status);
+      }
+    } catch(edgeErr) {
+      console.warn('[VisiteurCounter] Edge Function indisponible, fallback Supabase:', edgeErr.message);
+    }
 
-      if (!dejaCompte) {
-        // Incrémenter le compteur global
-        await sb.rpc('incrementer_visiteurs');
-        try { safeSession.setItem(sessionKey, '1'); } catch(e) {}
+    // --- Fallback : Supabase direct (si Edge Function a échoué) ---
+    if (!edgeFnSuccess && window.supabase) {
+      try {
+        var sb = supabase;
 
-        // Logger la visite avec IP et géolocalisation
-        try {
-          var geo = await fetch('https://ipapi.co/json/').then(function(r) { return r.json(); });
-          await sb.from('visites_log').insert({
-            ip: geo.ip || null,
-            ville: geo.city || null,
-            pays: geo.country_name || null,
-            region: geo.region || null,
-            navigateur: navigator.userAgent.substring(0, 200),
-            page: window.location.hash || '#accueil'
-          });
-        } catch(geoErr) {
-          // Fallback sans géolocalisation
+        if (!dejaCompte) {
+          // Incrémenter le compteur global
+          await sb.rpc('incrementer_visiteurs');
+          try { safeSession.setItem(sessionKey, '1'); } catch(e) {}
+
+          // Logger la visite avec IP et géolocalisation
           try {
+            var geo = await fetch('https://ipapi.co/json/').then(function(r) { return r.json(); });
             await sb.from('visites_log').insert({
-              ip: null,
-              ville: null,
-              pays: null,
-              region: null,
+              ip: geo.ip || null,
+              ville: geo.city || null,
+              pays: geo.country_name || null,
+              region: geo.region || null,
               navigateur: navigator.userAgent.substring(0, 200),
               page: window.location.hash || '#accueil'
             });
-          } catch(e2) {}
+          } catch(geoErr) {
+            // Fallback sans géolocalisation
+            try {
+              await sb.from('visites_log').insert({
+                ip: null,
+                ville: null,
+                pays: null,
+                region: null,
+                navigateur: navigator.userAgent.substring(0, 200),
+                page: window.location.hash || '#accueil'
+              });
+            } catch(e2) {}
+          }
         }
-      }
 
-      // Lire le total
-      if (el) {
-        var result = await sb.from('visiteurs').select('total').eq('id', 1).maybeSingle();
-        if (result.data && result.data.total != null) {
-          el.textContent = result.data.total.toLocaleString('fr-FR');
+        // Lire le total
+        if (el) {
+          var result = await sb.from('visiteurs').select('total').eq('id', 1).maybeSingle();
+          if (result.data && result.data.total != null) {
+            el.textContent = result.data.total.toLocaleString('fr-FR');
+          }
         }
+      } catch(e) {
+        // Fallback silencieux
       }
-    } catch(e) {
-      // Fallback silencieux
     }
   })();
 

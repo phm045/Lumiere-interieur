@@ -72,13 +72,24 @@ serve(async (req) => {
 
   try {
     const response = await fetch(`https://api.brevo.com${endpoint}`, fetchOptions);
+
+    // Brevo retourne 204 sans body pour les mises à jour de contacts (updateEnabled=true).
+    // On ne peut pas lire le body d'un 204 — on renvoie un JSON explicite.
+    if (response.status === 204) {
+      return new Response(JSON.stringify({ updated: true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Pour toutes les autres réponses, lire le body
     const responseBody = await response.text();
 
-    return new Response(responseBody, {
+    return new Response(responseBody || '{}', {
       status: response.status,
       headers: {
         ...corsHeaders,
-        "Content-Type": response.headers.get("Content-Type") || "application/json",
+        "Content-Type": "application/json",
       },
     });
   } catch (err) {

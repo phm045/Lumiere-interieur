@@ -38,7 +38,7 @@
 <!-- jsPDF pour generation des rapports -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
-<link rel="stylesheet" href="./style.css?v=20260417m">
+<link rel="stylesheet" href="./style.css?v=20260417n">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -2973,20 +2973,43 @@
   </div>
 </footer>
 
-<!-- Popup mobile : info relevé bancaire -->
-<div id="releve-popup" class="releve-popup" hidden aria-modal="true" role="dialog" aria-labelledby="releve-popup-title">
-  <div class="releve-popup__overlay" id="releve-popup-overlay"></div>
-  <div class="releve-popup__card">
-    <button class="releve-popup__close" id="releve-popup-close" aria-label="Fermer">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-    </button>
-    <div class="releve-popup__icon">
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+<!-- Bottom sheet mobile : info relevé bancaire -->
+<div id="releve-popup" class="rbs" hidden aria-modal="true" role="dialog" aria-labelledby="rbs-title">
+  <div class="rbs__overlay" id="releve-popup-overlay"></div>
+  <div class="rbs__sheet">
+    <!-- Poignée swipe -->
+    <div class="rbs__handle" aria-hidden="true"></div>
+
+    <!-- En-tête coloré -->
+    <div class="rbs__header">
+      <div class="rbs__header-icon">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+      </div>
+      <div class="rbs__header-text">
+        <p class="rbs__header-label">Relevé bancaire</p>
+        <h3 class="rbs__title" id="rbs-title">Lumière Intérieure</h3>
+      </div>
+      <button class="rbs__close" id="releve-popup-close" aria-label="Fermer">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
     </div>
-    <h3 class="releve-popup__title" id="releve-popup-title">Lumière Intérieure sur votre relevé</h3>
-    <p class="releve-popup__text">Vous avez vu apparaitre <strong>Lumière Intérieure</strong> sur votre relevé bancaire après un paiement sur ce site ? C'est tout à fait normal — il s'agit du nom de la société liée au compte de paiement.</p>
-    <p class="releve-popup__text releve-popup__text--muted">Ce point est <strong>en cours de résolution</strong>. Le nom affiché sera prochainement mis à jour pour correspondre à <em>Une voix intérieure</em>.</p>
-    <button class="btn btn--primary releve-popup__btn" id="releve-popup-ok">J'ai compris</button>
+
+    <!-- Corps -->
+    <div class="rbs__body">
+      <p class="rbs__text">Vous avez vu apparaître <strong>Lumière Intérieure</strong> sur votre relevé après un paiement sur ce site ? C'est tout à fait normal — il s'agit du nom de la société liée au compte de paiement.</p>
+
+      <!-- Badge statut -->
+      <div class="rbs__status">
+        <span class="rbs__status-dot"></span>
+        <span class="rbs__status-label">En cours de résolution</span>
+      </div>
+      <p class="rbs__status-text">Le nom affiché sur votre relevé sera prochainement mis à jour pour correspondre à <em>Une voix intérieure</em>.</p>
+    </div>
+
+    <!-- Pied -->
+    <div class="rbs__footer">
+      <button class="btn btn--primary rbs__btn" id="releve-popup-ok">Compris</button>
+    </div>
   </div>
 </div>
 

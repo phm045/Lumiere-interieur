@@ -9410,115 +9410,181 @@ a, button, [role="button"] {
 }
 
 /* ========================================
-   POPUP MOBILE — INFO RELEVÉ BANCAIRE
+   BOTTOM SHEET MOBILE — RELEVÉ BANCAIRE
 ======================================== */
-.releve-popup {
+.rbs {
   position: fixed;
   inset: 0;
   z-index: 9998;
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
-.releve-popup[hidden] {
-  display: none;
-}
+.rbs[hidden] { display: none; }
 
-.releve-popup__overlay {
+.rbs__overlay {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.45);
-  backdrop-filter: blur(3px);
-  -webkit-backdrop-filter: blur(3px);
-  animation: releve-fade-in 250ms ease;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  animation: rbs-fade 250ms ease;
 }
 
-.releve-popup__card {
+.rbs__sheet {
   position: relative;
   z-index: 1;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 1.25rem 1.25rem 0 0;
-  padding: 2rem 1.5rem 2.5rem;
   width: 100%;
   max-width: 480px;
-  text-align: center;
-  animation: releve-slide-up 300ms cubic-bezier(0.16, 1, 0.3, 1);
+  background: var(--color-surface);
+  border-radius: 1.5rem 1.5rem 0 0;
+  overflow: hidden;
+  animation: rbs-up 340ms cubic-bezier(0.16, 1, 0.3, 1);
+  padding-bottom: env(safe-area-inset-bottom, 1rem);
 }
 
-/* Sur desktop : card centrée comme une modale */
-@media (min-width: 641px) {
-  .releve-popup {
-    align-items: center;
-  }
-  .releve-popup__card {
-    border-radius: 1.25rem;
-    max-width: 420px;
-    padding: 2.5rem 2rem;
-  }
+/* Poignée de glissement */
+.rbs__handle {
+  width: 40px;
+  height: 4px;
+  background: var(--color-divider);
+  border-radius: 2px;
+  margin: 0.85rem auto 0;
 }
 
-.releve-popup__close {
-  position: absolute;
-  top: 1rem;
-  right: 1rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--color-text-muted);
-  padding: 0.25rem;
+/* En-tête */
+.rbs__header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1.1rem 1.25rem 1rem;
+  border-bottom: 1px solid var(--color-divider);
+}
+
+.rbs__header-icon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  background: rgba(184, 149, 46, 0.12);
+  border: 1px solid rgba(184, 149, 46, 0.25);
+  color: var(--color-accent);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: var(--radius-full);
-  transition: color 0.2s, background 0.2s;
 }
 
-.releve-popup__close:hover {
-  color: var(--color-text);
-  background: var(--color-surface-2);
+.rbs__header-text {
+  flex: 1;
+  min-width: 0;
 }
 
-.releve-popup__icon {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 1rem;
-  color: var(--color-accent);
+.rbs__header-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-faint);
+  margin: 0 0 0.1rem;
 }
 
-.releve-popup__title {
+.rbs__title {
   font-family: var(--font-display);
-  font-size: var(--text-lg);
+  font-size: 1.05rem;
   font-weight: 500;
   color: var(--color-text);
-  margin: 0 0 1rem;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.releve-popup__text {
-  font-size: var(--text-sm);
+.rbs__close {
+  flex-shrink: 0;
+  background: var(--color-surface-2);
+  border: none;
+  cursor: pointer;
+  color: var(--color-text-muted);
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, color 0.2s;
+}
+
+.rbs__close:hover { background: var(--color-surface-offset); color: var(--color-text); }
+
+/* Corps */
+.rbs__body {
+  padding: 1.25rem 1.25rem 0.75rem;
+}
+
+.rbs__text {
+  font-size: 0.9rem;
   color: var(--color-text-muted);
   line-height: 1.7;
-  margin: 0 0 0.75rem;
+  margin: 0 0 1.1rem;
 }
 
-.releve-popup__text--muted {
-  color: var(--color-text-faint);
+/* Badge statut */
+.rbs__status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(241, 196, 15, 0.1);
+  border: 1px solid rgba(241, 196, 15, 0.3);
+  border-radius: var(--radius-full);
+  padding: 0.35rem 0.85rem;
+  margin-bottom: 0.75rem;
+}
+
+.rbs__status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e6a817;
+  animation: rbs-pulse 1.8s ease-in-out infinite;
+  flex-shrink: 0;
+}
+
+.rbs__status-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #c8920a;
+  letter-spacing: 0.02em;
+}
+
+[data-theme="dark"] .rbs__status-label { color: #e6b84a; }
+
+.rbs__status-text {
   font-size: 0.82rem;
-  margin-bottom: 1.5rem;
+  color: var(--color-text-faint);
+  line-height: 1.6;
+  margin: 0;
 }
 
-.releve-popup__btn {
-  width: 100%;
+/* Pied */
+.rbs__footer {
+  padding: 1rem 1.25rem 1.25rem;
 }
 
-@keyframes releve-fade-in {
+.rbs__btn { width: 100%; }
+
+/* Animations */
+@keyframes rbs-fade {
   from { opacity: 0; }
   to   { opacity: 1; }
 }
 
-@keyframes releve-slide-up {
-  from { opacity: 0; transform: translateY(40px); }
+@keyframes rbs-up {
+  from { opacity: 0; transform: translateY(60px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes rbs-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(0.75); }
 }

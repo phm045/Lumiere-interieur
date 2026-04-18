@@ -39,6 +39,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js"></script>
 <link rel="stylesheet" href="./style.css?v=20260417u">
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -2287,6 +2289,18 @@
                 <option value="week">Cette semaine</option>
               </select>
             </div>
+            <!-- Carte interactive visiteurs -->
+            <div id="admin-visiteurs-map-wrapper" style="display:none;">
+              <div id="admin-visiteurs-map"></div>
+              <button id="admin-visiteurs-map-toggle-btn" class="admin-map-toggle-btn" type="button">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                Masquer la carte
+              </button>
+            </div>
+            <button id="admin-visiteurs-show-map-btn" class="admin-map-toggle-btn" type="button" style="margin-bottom:0.75rem;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Voir la carte des visites
+            </button>
             <div class="admin-dash-table" id="admin-visiteurs-table">
               <p class="admin-dash-loading">Chargement des visiteurs...</p>
             </div>
@@ -3382,5 +3396,8 @@ Cal("init", "consultations", { origin: "https://app.cal.eu" });
     }
   });
 })();
-</script></body>
+</script>
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV/XN/WPeM=" crossorigin=""></script>
+</body>
 </html>

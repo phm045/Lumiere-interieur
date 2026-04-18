@@ -8614,12 +8614,116 @@ function getComments(articleId) {
       }
       html += '</div>';
       container.innerHTML = html;
+      // Rendu de la carte
+      rendreCarteVisiteurs(data);
       adminCacheSet('tab_visiteurs', html);
       initResizableColumns(container.querySelector('.admin-dash-table--visiteurs'));
     } catch(e) {
       if (!restaurerAdminTabCache('visiteurs', 'admin-visiteurs-table')) {
         container.innerHTML = '<p class="admin-dash-empty">Erreur lors du chargement des visiteurs.</p>';
       }
+    }
+  }
+
+  // ── Carte interactive visiteurs (Leaflet) ──
+  var _carteVisiteursInstance = null;
+
+  function rendreCarteVisiteurs(data) {
+    var wrapper = document.getElementById('admin-visiteurs-map-wrapper');
+    var showBtn = document.getElementById('admin-visiteurs-show-map-btn');
+    var hideBtn = document.getElementById('admin-visiteurs-map-toggle-btn');
+    if (!wrapper || !showBtn) return;
+
+    // Filtrer uniquement les visites avec coordonnées valides
+    var points = data.filter(function(v) {
+      return v.latitude != null && v.longitude != null &&
+             !isNaN(Number(v.latitude)) && !isNaN(Number(v.longitude));
+    });
+
+    // Mettre à jour le texte du bouton avec le nombre de points
+    showBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
+      ' Voir la carte (' + points.length + ' points)';
+
+    // Bouton "Voir la carte"
+    showBtn.onclick = function() {
+      wrapper.style.display = 'block';
+      showBtn.style.display = 'none';
+      initialiserCarte(points);
+    };
+
+    // Bouton "Masquer la carte"
+    if (hideBtn) {
+      hideBtn.onclick = function() {
+        wrapper.style.display = 'none';
+        showBtn.style.display = 'inline-flex';
+      };
+    }
+  }
+
+  function initialiserCarte(points) {
+    var mapEl = document.getElementById('admin-visiteurs-map');
+    if (!mapEl || typeof L === 'undefined') return;
+
+    // Détruire l'instance précédente si elle existe
+    if (_carteVisiteursInstance) {
+      _carteVisiteursInstance.remove();
+      _carteVisiteursInstance = null;
+    }
+
+    // Créer la carte (fond OpenStreetMap)
+    var carte = L.map('admin-visiteurs-map', {
+      center: [46.5, 2.5],
+      zoom: 5,
+      zoomControl: true
+    });
+    _carteVisiteursInstance = carte;
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 18
+    }).addTo(carte);
+
+    if (points.length === 0) return;
+
+    // Créer un marqueur personnalisé (point doré)
+    var markerIcon = L.divIcon({
+      className: '',
+      html: '<div style="width:12px;height:12px;background:#d4a574;border:2px solid #fff;border-radius:50%;box-shadow:0 0 6px rgba(212,165,116,0.8);"></div>',
+      iconSize: [12, 12],
+      iconAnchor: [6, 6],
+      popupAnchor: [0, -8]
+    });
+
+    var bounds = [];
+
+    points.forEach(function(v) {
+      var lat = Number(v.latitude);
+      var lng = Number(v.longitude);
+      bounds.push([lat, lng]);
+
+      var d = v.created_at ? new Date(v.created_at) : null;
+      var dateStr = d ? d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—';
+      var villeLabel = v.ville ? (v.code_postal ? v.ville + ' (' + v.code_postal + ')' : v.ville) : '—';
+
+      var popupContent = '<div class="admin-map-popup">' +
+        '<strong>' + (v.ville || v.pays || 'Visiteur') + '</strong>' +
+        '<span>📅 ' + dateStr + '</span>' +
+        '<span>📍 ' + villeLabel + (v.region ? ', ' + v.region : '') + '</span>' +
+        '<span>🌍 ' + (v.pays || '—') + '</span>' +
+        (v.isp ? '<span>🌐 ' + v.isp + '</span>' : '') +
+        '<span style="opacity:0.5;font-size:0.75rem;">' + (v.ip || '') + '</span>' +
+        '</div>';
+
+      L.marker([lat, lng], { icon: markerIcon })
+        .addTo(carte)
+        .bindPopup(popupContent, { maxWidth: 220 });
+    });
+
+    // Ajuster la vue pour englober tous les points
+    if (bounds.length === 1) {
+      carte.setView(bounds[0], 10);
+    } else if (bounds.length > 1) {
+      carte.fitBounds(bounds, { padding: [30, 30], maxZoom: 10 });
     }
   }
 

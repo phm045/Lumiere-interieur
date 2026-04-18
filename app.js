@@ -8445,13 +8445,39 @@ function getComments(articleId) {
     try { dejaCompte = !!safeSession.getItem(sessionKey); } catch(e) {}
 
     // --- Récupérer la géolocalisation une seule fois (si nouvelle visite) ---
-    // Utilise ipwho.is : HTTPS gratuit, retourne lat/lon/code postal/FAI
+    // Géolocalisation IP : ipapi.co (HTTPS, fiable) avec fallback ipwho.is
     var geoData = null;
     if (!dejaCompte) {
       try {
-        geoData = await fetch('https://ipwho.is/').then(function(r) { return r.json(); });
-        if (!geoData || !geoData.success) geoData = null;
+        var geoResp = await fetch('https://ipapi.co/json/');
+        if (geoResp.ok) {
+          var raw = await geoResp.json();
+          // Normaliser au même format que ipwho.is
+          if (raw && raw.city) {
+            geoData = {
+              success: true,
+              ip:         raw.ip,
+              city:       raw.city,
+              country:    raw.country_name,
+              region:     raw.region,
+              latitude:   raw.latitude,
+              longitude:  raw.longitude,
+              postal:     raw.postal,
+              connection: { isp: raw.org }
+            };
+          }
+        }
       } catch(e) {}
+      // Fallback : ipwho.is
+      if (!geoData) {
+        try {
+          var r2 = await fetch('https://ipwho.is/');
+          if (r2.ok) {
+            var raw2 = await r2.json();
+            if (raw2 && raw2.success) geoData = raw2;
+          }
+        } catch(e2) {}
+      }
     }
 
     // Préparer les données de visite

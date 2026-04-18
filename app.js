@@ -8478,26 +8478,45 @@ function getComments(articleId) {
       console.warn('[VisiteurCounter] Edge Function indisponible, fallback Supabase:', edgeErr.message);
     }
 
-    // --- Fallback : Supabase direct (uniquement si Edge Function a échoué) ---
-    if (!edgeFnSuccess && window.supabase) {
+    // --- Fallback : REST API directe (uniquement si Edge Function a échoué) ---
+    if (!edgeFnSuccess) {
       try {
-        var sb = supabase;
+        var restHeaders = {
+          'apikey': SUPABASE_ANON_KEY,
+          'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+          'Content-Type': 'application/json'
+        };
+
+        // Lire compteur actuel
+        var getResp = await fetch(SUPABASE_URL + '/rest/v1/visiteurs?id=eq.1&select=count', { headers: restHeaders });
+        var rows = await getResp.json();
+        var current = (rows && rows[0] && rows[0].count != null) ? Number(rows[0].count) : 0;
+        var newCount = current;
 
         if (!dejaCompte) {
-          // Incrémenter le compteur global (RPC correcte : increment_visiteur)
-          await sb.rpc('increment_visiteur');
+          newCount = current + 1;
+          // Incrémenter via PATCH
+          try {
+            await fetch(SUPABASE_URL + '/rest/v1/visiteurs?id=eq.1', {
+              method: 'PATCH',
+              headers: restHeaders,
+              body: JSON.stringify({ count: newCount })
+            });
+          } catch(ePatch) {}
           // Logger la visite
-          try { await sb.from('visites_log').insert(visitePayload); } catch(e2) {}
+          try {
+            await fetch(SUPABASE_URL + '/rest/v1/visites_log', {
+              method: 'POST',
+              headers: Object.assign({}, restHeaders, { 'Prefer': 'return=minimal' }),
+              body: JSON.stringify(visitePayload)
+            });
+          } catch(eLog) {}
           // Marquer la session
           try { safeSession.setItem(sessionKey, '1'); } catch(e) {}
         }
 
-        // Lire le total (colonne 'count' dans la table visiteurs)
         if (el) {
-          var result = await sb.from('visiteurs').select('count').eq('id', 1).maybeSingle();
-          if (result.data && result.data.count != null) {
-            el.textContent = Number(result.data.count).toLocaleString('fr-FR');
-          }
+          el.textContent = Number(newCount).toLocaleString('fr-FR');
         }
       } catch(e) {
         // Fallback silencieux

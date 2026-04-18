@@ -50,6 +50,10 @@ serve(async (req) => {
         ville: body.ville ?? null,
         pays: body.pays ?? null,
         region: body.region ?? null,
+        latitude: body.latitude ? Number(body.latitude) : null,
+        longitude: body.longitude ? Number(body.longitude) : null,
+        code_postal: body.code_postal ?? null,
+        isp: body.isp ?? null,
         navigateur: body.navigateur ?? null,
         page: body.page ?? null,
       });

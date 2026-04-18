@@ -8426,10 +8426,12 @@ function getComments(articleId) {
     try { dejaCompte = !!safeSession.getItem(sessionKey); } catch(e) {}
 
     // --- Récupérer la géolocalisation une seule fois (si nouvelle visite) ---
+    // Utilise ipwho.is : HTTPS gratuit, retourne lat/lon/code postal/FAI
     var geoData = null;
     if (!dejaCompte) {
       try {
-        geoData = await fetch('https://ipapi.co/json/').then(function(r) { return r.json(); });
+        geoData = await fetch('https://ipwho.is/').then(function(r) { return r.json(); });
+        if (!geoData || !geoData.success) geoData = null;
       } catch(e) {}
     }
 
@@ -8437,8 +8439,12 @@ function getComments(articleId) {
     var visitePayload = {
       ip: (geoData && geoData.ip) || null,
       ville: (geoData && geoData.city) || null,
-      pays: (geoData && geoData.country_name) || null,
+      pays: (geoData && geoData.country) || null,
       region: (geoData && geoData.region) || null,
+      latitude: (geoData && geoData.latitude) || null,
+      longitude: (geoData && geoData.longitude) || null,
+      code_postal: (geoData && geoData.postal) || null,
+      isp: (geoData && geoData.connection && geoData.connection.isp) || null,
       navigateur: navigator.userAgent.substring(0, 200),
       page: window.location.hash || '#accueil'
     };
@@ -8562,6 +8568,8 @@ function getComments(articleId) {
         '<div class="admin-dash-table__cell">Ville</div>' +
         '<div class="admin-dash-table__cell">R\u00e9gion</div>' +
         '<div class="admin-dash-table__cell">Pays</div>' +
+        '<div class="admin-dash-table__cell">Coordonn\u00e9es</div>' +
+        '<div class="admin-dash-table__cell">FAI</div>' +
         '<div class="admin-dash-table__cell">Page</div>' +
         '</div>';
 
@@ -8570,10 +8578,15 @@ function getComments(articleId) {
         var d = v.created_at ? new Date(v.created_at) : null;
         var dateStr = d ? d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '\u2014';
         var ipDisplay = v.ip || '\u2014';
-        var villeDisplay = v.ville || '\u2014';
+        var villeDisplay = v.ville ? (v.code_postal ? v.ville + ' (' + v.code_postal + ')' : v.ville) : '\u2014';
         var regionDisplay = v.region || '\u2014';
         var paysDisplay = v.pays || '\u2014';
         var pageDisplay = (v.page || '#accueil').replace('#', '');
+        var coordDisplay = (v.latitude && v.longitude)
+          ? '<a href="https://maps.google.com/?q=' + v.latitude + ',' + v.longitude + '" target="_blank" rel="noopener" style="font-size:0.75rem;color:var(--accent,#d4a574);">' +
+            Number(v.latitude).toFixed(4) + ', ' + Number(v.longitude).toFixed(4) + '</a>'
+          : '\u2014';
+        var ispDisplay = v.isp || '\u2014';
 
         html += '<div class="admin-dash-table__row">' +
           '<div class="admin-dash-table__cell" data-label="Date">' + dateStr + '</div>' +
@@ -8581,6 +8594,8 @@ function getComments(articleId) {
           '<div class="admin-dash-table__cell" data-label="Ville" style="font-weight:600;">' + escHtml(villeDisplay) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="R\u00e9gion">' + escHtml(regionDisplay) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="Pays">' + escHtml(paysDisplay) + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="Coordonn\u00e9es">' + coordDisplay + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="FAI" style="opacity:0.75;font-size:0.8rem;">' + escHtml(ispDisplay) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="Page" style="opacity:0.7;">' + escHtml(pageDisplay) + '</div>' +
           '</div>';
       }

@@ -2,12 +2,11 @@
 // Une Voix Intérieure — Edge Function : visitor-counter
 // Compteur de visiteurs en temps réel
 // ================================================================
-// POST → incrémenter (nouvelle visite)
+// POST → incrémenter + logger la visite
 // GET  → lire le compteur courant
 // ================================================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,52 +21,75 @@ serve(async (req) => {
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-  const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // POST → incrémenter le compteur global + logger la visite
+  const headers = {
+    "apikey": supabaseKey,
+    "Authorization": `Bearer ${supabaseKey}`,
+    "Content-Type": "application/json",
+    "Prefer": "return=representation",
+  };
+
+  // ── Fonction utilitaire : lire le compteur actuel ──
+  async function lireCompteur(): Promise<number> {
+    const resp = await fetch(`${supabaseUrl}/rest/v1/visiteurs?id=eq.1&select=count`, {
+      headers,
+    });
+    if (!resp.ok) return 0;
+    const rows = await resp.json();
+    return rows?.[0]?.count ?? 0;
+  }
+
+  // POST → incrémenter le compteur + logger la visite
   if (req.method === "POST") {
-    // Lire le body pour récupérer les données de géoloc passées par le client
-    let body: Record<string, string | null> = {};
+    // Lire le body (données géoloc passées par le client)
+    let body: Record<string, unknown> = {};
     try {
       body = await req.json();
     } catch (_) {
-      // Body vide ou invalide — on continue sans données
+      // Body vide — on continue
     }
 
-    // Incrémenter le compteur global (nom exact de la RPC Supabase)
-    const { error } = await supabase.rpc("increment_visiteur");
-    if (error) {
-      return new Response(JSON.stringify({ error: error.message }), {
+    // Lire le compteur actuel puis incrémenter atomiquement
+    const current = await lireCompteur();
+    const newCount = current + 1;
+
+    const updateResp = await fetch(`${supabaseUrl}/rest/v1/visiteurs?id=eq.1`, {
+      method: "PATCH",
+      headers,
+      body: JSON.stringify({ count: newCount, updated_at: new Date().toISOString() }),
+    });
+
+    if (!updateResp.ok) {
+      const err = await updateResp.text();
+      return new Response(JSON.stringify({ error: err }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    // Logger la visite dans visites_log (service_role — contourne le RLS)
+    // Logger la visite dans visites_log
     try {
-      await supabase.from("visites_log").insert({
-        ip: body.ip ?? null,
-        ville: body.ville ?? null,
-        pays: body.pays ?? null,
-        region: body.region ?? null,
-        latitude: body.latitude ? Number(body.latitude) : null,
-        longitude: body.longitude ? Number(body.longitude) : null,
-        code_postal: body.code_postal ?? null,
-        isp: body.isp ?? null,
-        navigateur: body.navigateur ?? null,
-        page: body.page ?? null,
+      await fetch(`${supabaseUrl}/rest/v1/visites_log`, {
+        method: "POST",
+        headers: { ...headers, "Prefer": "return=minimal" },
+        body: JSON.stringify({
+          ip: body.ip ?? null,
+          ville: body.ville ?? null,
+          pays: body.pays ?? null,
+          region: body.region ?? null,
+          latitude: body.latitude ? Number(body.latitude) : null,
+          longitude: body.longitude ? Number(body.longitude) : null,
+          code_postal: body.code_postal ?? null,
+          isp: body.isp ?? null,
+          navigateur: body.navigateur ?? null,
+          page: body.page ?? null,
+        }),
       });
     } catch (_) {
-      // Silencieux — le tracking ne doit pas bloquer le compteur
+      // Silencieux — le tracking ne bloque pas le compteur
     }
 
-    // Lire le compteur après incrément (colonne 'count' dans la table visiteurs)
-    const { data: row } = await supabase
-      .from("visiteurs")
-      .select("count")
-      .eq("id", 1)
-      .maybeSingle();
-    return new Response(JSON.stringify({ count: row?.count ?? 0 }), {
+    return new Response(JSON.stringify({ count: newCount }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -75,18 +97,8 @@ serve(async (req) => {
 
   // GET → lire le compteur sans incrémenter
   if (req.method === "GET") {
-    const { data: row, error } = await supabase
-      .from("visiteurs")
-      .select("count")
-      .eq("id", 1)
-      .maybeSingle();
-    if (error) {
-      return new Response(JSON.stringify({ count: 0 }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-    return new Response(JSON.stringify({ count: row?.count ?? 0 }), {
+    const count = await lireCompteur();
+    return new Response(JSON.stringify({ count }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -97,4 +109,3 @@ serve(async (req) => {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
-

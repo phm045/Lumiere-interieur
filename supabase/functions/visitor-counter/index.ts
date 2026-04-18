@@ -34,8 +34,8 @@ serve(async (req) => {
       // Body vide ou invalide — on continue sans données
     }
 
-    // Incrémenter le compteur global
-    const { error } = await supabase.rpc("incrementer_visiteurs");
+    // Incrémenter le compteur global (nom exact de la RPC Supabase)
+    const { error } = await supabase.rpc("increment_visiteur");
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {
         status: 500,
@@ -61,13 +61,13 @@ serve(async (req) => {
       // Silencieux — le tracking ne doit pas bloquer le compteur
     }
 
-    // Lire le total après incrément
+    // Lire le compteur après incrément (colonne 'count' dans la table visiteurs)
     const { data: row } = await supabase
       .from("visiteurs")
-      .select("total")
+      .select("count")
       .eq("id", 1)
       .maybeSingle();
-    return new Response(JSON.stringify({ count: row?.total ?? 0 }), {
+    return new Response(JSON.stringify({ count: row?.count ?? 0 }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -77,7 +77,7 @@ serve(async (req) => {
   if (req.method === "GET") {
     const { data: row, error } = await supabase
       .from("visiteurs")
-      .select("total")
+      .select("count")
       .eq("id", 1)
       .maybeSingle();
     if (error) {
@@ -86,7 +86,7 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    return new Response(JSON.stringify({ count: row?.total ?? 0 }), {
+    return new Response(JSON.stringify({ count: row?.count ?? 0 }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

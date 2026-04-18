@@ -8449,19 +8449,11 @@ function getComments(articleId) {
       page: window.location.hash || '#accueil'
     };
 
-    // --- Tracking direct Supabase (toujours exécuté, fonctionne sans être connecté) ---
-    // Cette insertion utilise la clé anon avec politique RLS INSERT public.
-    if (!dejaCompte && window.supabase) {
-      (async function() {
-        try {
-          await supabase.from('visites_log').insert(visitePayload);
-        } catch(e) {}
-      })();
-    }
-
     var edgeFnSuccess = false;
 
     // --- Priorité 1 : Edge Function visitor-counter ---
+    // L'Edge Function gère l'incrément du compteur ET l'insertion dans visites_log.
+    // Le tracking direct Supabase ci-dessous ne s'exécute qu'en fallback si elle échoue.
     try {
       var edgeMethod = dejaCompte ? 'GET' : 'POST';
       var edgeResp = await fetch(VISITOR_COUNTER, {
@@ -8472,6 +8464,7 @@ function getComments(articleId) {
       if (edgeResp.ok) {
         var edgeData = await edgeResp.json();
         if (!dejaCompte) {
+          // Marquer la session dès que l'Edge Function a réussi (pas de double comptage)
           try { safeSession.setItem(sessionKey, '1'); } catch(e) {}
         }
         if (el && edgeData && edgeData.count != null) {
@@ -8485,22 +8478,25 @@ function getComments(articleId) {
       console.warn('[VisiteurCounter] Edge Function indisponible, fallback Supabase:', edgeErr.message);
     }
 
-    // --- Fallback : Supabase direct (si Edge Function a échoué) ---
+    // --- Fallback : Supabase direct (uniquement si Edge Function a échoué) ---
     if (!edgeFnSuccess && window.supabase) {
       try {
         var sb = supabase;
 
         if (!dejaCompte) {
-          // Incrémenter le compteur global
-          await sb.rpc('incrementer_visiteurs');
+          // Incrémenter le compteur global (RPC correcte : increment_visiteur)
+          await sb.rpc('increment_visiteur');
+          // Logger la visite
+          try { await sb.from('visites_log').insert(visitePayload); } catch(e2) {}
+          // Marquer la session
           try { safeSession.setItem(sessionKey, '1'); } catch(e) {}
         }
 
-        // Lire le total
+        // Lire le total (colonne 'count' dans la table visiteurs)
         if (el) {
-          var result = await sb.from('visiteurs').select('total').eq('id', 1).maybeSingle();
-          if (result.data && result.data.total != null) {
-            el.textContent = result.data.total.toLocaleString('fr-FR');
+          var result = await sb.from('visiteurs').select('count').eq('id', 1).maybeSingle();
+          if (result.data && result.data.count != null) {
+            el.textContent = Number(result.data.count).toLocaleString('fr-FR');
           }
         }
       } catch(e) {

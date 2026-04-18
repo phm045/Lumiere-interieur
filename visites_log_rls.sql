@@ -10,10 +10,20 @@ CREATE TABLE IF NOT EXISTS visites_log (
   ville TEXT,
   region TEXT,
   pays TEXT,
+  latitude DOUBLE PRECISION,
+  longitude DOUBLE PRECISION,
+  code_postal TEXT,
+  isp TEXT,
   navigateur TEXT,
   page TEXT,
   created_at TIMESTAMPTZ DEFAULT now()
 );
+
+-- Ajouter les colonnes de précision si la table existe déjà
+ALTER TABLE visites_log ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
+ALTER TABLE visites_log ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
+ALTER TABLE visites_log ADD COLUMN IF NOT EXISTS code_postal TEXT;
+ALTER TABLE visites_log ADD COLUMN IF NOT EXISTS isp TEXT;
 
 -- Activer RLS
 ALTER TABLE visites_log ENABLE ROW LEVEL SECURITY;

@@ -8568,7 +8568,6 @@ function getComments(articleId) {
         '<div class="admin-dash-table__cell">Ville</div>' +
         '<div class="admin-dash-table__cell">R\u00e9gion</div>' +
         '<div class="admin-dash-table__cell">Pays</div>' +
-        '<div class="admin-dash-table__cell">Coordonn\u00e9es</div>' +
         '<div class="admin-dash-table__cell">FAI</div>' +
         '<div class="admin-dash-table__cell">Page</div>' +
         '</div>';
@@ -8578,24 +8577,23 @@ function getComments(articleId) {
         var d = v.created_at ? new Date(v.created_at) : null;
         var dateStr = d ? d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '\u2014';
         var ipDisplay = v.ip || '\u2014';
-        var villeDisplay = v.ville ? (v.code_postal ? v.ville + ' (' + v.code_postal + ')' : v.ville) : '\u2014';
+        // Ville : avec code postal + lien Google Maps si coordonn\u00e9es disponibles
+        var villeLabel = v.ville ? (v.code_postal ? v.ville + '\u00a0(' + v.code_postal + ')' : v.ville) : '\u2014';
+        var villeDisplay = (v.latitude && v.longitude && v.ville)
+          ? '<a href="https://maps.google.com/?q=' + v.latitude + ',' + v.longitude + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline dotted;">' + escHtml(villeLabel) + '</a>'
+          : escHtml(villeLabel);
         var regionDisplay = v.region || '\u2014';
         var paysDisplay = v.pays || '\u2014';
         var pageDisplay = (v.page || '#accueil').replace('#', '');
-        var coordDisplay = (v.latitude && v.longitude)
-          ? '<a href="https://maps.google.com/?q=' + v.latitude + ',' + v.longitude + '" target="_blank" rel="noopener" style="font-size:0.75rem;color:var(--accent,#d4a574);">' +
-            Number(v.latitude).toFixed(4) + ', ' + Number(v.longitude).toFixed(4) + '</a>'
-          : '\u2014';
         var ispDisplay = v.isp || '\u2014';
 
         html += '<div class="admin-dash-table__row">' +
           '<div class="admin-dash-table__cell" data-label="Date">' + dateStr + '</div>' +
           '<div class="admin-dash-table__cell" data-label="IP" style="font-family:monospace;font-size:0.78rem;">' + escHtml(ipDisplay) + '</div>' +
-          '<div class="admin-dash-table__cell" data-label="Ville" style="font-weight:600;">' + escHtml(villeDisplay) + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="Ville" style="font-weight:600;">' + villeDisplay + '</div>' +
           '<div class="admin-dash-table__cell" data-label="R\u00e9gion">' + escHtml(regionDisplay) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="Pays">' + escHtml(paysDisplay) + '</div>' +
-          '<div class="admin-dash-table__cell" data-label="Coordonn\u00e9es">' + coordDisplay + '</div>' +
-          '<div class="admin-dash-table__cell" data-label="FAI" style="opacity:0.75;font-size:0.8rem;">' + escHtml(ispDisplay) + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="FAI" style="font-size:0.8rem;opacity:0.8;">' + escHtml(ispDisplay) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="Page" style="opacity:0.7;">' + escHtml(pageDisplay) + '</div>' +
           '</div>';
       }

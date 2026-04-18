@@ -6400,7 +6400,7 @@ textarea.blog-comments__input {
   display: block;
   max-height: 70vh;
   overflow-y: auto;
-  overflow-x: hidden;
+  overflow-x: auto;
   padding-right: 4px;
 }
 
@@ -6593,8 +6593,8 @@ textarea.blog-comments__input {
 }
 
 .admin-dash-table--visiteurs .admin-dash-table__row {
-  grid-template-columns: 110px 115px minmax(70px, 1fr) minmax(70px, 0.8fr) 70px 90px 100px 80px;
-  min-width: 0;
+  grid-template-columns: 120px 130px 130px 140px 90px 120px 65px;
+  min-width: 800px;
 }
 
 .admin-dash-table__row--highlight {

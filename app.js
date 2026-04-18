@@ -8627,6 +8627,7 @@ function getComments(articleId) {
 
   // ── Carte interactive visiteurs (Leaflet) ──
   var _carteVisiteursInstance = null;
+  var _carteVisiteursPoints = [];
 
   function rendreCarteVisiteurs(data) {
     var wrapper = document.getElementById('admin-visiteurs-map-wrapper');
@@ -8635,20 +8636,28 @@ function getComments(articleId) {
     if (!wrapper || !showBtn) return;
 
     // Filtrer uniquement les visites avec coordonnées valides
-    var points = data.filter(function(v) {
+    _carteVisiteursPoints = data.filter(function(v) {
       return v.latitude != null && v.longitude != null &&
              !isNaN(Number(v.latitude)) && !isNaN(Number(v.longitude));
     });
+    var points = _carteVisiteursPoints;
 
     // Mettre à jour le texte du bouton avec le nombre de points
     showBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>' +
-      ' Voir la carte (' + points.length + ' points)';
+      ' Voir la carte (' + points.length + ' point' + (points.length > 1 ? 's' : '') + ')';
+
+    // Si la carte est déjà ouverte, la rafraîchir sans fermer
+    var carteDejaOuverte = wrapper.style.display !== 'none';
+    if (carteDejaOuverte) {
+      initialiserCarte(points);
+      return;
+    }
 
     // Bouton "Voir la carte"
     showBtn.onclick = function() {
       wrapper.style.display = 'block';
       showBtn.style.display = 'none';
-      initialiserCarte(points);
+      initialiserCarte(_carteVisiteursPoints);
     };
 
     // Bouton "Masquer la carte"
@@ -8664,7 +8673,7 @@ function getComments(articleId) {
     var mapEl = document.getElementById('admin-visiteurs-map');
     if (!mapEl || typeof L === 'undefined') return;
 
-    // Détruire l'instance précédente si elle existe
+    // Détruire l'instance précédente proprement
     if (_carteVisiteursInstance) {
       _carteVisiteursInstance.remove();
       _carteVisiteursInstance = null;
@@ -8674,7 +8683,8 @@ function getComments(articleId) {
     var carte = L.map('admin-visiteurs-map', {
       center: [46.5, 2.5],
       zoom: 5,
-      zoomControl: true
+      zoomControl: true,
+      preferCanvas: true  // Meilleure performance avec beaucoup de marqueurs
     });
     _carteVisiteursInstance = carte;
 
@@ -8683,15 +8693,20 @@ function getComments(articleId) {
       maxZoom: 18
     }).addTo(carte);
 
-    if (points.length === 0) return;
+    // invalidateSize après affichage (évite la carte grisée si initialisée dans un conteneur caché)
+    setTimeout(function() {
+      if (_carteVisiteursInstance) _carteVisiteursInstance.invalidateSize();
+    }, 100);
 
-    // Créer un marqueur personnalisé (point doré)
+    if (!points || points.length === 0) return;
+
+    // Marqueur personnalisé : point doré
     var markerIcon = L.divIcon({
       className: '',
-      html: '<div style="width:12px;height:12px;background:#d4a574;border:2px solid #fff;border-radius:50%;box-shadow:0 0 6px rgba(212,165,116,0.8);"></div>',
+      html: '<div style="width:12px;height:12px;background:#d4a574;border:2px solid rgba(255,255,255,0.9);border-radius:50%;box-shadow:0 0 8px rgba(212,165,116,0.9);"></div>',
       iconSize: [12, 12],
       iconAnchor: [6, 6],
-      popupAnchor: [0, -8]
+      popupAnchor: [0, -10]
     });
 
     var bounds = [];
@@ -8703,27 +8718,27 @@ function getComments(articleId) {
 
       var d = v.created_at ? new Date(v.created_at) : null;
       var dateStr = d ? d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '—';
-      var villeLabel = v.ville ? (v.code_postal ? v.ville + ' (' + v.code_postal + ')' : v.ville) : '—';
+      var villeLabel = v.ville ? (v.code_postal ? escHtml(v.ville) + '\u00a0(' + escHtml(v.code_postal) + ')' : escHtml(v.ville)) : '—';
 
       var popupContent = '<div class="admin-map-popup">' +
-        '<strong>' + (v.ville || v.pays || 'Visiteur') + '</strong>' +
-        '<span>📅 ' + dateStr + '</span>' +
-        '<span>📍 ' + villeLabel + (v.region ? ', ' + v.region : '') + '</span>' +
-        '<span>🌍 ' + (v.pays || '—') + '</span>' +
-        (v.isp ? '<span>🌐 ' + v.isp + '</span>' : '') +
-        '<span style="opacity:0.5;font-size:0.75rem;">' + (v.ip || '') + '</span>' +
+        '<strong>' + escHtml(v.ville || v.pays || 'Visiteur') + '</strong>' +
+        '<span>&#128197; ' + dateStr + '</span>' +
+        '<span>&#128205; ' + villeLabel + (v.region ? ', ' + escHtml(v.region) : '') + '</span>' +
+        '<span>&#127758; ' + escHtml(v.pays || '—') + '</span>' +
+        (v.isp ? '<span>&#127760; ' + escHtml(v.isp) + '</span>' : '') +
+        (v.ip ? '<span style="opacity:0.45;font-size:0.72rem;font-family:monospace;">' + escHtml(v.ip) + '</span>' : '') +
         '</div>';
 
       L.marker([lat, lng], { icon: markerIcon })
         .addTo(carte)
-        .bindPopup(popupContent, { maxWidth: 220 });
+        .bindPopup(popupContent, { maxWidth: 230, className: 'admin-map-leaflet-popup' });
     });
 
     // Ajuster la vue pour englober tous les points
     if (bounds.length === 1) {
       carte.setView(bounds[0], 10);
     } else if (bounds.length > 1) {
-      carte.fitBounds(bounds, { padding: [30, 30], maxZoom: 10 });
+      carte.fitBounds(bounds, { padding: [40, 40], maxZoom: 10 });
     }
   }
 

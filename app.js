@@ -8468,7 +8468,7 @@ function getComments(articleId) {
           try { safeSession.setItem(sessionKey, '1'); } catch(e) {}
         }
         if (el && edgeData && edgeData.count != null) {
-          el.textContent = Number(edgeData.count).toLocaleString('fr-FR');
+          el.textContent = Number(edgeData.count).toLocaleString('fr-FR'); // Edge Function retourne toujours 'count'
         }
         edgeFnSuccess = true;
       } else {
@@ -8488,9 +8488,9 @@ function getComments(articleId) {
         };
 
         // Lire compteur actuel
-        var getResp = await fetch(SUPABASE_URL + '/rest/v1/visiteurs?id=eq.1&select=count', { headers: restHeaders });
+        var getResp = await fetch(SUPABASE_URL + '/rest/v1/visiteurs?id=eq.1&select=total', { headers: restHeaders });
         var rows = await getResp.json();
-        var current = (rows && rows[0] && rows[0].count != null) ? Number(rows[0].count) : 0;
+        var current = (rows && rows[0] && rows[0].total != null) ? Number(rows[0].total) : 0;
         var newCount = current;
 
         if (!dejaCompte) {
@@ -8500,7 +8500,7 @@ function getComments(articleId) {
             await fetch(SUPABASE_URL + '/rest/v1/visiteurs?id=eq.1', {
               method: 'PATCH',
               headers: restHeaders,
-              body: JSON.stringify({ count: newCount })
+              body: JSON.stringify({ total: newCount })
             });
           } catch(ePatch) {}
           // Logger la visite

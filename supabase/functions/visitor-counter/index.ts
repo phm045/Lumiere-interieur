@@ -31,12 +31,12 @@ serve(async (req) => {
 
   // ── Fonction utilitaire : lire le compteur actuel ──
   async function lireCompteur(): Promise<number> {
-    const resp = await fetch(`${supabaseUrl}/rest/v1/visiteurs?id=eq.1&select=count`, {
+    const resp = await fetch(`${supabaseUrl}/rest/v1/visiteurs?id=eq.1&select=total`, {
       headers,
     });
     if (!resp.ok) return 0;
     const rows = await resp.json();
-    return rows?.[0]?.count ?? 0;
+    return rows?.[0]?.total ?? 0;
   }
 
   // POST → incrémenter le compteur + logger la visite
@@ -56,7 +56,7 @@ serve(async (req) => {
     const updateResp = await fetch(`${supabaseUrl}/rest/v1/visiteurs?id=eq.1`, {
       method: "PATCH",
       headers,
-      body: JSON.stringify({ count: newCount, updated_at: new Date().toISOString() }),
+      body: JSON.stringify({ total: newCount, updated_at: new Date().toISOString() }),
     });
 
     if (!updateResp.ok) {

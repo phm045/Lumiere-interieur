@@ -7888,11 +7888,30 @@ function getComments(articleId) {
     calculerBenefices();
   }
 
+  // Chargement dynamique de jsPDF (uniquement quand on exporte)
+  async function chargerJsPDF() {
+    if (window.jsPDF || (window.jspdf && window.jspdf.jsPDF)) return;
+    await new Promise(function(resolve, reject) {
+      var s1 = document.createElement('script');
+      s1.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js';
+      s1.onload = function() {
+        var s2 = document.createElement('script');
+        s2.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.3/jspdf.plugin.autotable.min.js';
+        s2.onload = resolve;
+        s2.onerror = reject;
+        document.head.appendChild(s2);
+      };
+      s1.onerror = reject;
+      document.head.appendChild(s1);
+    });
+  }
+
   // Generer le PDF du rapport CA
-  function genererPDFRapport(data) {
+  async function genererPDFRapport(data) {
     if (!data) data = window.__caData;
     if (!data) { alert('Aucune donn\u00e9e de CA disponible.'); return; }
 
+    try { await chargerJsPDF(); } catch (e) {}
     if (!window.jspdf || !window.jspdf.jsPDF) { alert('La bibliothèque PDF n\'est pas chargée. Veuillez réessayer.'); return; }
     var jsPDF = window.jspdf.jsPDF;
     var doc = new jsPDF();
@@ -8687,6 +8706,17 @@ function getComments(articleId) {
   }
 
   function initialiserCarte(points) {
+    // Charger Leaflet CSS si pas encore présent
+    if (!document.getElementById('leaflet-css')) {
+      var lnk = document.createElement('link');
+      lnk.id = 'leaflet-css';
+      lnk.rel = 'stylesheet';
+      lnk.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      lnk.integrity = 'sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=';
+      lnk.crossOrigin = '';
+      document.head.appendChild(lnk);
+    }
+
     var mapEl = document.getElementById('admin-visiteurs-map');
     if (!mapEl || typeof L === 'undefined') return;
 

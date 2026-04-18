@@ -63,4 +63,7 @@ jobs:
           # stripe-webhook : avec JWT (appelé par Stripe, signature vérifiée en interne)
           deploy_fn stripe-webhook false
 
+          # geocode-retroactif : sans JWT (appel manuel unique, utilise service_role en interne)
+          deploy_fn geocode-retroactif true
+
           echo "✅ Toutes les Edge Functions déployées avec succès"

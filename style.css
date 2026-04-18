@@ -9597,3 +9597,70 @@ a, button, [role="button"] {
   0%, 100% { opacity: 1; transform: scale(1); }
   50%       { opacity: 0.5; transform: scale(0.75); }
 }
+
+/* ── Carte interactive visiteurs (Leaflet) ── */
+#admin-visiteurs-map {
+  height: 380px;
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+  margin-bottom: 0.5rem;
+  background: #1a1a2e;
+  z-index: 1;
+}
+
+#admin-visiteurs-map-wrapper {
+  margin-bottom: 1rem;
+}
+
+.admin-map-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 1rem;
+  font-size: 0.82rem;
+  background: rgba(212, 165, 116, 0.12);
+  color: var(--accent, #d4a574);
+  border: 1px solid rgba(212, 165, 116, 0.25);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  font-family: inherit;
+}
+
+.admin-map-toggle-btn:hover {
+  background: rgba(212, 165, 116, 0.22);
+  border-color: rgba(212, 165, 116, 0.45);
+}
+
+/* Popup Leaflet — thème sombre */
+.leaflet-popup-content-wrapper {
+  background: #1e1e2e !important;
+  color: #e8e0d5 !important;
+  border: 1px solid rgba(212,165,116,0.3) !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.5) !important;
+  font-family: inherit !important;
+  font-size: 0.82rem !important;
+}
+
+.leaflet-popup-tip {
+  background: #1e1e2e !important;
+}
+
+.leaflet-popup-close-button {
+  color: #d4a574 !important;
+}
+
+.admin-map-popup strong {
+  color: var(--accent, #d4a574);
+  display: block;
+  margin-bottom: 0.2rem;
+  font-size: 0.88rem;
+}
+
+.admin-map-popup span {
+  opacity: 0.75;
+  display: block;
+  line-height: 1.5;
+}

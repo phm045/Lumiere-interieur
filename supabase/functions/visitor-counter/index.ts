@@ -24,8 +24,17 @@ serve(async (req) => {
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const supabase = createClient(supabaseUrl, supabaseKey);
 
-  // POST → incrémenter le compteur global
+  // POST → incrémenter le compteur global + logger la visite
   if (req.method === "POST") {
+    // Lire le body pour récupérer les données de géoloc passées par le client
+    let body: Record<string, string | null> = {};
+    try {
+      body = await req.json();
+    } catch (_) {
+      // Body vide ou invalide — on continue sans données
+    }
+
+    // Incrémenter le compteur global
     const { error } = await supabase.rpc("incrementer_visiteurs");
     if (error) {
       return new Response(JSON.stringify({ error: error.message }), {
@@ -33,6 +42,21 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+
+    // Logger la visite dans visites_log (service_role — contourne le RLS)
+    try {
+      await supabase.from("visites_log").insert({
+        ip: body.ip ?? null,
+        ville: body.ville ?? null,
+        pays: body.pays ?? null,
+        region: body.region ?? null,
+        navigateur: body.navigateur ?? null,
+        page: body.page ?? null,
+      });
+    } catch (_) {
+      // Silencieux — le tracking ne doit pas bloquer le compteur
+    }
+
     // Lire le total après incrément
     const { data: row } = await supabase
       .from("visiteurs")

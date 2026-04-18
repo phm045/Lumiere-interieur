@@ -8425,6 +8425,34 @@ function getComments(articleId) {
     var dejaCompte = false;
     try { dejaCompte = !!safeSession.getItem(sessionKey); } catch(e) {}
 
+    // --- Récupérer la géolocalisation une seule fois (si nouvelle visite) ---
+    var geoData = null;
+    if (!dejaCompte) {
+      try {
+        geoData = await fetch('https://ipapi.co/json/').then(function(r) { return r.json(); });
+      } catch(e) {}
+    }
+
+    // Préparer les données de visite
+    var visitePayload = {
+      ip: (geoData && geoData.ip) || null,
+      ville: (geoData && geoData.city) || null,
+      pays: (geoData && geoData.country_name) || null,
+      region: (geoData && geoData.region) || null,
+      navigateur: navigator.userAgent.substring(0, 200),
+      page: window.location.hash || '#accueil'
+    };
+
+    // --- Tracking direct Supabase (toujours exécuté, fonctionne sans être connecté) ---
+    // Cette insertion utilise la clé anon avec politique RLS INSERT public.
+    if (!dejaCompte && window.supabase) {
+      (async function() {
+        try {
+          await supabase.from('visites_log').insert(visitePayload);
+        } catch(e) {}
+      })();
+    }
+
     var edgeFnSuccess = false;
 
     // --- Priorité 1 : Edge Function visitor-counter ---
@@ -8432,7 +8460,8 @@ function getComments(articleId) {
       var edgeMethod = dejaCompte ? 'GET' : 'POST';
       var edgeResp = await fetch(VISITOR_COUNTER, {
         method: edgeMethod,
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: edgeMethod === 'POST' ? JSON.stringify(visitePayload) : undefined
       });
       if (edgeResp.ok) {
         var edgeData = await edgeResp.json();
@@ -8459,31 +8488,6 @@ function getComments(articleId) {
           // Incrémenter le compteur global
           await sb.rpc('incrementer_visiteurs');
           try { safeSession.setItem(sessionKey, '1'); } catch(e) {}
-
-          // Logger la visite avec IP et géolocalisation
-          try {
-            var geo = await fetch('https://ipapi.co/json/').then(function(r) { return r.json(); });
-            await sb.from('visites_log').insert({
-              ip: geo.ip || null,
-              ville: geo.city || null,
-              pays: geo.country_name || null,
-              region: geo.region || null,
-              navigateur: navigator.userAgent.substring(0, 200),
-              page: window.location.hash || '#accueil'
-            });
-          } catch(geoErr) {
-            // Fallback sans géolocalisation
-            try {
-              await sb.from('visites_log').insert({
-                ip: null,
-                ville: null,
-                pays: null,
-                region: null,
-                navigateur: navigator.userAgent.substring(0, 200),
-                page: window.location.hash || '#accueil'
-              });
-            } catch(e2) {}
-          }
         }
 
         // Lire le total

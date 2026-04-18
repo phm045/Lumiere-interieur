@@ -9609,6 +9609,21 @@ a, button, [role="button"] {
   z-index: 1;
 }
 
+@media (max-width: 768px) {
+  #admin-visiteurs-map {
+    height: 240px;
+  }
+  .admin-map-toggle-btn {
+    font-size: 0.78rem;
+    padding: 0.4rem 0.75rem;
+  }
+}
+@media (max-width: 480px) {
+  #admin-visiteurs-map {
+    height: 200px;
+  }
+}
+
 #admin-visiteurs-map-wrapper {
   margin-bottom: 1rem;
 }

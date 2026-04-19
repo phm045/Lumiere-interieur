@@ -8444,34 +8444,52 @@ function getComments(articleId) {
     var dejaCompte = false;
     try { dejaCompte = !!safeSession.getItem(sessionKey); } catch(e) {}
 
-    // --- Récupérer la géolocalisation une seule fois (si nouvelle visite) ---
-    // Géolocalisation IP : ipapi.co (HTTPS, fiable) avec fallback ipwho.is
+    // --- Géolocalisation (best-effort côté client, avec timeout) ---
+    // La géoloc principale se fait maintenant côté serveur dans l'Edge Function
+    // visitor-counter (contourne les blocages CORS/Cloudflare des navigateurs
+    // mobiles, iOS notamment). On tente ipapi.co / ipwho.is ici en best-effort
+    // avec timeout court — si ça échoue, le serveur prend le relais à partir
+    // de l'IP réelle du visiteur.
     var geoData = null;
     if (!dejaCompte) {
+      // fetch avec timeout (AbortController, support iOS Safari 12+)
+      var fetchTO = function(url, ms) {
+        var ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        var timer = ctrl ? setTimeout(function() { ctrl.abort(); }, ms) : null;
+        return fetch(url, ctrl ? { signal: ctrl.signal } : {})
+          .finally(function() { if (timer) clearTimeout(timer); });
+      };
+
       try {
-        var geoResp = await fetch('https://ipapi.co/json/');
+        var geoResp = await fetchTO('https://ipapi.co/json/', 3000);
         if (geoResp.ok) {
-          var raw = await geoResp.json();
-          // Normaliser au même format que ipwho.is
-          if (raw && raw.city) {
-            geoData = {
-              success: true,
-              ip:         raw.ip,
-              city:       raw.city,
-              country:    raw.country_name,
-              region:     raw.region,
-              latitude:   raw.latitude,
-              longitude:  raw.longitude,
-              postal:     raw.postal,
-              connection: { isp: raw.org }
-            };
+          // Refuser les réponses non-JSON (challenge Cloudflare renvoyé par ipapi.co)
+          var ct = (geoResp.headers.get('content-type') || '').toLowerCase();
+          if (ct.indexOf('application/json') !== -1) {
+            var raw = await geoResp.json();
+            var rawLat = (raw && raw.latitude != null && raw.latitude !== '' && raw.latitude !== 'Undefined') ? Number(raw.latitude) : null;
+            var rawLon = (raw && raw.longitude != null && raw.longitude !== '' && raw.longitude !== 'Undefined') ? Number(raw.longitude) : null;
+            var latOk = rawLat !== null && !isNaN(rawLat) && rawLat >= -90  && rawLat <= 90;
+            var lonOk = rawLon !== null && !isNaN(rawLon) && rawLon >= -180 && rawLon <= 180;
+            if (raw && !raw.error && (raw.city || (latOk && lonOk))) {
+              geoData = {
+                success: true,
+                ip:         raw.ip || null,
+                city:       raw.city || null,
+                country:    raw.country_name || null,
+                region:     raw.region || null,
+                latitude:   (latOk && lonOk) ? rawLat : null,
+                longitude:  (latOk && lonOk) ? rawLon : null,
+                postal:     raw.postal || null,
+                connection: { isp: raw.org || null }
+              };
+            }
           }
         }
       } catch(e) {}
-      // Fallback : ipwho.is
       if (!geoData) {
         try {
-          var r2 = await fetch('https://ipwho.is/');
+          var r2 = await fetchTO('https://ipwho.is/', 3000);
           if (r2.ok) {
             var raw2 = await r2.json();
             if (raw2 && raw2.success) geoData = raw2;
@@ -8480,14 +8498,23 @@ function getComments(articleId) {
       }
     }
 
-    // Préparer les données de visite
+    // Préparer les données de visite (validation finale)
+    var payloadLat = null, payloadLon = null;
+    if (geoData) {
+      var gLat = (geoData.latitude  != null && geoData.latitude  !== '') ? Number(geoData.latitude)  : NaN;
+      var gLon = (geoData.longitude != null && geoData.longitude !== '') ? Number(geoData.longitude) : NaN;
+      if (isFinite(gLat) && isFinite(gLon) && gLat >= -90 && gLat <= 90 && gLon >= -180 && gLon <= 180) {
+        payloadLat = gLat;
+        payloadLon = gLon;
+      }
+    }
     var visitePayload = {
       ip: (geoData && geoData.ip) || null,
       ville: (geoData && geoData.city) || null,
       pays: (geoData && geoData.country) || null,
       region: (geoData && geoData.region) || null,
-      latitude: (geoData && geoData.latitude != null) ? geoData.latitude : null,
-      longitude: (geoData && geoData.longitude != null) ? geoData.longitude : null,
+      latitude: payloadLat,
+      longitude: payloadLon,
       code_postal: (geoData && geoData.postal) || null,
       isp: (geoData && geoData.connection && geoData.connection.isp) || null,
       navigateur: navigator.userAgent.substring(0, 200),
@@ -9791,23 +9818,6 @@ function getComments(articleId) {
       if (msgEl) {
         msgEl.hidden = false;
         msgEl.textContent = 'Erreur : ' + (e.message || 'impossible de mettre à jour');
-        msgEl.className = 'dispo-message dispo-message--error';
-        setTimeout(function() { if (msgEl) msgEl.hidden = true; }, 3500);
-      }
-      return false;
-    }
-  }
-
-  (function() {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', appliquerVisibiliteTherapie);
-    } else {
-      appliquerVisibiliteTherapie();
-    }
-  })();
-
-
-})();xtContent = 'Erreur : ' + (e.message || 'impossible de mettre à jour');
         msgEl.className = 'dispo-message dispo-message--error';
         setTimeout(function() { if (msgEl) msgEl.hidden = true; }, 3500);
       }

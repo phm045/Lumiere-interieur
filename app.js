@@ -45,8 +45,10 @@
 
   // --- Mapping hash → catégorie humaine (pour le traceur admin) ---
   // Sert à afficher "Thérapie" plutôt que "#therapie" dans la liste des visiteurs.
-  // Les clés doivent correspondre aux id des sections d'index.html.
+  // Les clés doivent correspondre aux id des sections d'index.html
+  // ET aux slugs des articles/catégories boutique qu'on track manuellement.
   var CATEGORIES_VISITEURS = {
+    // --- Sections principales ---
     'accueil':          'Accueil',
     'a-propos':         'À propos',
     'services':         'Services',
@@ -61,13 +63,45 @@
     'cgv':              'CGV',
     'mentions-legales': 'Mentions légales',
     'confidentialite':  'Confidentialité',
-    'main':             'Accueil'
+    'main':             'Accueil',
+
+    // --- Articles de blog (préfixe "blog:" pour éviter collisions) ---
+    'blog:libre-arbitre':               'Blog : Libre arbitre',
+    'blog:biologie-emotions':           'Blog : Biologie des émotions',
+    'blog:astrologie-lumiere-interieur':'Blog : Astrologie & lumière intérieure',
+    'blog:vraie-spiritualite':          'Blog : Vraie spiritualité',
+    'blog:numerologie-pythagoricienne': 'Blog : Numérologie pythagoricienne',
+    'blog:vampires-energetiques':       'Blog : Vampires énergétiques',
+    'blog:confiance-ressenti':          'Blog : Confiance & ressenti',
+    'blog:lithotherapie':               'Blog : Lithothérapie',
+
+    // --- Catégories boutique (préfixe "boutique:") ---
+    'boutique:cristaux':                  'Boutique : Cristaux',
+    'boutique:accessoires':               'Boutique : Accessoires',
+    'boutique:bijoux & lithothérapie':    'Boutique : Bijoux & Lithothérapie',
+    'boutique:bijoux-lithotherapie':      'Boutique : Bijoux & Lithothérapie',
+    'boutique:encens & purification':     'Boutique : Encens & Purification',
+    'boutique:encens-purification':       'Boutique : Encens & Purification',
+    'boutique:tout':                      'Boutique : Tous les produits'
   };
   function categorieDepuisHash(hashOuPage) {
     if (!hashOuPage) return 'Accueil';
-    var h = String(hashOuPage).replace(/^#/, '').split('?')[0].split('/')[0].toLowerCase().trim();
+    var brut = String(hashOuPage).replace(/^#/, '').trim();
+    if (!brut) return 'Accueil';
+    // Gestion des pseudo-URLs avec préfixe (blog:slug, boutique:cat)
+    var bas = brut.toLowerCase();
+    if (CATEGORIES_VISITEURS[bas]) return CATEGORIES_VISITEURS[bas];
+    // Fallback : clef sans préfixe (ancien format "accueil", "therapie")
+    var h = bas.split('?')[0].split('/')[0].trim();
     if (!h) return 'Accueil';
     if (CATEGORIES_VISITEURS[h]) return CATEGORIES_VISITEURS[h];
+    // Si préfixe non mappé : afficher joliment (ex: "blog:xxx" → "Blog : Xxx")
+    if (brut.indexOf(':') !== -1) {
+      var parts = brut.split(':');
+      var prefix = parts[0].charAt(0).toUpperCase() + parts[0].slice(1);
+      var suffix = parts.slice(1).join(':').replace(/-/g, ' ').trim();
+      return prefix + ' : ' + (suffix.charAt(0).toUpperCase() + suffix.slice(1));
+    }
     // Pour un hash inconnu, on renvoie une version capitalisée proprement
     return h.charAt(0).toUpperCase() + h.slice(1).replace(/-/g, ' ');
   }
@@ -1189,6 +1223,13 @@ function getComments(articleId) {
   function openBlogArticle(articleId) {
     var article = blogArticles[articleId];
     if (!article || !overlay || !articleBody) return;
+
+    // Traceur admin : logger la lecture de l'article (catégorie "Blog : [titre]")
+    try {
+      if (typeof window.__trackerLogNavigation === 'function') {
+        window.__trackerLogNavigation('blog:' + articleId);
+      }
+    } catch(e) {/* silencieux */}
 
     // Increment views (shared counter)
     addView(articleId, function() {
@@ -4805,6 +4846,18 @@ function getComments(articleId) {
 
       function filterProducts(category) {
         currentFilter = category;
+
+        // Traceur admin : logger la sélection de catégorie boutique
+        // (catégorie "Boutique : Cristaux", "Boutique : Bijoux & Lithothérapie", etc.)
+        try {
+          if (typeof window.__trackerLogNavigation === 'function') {
+            var tag = (category === '__all__')
+              ? 'boutique:tout'
+              : 'boutique:' + String(category).toLowerCase();
+            window.__trackerLogNavigation(tag);
+          }
+        } catch(e) {/* silencieux */}
+
         var cards = prodGrid.querySelectorAll('.boutique-product-card');
         var visibleCount = 0;
 
@@ -8705,21 +8758,25 @@ function getComments(articleId) {
     }
 
     // ========================================
-    // Tracking des navigations internes (hashchange)
+    // Tracking des navigations internes (hashchange + hooks métier)
     // ========================================
     // Si le visiteur explore d'autres catégories après son arrivée, on log chaque
     // section visitée — MAIS sans incrémenter le compteur (on envoie juste un log
-    // dans visites_log). Limites : 1 log toutes les 3s, max 8 logs/session,
+    // dans visites_log). Limites : 1 log toutes les 3s, max 12 logs/session,
     // ne log pas la même catégorie deux fois d'affilée.
-    (function initHashChangeTracker() {
+    (function initNavigationTracker() {
       var derniereCategorieLoguee = categorieDepuisHash(window.location.hash || '#accueil');
       var dernierEnvoi = Date.now();
       var compteurNavigations = 0;
-      var MAX_NAVIGATIONS = 8;
+      var MAX_NAVIGATIONS = 12;
       var DELAI_MIN_MS = 3000;
 
-      function logNavigation() {
-        var nouvelleCategorie = categorieDepuisHash(window.location.hash || '#accueil');
+      // Fonction centrale : envoie une ligne visites_log avec la page spécifiée
+      // Accepte soit un hash standard ("#accueil"), soit un pseudo-path
+      // ("blog:libre-arbitre", "boutique:cristaux") qui sera affiché comme catégorie.
+      function logNavigation(pageValue) {
+        var page = pageValue || window.location.hash || '#accueil';
+        var nouvelleCategorie = categorieDepuisHash(page);
         if (nouvelleCategorie === derniereCategorieLoguee) return;
         if (compteurNavigations >= MAX_NAVIGATIONS) return;
         var maintenant = Date.now();
@@ -8740,7 +8797,7 @@ function getComments(articleId) {
             body: JSON.stringify({
               skip_increment: true, // ← important : ne pas incrémenter le compteur
               navigateur: navigator.userAgent.substring(0, 200),
-              page: window.location.hash || '#accueil'
+              page: page
               // Pas d'IP/ville/coord : le serveur les détecte via x-forwarded-for
             }),
             signal: navCtrl ? navCtrl.signal : undefined,
@@ -8753,7 +8810,12 @@ function getComments(articleId) {
         } catch(e) {/* silencieux */}
       }
 
-      window.addEventListener('hashchange', logNavigation);
+      // 1. Tracking via hashchange (navigation sections)
+      window.addEventListener('hashchange', function() { logNavigation(); });
+
+      // 2. Expose la fonction pour que les hooks métier puissent l'appeler
+      //    (ouverture d'article blog, filtre boutique, etc.)
+      window.__trackerLogNavigation = logNavigation;
     })();
   })();
 

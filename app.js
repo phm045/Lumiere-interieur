@@ -43,6 +43,35 @@
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
   }
 
+  // --- Mapping hash → catégorie humaine (pour le traceur admin) ---
+  // Sert à afficher "Thérapie" plutôt que "#therapie" dans la liste des visiteurs.
+  // Les clés doivent correspondre aux id des sections d'index.html.
+  var CATEGORIES_VISITEURS = {
+    'accueil':          'Accueil',
+    'a-propos':         'À propos',
+    'services':         'Services',
+    'therapie':         'Thérapie',
+    'boutique':         'Boutique',
+    'blog':             'Blog',
+    'temoignages':      'Témoignages',
+    'contact':          'Contact',
+    'mon-compte':       'Mon compte',
+    'connexion':        'Connexion',
+    'inscription':      'Inscription',
+    'cgv':              'CGV',
+    'mentions-legales': 'Mentions légales',
+    'confidentialite':  'Confidentialité',
+    'main':             'Accueil'
+  };
+  function categorieDepuisHash(hashOuPage) {
+    if (!hashOuPage) return 'Accueil';
+    var h = String(hashOuPage).replace(/^#/, '').split('?')[0].split('/')[0].toLowerCase().trim();
+    if (!h) return 'Accueil';
+    if (CATEGORIES_VISITEURS[h]) return CATEGORIES_VISITEURS[h];
+    // Pour un hash inconnu, on renvoie une version capitalisée proprement
+    return h.charAt(0).toUpperCase() + h.slice(1).replace(/-/g, ' ');
+  }
+
   // --- Theme Toggle ---
   const toggle = document.querySelector('[data-theme-toggle]');
   const root = document.documentElement;
@@ -8662,6 +8691,65 @@ function getComments(articleId) {
         // Fallback silencieux
       }
     }
+
+    // ========================================
+    // Tracking des navigations internes (hashchange)
+    // ========================================
+    // Si le visiteur explore d'autres catégories après son arrivée, on log chaque
+    // section visitée — MAIS sans incrémenter le compteur (on envoie juste un log
+    // dans visites_log). Limites : 1 log toutes les 3s, max 8 logs/session,
+    // ne log pas la même catégorie deux fois d'affilée.
+    (function initHashChangeTracker() {
+      var derniereCategorieLoguee = categorieDepuisHash(window.location.hash || '#accueil');
+      var dernierEnvoi = Date.now();
+      var compteurNavigations = 0;
+      var MAX_NAVIGATIONS = 8;
+      var DELAI_MIN_MS = 3000;
+
+      function logNavigation() {
+        var nouvelleCategorie = categorieDepuisHash(window.location.hash || '#accueil');
+        if (nouvelleCategorie === derniereCategorieLoguee) return;
+        if (compteurNavigations >= MAX_NAVIGATIONS) return;
+        var maintenant = Date.now();
+        if (maintenant - dernierEnvoi < DELAI_MIN_MS) return;
+        derniereCategorieLoguee = nouvelleCategorie;
+        dernierEnvoi = maintenant;
+        compteurNavigations++;
+
+        // Payload : mêmes infos geo que la 1ère visite (déjà résolues serveur)
+        // mais on ne marque QUE la page — le serveur enverra via x-forwarded-for
+        // la géoloc si besoin.
+        var navPayload = {
+          navigateur: navigator.userAgent.substring(0, 200),
+          page: window.location.hash || '#accueil',
+          // Champ marqueur pour différencier des visites principales
+          // (pas d'incrément compteur — mais la ligne est bien logée)
+          _navigation_interne: true
+        };
+        // On ne veut PAS incrémenter le compteur pour les navigations internes,
+        // donc on va directement sur /rest/v1/visites_log au lieu de l'Edge Function.
+        try {
+          fetch(SUPABASE_URL + '/rest/v1/visites_log', {
+            method: 'POST',
+            headers: {
+              'apikey': SUPABASE_ANON_KEY,
+              'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
+              'Content-Type': 'application/json',
+              'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+              navigateur: navPayload.navigateur,
+              page:       navPayload.page
+              // Pas d'IP/ville/coord — c'est une navigation interne, la visite
+              // principale a déjà logé la géoloc complète
+            }),
+            keepalive: true
+          }).catch(function() {/* silencieux */});
+        } catch(e) {/* silencieux */}
+      }
+
+      window.addEventListener('hashchange', logNavigation);
+    })();
   })();
 
   // ========================================
@@ -8724,7 +8812,7 @@ function getComments(articleId) {
         '<div class="admin-dash-table__cell">R\u00e9gion</div>' +
         '<div class="admin-dash-table__cell">Pays</div>' +
         '<div class="admin-dash-table__cell">FAI</div>' +
-        '<div class="admin-dash-table__cell">Page</div>' +
+        '<div class="admin-dash-table__cell">Catégorie</div>' +
         '</div>';
 
       for (var i = 0; i < data.length; i++) {
@@ -8745,7 +8833,7 @@ function getComments(articleId) {
           : escHtml(villeLabel);
         var regionDisplay = v.region || '\u2014';
         var paysDisplay = v.pays || '\u2014';
-        var pageDisplay = (v.page || '#accueil').replace('#', '');
+        var pageDisplay = categorieDepuisHash(v.page);
         var ispDisplay = v.isp || '\u2014';
 
         html += '<div class="admin-dash-table__row">' +
@@ -8755,7 +8843,7 @@ function getComments(articleId) {
           '<div class="admin-dash-table__cell" data-label="R\u00e9gion">' + escHtml(regionDisplay) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="Pays">' + escHtml(paysDisplay) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="FAI" style="font-size:0.8rem;opacity:0.8;">' + escHtml(ispDisplay) + '</div>' +
-          '<div class="admin-dash-table__cell" data-label="Page" style="opacity:0.7;">' + escHtml(pageDisplay) + '</div>' +
+          '<div class="admin-dash-table__cell" data-label="Catégorie" style="font-weight:500;"><span style="display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(212,165,116,0.12);color:var(--accent,#d4a574);font-size:0.8rem;">' + escHtml(pageDisplay) + '</span></div>' +
           '</div>';
       }
       html += '</div>';

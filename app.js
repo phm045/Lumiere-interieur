@@ -8697,10 +8697,15 @@ function getComments(articleId) {
     var hideBtn = document.getElementById('admin-visiteurs-map-toggle-btn');
     if (!wrapper || !showBtn) return;
 
-    // Filtrer uniquement les visites avec coordonnées valides
+    // Filtrer uniquement les visites avec coordonnées valides (plages géographiques respectées)
     _carteVisiteursPoints = data.filter(function(v) {
-      return v.latitude != null && v.longitude != null &&
-             !isNaN(Number(v.latitude)) && !isNaN(Number(v.longitude));
+      if (v.latitude == null || v.longitude == null) return false;
+      var la = Number(v.latitude), lo = Number(v.longitude);
+      if (!isFinite(la) || !isFinite(lo)) return false;
+      if (la < -90 || la > 90 || lo < -180 || lo > 180) return false;
+      // Exclure (0,0) qui est presque toujours une valeur d'erreur (océan au large de l'Afrique)
+      if (la === 0 && lo === 0) return false;
+      return true;
     });
     var points = _carteVisiteursPoints;
 
@@ -9780,6 +9785,23 @@ function getComments(articleId) {
       if (msgEl) {
         msgEl.hidden = false;
         msgEl.textContent = 'Erreur : ' + (e.message || 'impossible de mettre à jour');
+        msgEl.className = 'dispo-message dispo-message--error';
+        setTimeout(function() { if (msgEl) msgEl.hidden = true; }, 3500);
+      }
+      return false;
+    }
+  }
+
+  (function() {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', appliquerVisibiliteTherapie);
+    } else {
+      appliquerVisibiliteTherapie();
+    }
+  })();
+
+
+})();xtContent = 'Erreur : ' + (e.message || 'impossible de mettre à jour');
         msgEl.className = 'dispo-message dispo-message--error';
         setTimeout(function() { if (msgEl) msgEl.hidden = true; }, 3500);
       }

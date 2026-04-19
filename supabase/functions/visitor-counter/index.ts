@@ -75,6 +75,20 @@ serve(async (req) => {
     // Lire le nouveau total après incrément
     const newCount = await lireTotal();
 
+    // Validation serveur des coordonnées (défense en profondeur)
+    // Un client malveillant/buggé pourrait envoyer lat=200 ou "Undefined" → on refuse
+    function safeCoord(v: unknown, min: number, max: number): number | null {
+      if (v == null || v === "") return null;
+      const n = Number(v);
+      if (!isFinite(n)) return null;
+      if (n < min || n > max) return null;
+      return n;
+    }
+    const safeLat = safeCoord(body.latitude,  -90,  90);
+    const safeLon = safeCoord(body.longitude, -180, 180);
+    // Rejeter aussi le couple (0,0) qui indique presque toujours une erreur amont
+    const coordsOk = safeLat !== null && safeLon !== null && !(safeLat === 0 && safeLon === 0);
+
     // Logger la visite dans visites_log (non-bloquant)
     fetch(`${supabaseUrl}/rest/v1/visites_log`, {
       method: "POST",
@@ -84,8 +98,8 @@ serve(async (req) => {
         ville:       body.ville       ? String(body.ville).substring(0, 100) : null,
         pays:        body.pays        ? String(body.pays).substring(0, 100) : null,
         region:      body.region      ? String(body.region).substring(0, 100) : null,
-        latitude:    body.latitude  != null ? Number(body.latitude)  : null,
-        longitude:   body.longitude != null ? Number(body.longitude) : null,
+        latitude:    coordsOk ? safeLat : null,
+        longitude:   coordsOk ? safeLon : null,
         code_postal: body.code_postal ? String(body.code_postal).substring(0, 20) : null,
         isp:         body.isp         ? String(body.isp).substring(0, 150) : null,
         navigateur:  body.navigateur  ? String(body.navigateur).substring(0, 250) : null,

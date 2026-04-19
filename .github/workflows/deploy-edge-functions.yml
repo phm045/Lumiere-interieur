@@ -66,7 +66,4 @@ jobs:
           # geocode-retroactif : sans JWT (appel manuel unique, utilise service_role en interne)
           deploy_fn geocode-retroactif true
 
-          # cleanup-test-visits : sans JWT (appel manuel unique, utilise service_role en interne)
-          deploy_fn cleanup-test-visits true
-
           echo "✅ Toutes les Edge Functions déployées avec succès"

@@ -40,22 +40,38 @@ function extractClientIp(req: Request): string | null {
   }
   const real = req.headers.get("x-real-ip");
   if (real) return real.trim();
+  // Cloudflare spécifique (au cas où)
+  const cf = req.headers.get("cf-connecting-ip");
+  if (cf) return cf.trim();
   return null;
+}
+
+// ── Détection IP privée / locale / réservée (IPv4 + IPv6) ──
+function isPrivateIp(ip: string): boolean {
+  if (!ip || ip === "unknown") return true;
+  const lower = ip.toLowerCase();
+  // IPv4 privées/locales/loopback
+  if (/^10\./.test(ip)) return true;
+  if (/^127\./.test(ip)) return true;
+  if (/^192\.168\./.test(ip)) return true;
+  // 172.16.0.0/12 (172.16–172.31)
+  const m = ip.match(/^172\.(\d+)\./);
+  if (m && Number(m[1]) >= 16 && Number(m[1]) <= 31) return true;
+  // Link-local IPv4 169.254/16
+  if (/^169\.254\./.test(ip)) return true;
+  // IPv6 : loopback, link-local, unique-local
+  if (lower === "::1" || lower.startsWith("::1/")) return true;
+  if (lower.startsWith("fe80:") || lower.startsWith("fe80::")) return true;
+  if (/^f[cd][0-9a-f]{2}:/.test(lower)) return true; // fc00::/7
+  return false;
 }
 
 // ── Géolocalisation serveur ──
 // Stratégie multi-providers : ipwho.is → ip-api.com (fallback) → null
 // Les deux sont gratuits, sans Cloudflare, appelés depuis Deno donc pas de CORS
 async function geocodeIp(ip: string): Promise<Record<string, unknown> | null> {
-  // Ignorer les IP privées, locales, et IPv6 link-local
-  if (
-    ip.startsWith("10.") || ip.startsWith("192.168.") ||
-    ip.startsWith("127.") || ip.startsWith("172.") ||
-    ip.startsWith("::1") || ip.startsWith("fe80:") ||
-    ip === "unknown" || ip === ""
-  ) {
-    return null;
-  }
+  // Ignorer les IP privées, locales, link-local (IPv4 + IPv6)
+  if (isPrivateIp(ip)) return null;
 
   // Provider 1 : ipwho.is (format identique au client, préférentiel)
   try {
@@ -104,12 +120,31 @@ async function geocodeIp(ip: string): Promise<Record<string, unknown> | null> {
 }
 
 serve(async (req) => {
+  // Wrapper global — garantit qu'on renvoie TOUJOURS une réponse, jamais un 500 Deno non-catché
+  try {
+    return await handleRequest(req);
+  } catch (err) {
+    console.error("[visitor-counter] fatal:", err);
+    return new Response(
+      JSON.stringify({ error: "internal", message: String((err as Error)?.message ?? err) }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});
+
+async function handleRequest(req: Request): Promise<Response> {
   if (req.method === "OPTIONS") {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  if (!supabaseUrl || !supabaseKey) {
+    return new Response(
+      JSON.stringify({ error: "env_missing" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
 
   const restHeaders = {
     "apikey": supabaseKey,
@@ -117,14 +152,19 @@ serve(async (req) => {
     "Content-Type": "application/json",
   };
 
-  // ── Lire le compteur actuel ──
+  // ── Lire le compteur actuel (tolérant aux pannes transitoires) ──
   async function lireTotal(): Promise<number> {
-    const resp = await fetch(`${supabaseUrl}/rest/v1/visiteurs?id=eq.1&select=total`, {
-      headers: restHeaders,
-    });
-    if (!resp.ok) return 0;
-    const rows = await resp.json();
-    return rows?.[0]?.total ?? 0;
+    try {
+      const resp = await fetch(`${supabaseUrl}/rest/v1/visiteurs?id=eq.1&select=total`, {
+        headers: restHeaders,
+        signal: AbortSignal.timeout(4000),
+      });
+      if (!resp.ok) return 0;
+      const rows = await resp.json();
+      return rows?.[0]?.total ?? 0;
+    } catch (_) {
+      return 0;
+    }
   }
 
   // ── GET → retourner le compteur sans incrémenter ──
@@ -247,4 +287,4 @@ serve(async (req) => {
     status: 405,
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-});
+}

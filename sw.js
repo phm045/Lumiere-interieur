@@ -3,7 +3,7 @@
 // IMPORTANT : bumper CACHE_NAME à chaque déploiement de code critique pour forcer
 // la purge des anciens assets (iOS garde le SW très longtemps en cache).
 
-const CACHE_NAME = 'voix-interieure-v3-2026-04-19';
+const CACHE_NAME = 'voix-interieure-v4-2026-04-19-hardened';
 const STATIC_ASSETS = [
   '/',
   './index.html',

@@ -8523,32 +8523,100 @@ function getComments(articleId) {
 
     var edgeFnSuccess = false;
 
+    // --- File d'attente offline : retry des visites non-envoyées ---
+    // Stocké en localStorage — si l'utilisateur était offline / réseau défaillant,
+    // on réessaie au prochain chargement de page (jusqu'à 7 jours).
+    var OFFLINE_QUEUE_KEY = 'li_visite_queue';
+    var QUEUE_MAX_AGE_MS = 7 * 24 * 3600 * 1000;
+    function lireQueueOffline() {
+      try {
+        var raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
+        if (!raw) return [];
+        var arr = JSON.parse(raw);
+        if (!Array.isArray(arr)) return [];
+        var now = Date.now();
+        return arr.filter(function(item) {
+          return item && item.ts && (now - item.ts) < QUEUE_MAX_AGE_MS;
+        });
+      } catch(e) { return []; }
+    }
+    function ecrireQueueOffline(arr) {
+      try { localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(arr.slice(-20))); } catch(e) {}
+    }
+    function ajouterALaQueueOffline(payload) {
+      var q = lireQueueOffline();
+      q.push({ ts: Date.now(), payload: payload });
+      ecrireQueueOffline(q);
+    }
+
     // --- Priorité 1 : Edge Function visitor-counter ---
     // L'Edge Function gère l'incrément du compteur ET l'insertion dans visites_log.
     // Le tracking direct Supabase ci-dessous ne s'exécute qu'en fallback si elle échoue.
+    //
+    // IMPORTANT : on marque la session AVANT l'envoi réseau pour éviter le double-comptage
+    // au cas où l'utilisateur reload pendant que la requête est en vol. En cas d'échec
+    // réseau, la visite part dans la queue offline et sera rejouée.
+    var edgeCtrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+    var edgeTimer = edgeCtrl ? setTimeout(function() { edgeCtrl.abort(); }, 8000) : null;
     try {
       var edgeMethod = dejaCompte ? 'GET' : 'POST';
+      if (!dejaCompte) {
+        // Marquer la session immédiatement — évite double comptage si reload pendant le fetch
+        try { safeSession.setItem(sessionKey, '1'); } catch(e) {}
+      }
       var edgeResp = await fetch(VISITOR_COUNTER, {
         method: edgeMethod,
         headers: { 'Content-Type': 'application/json' },
-        body: edgeMethod === 'POST' ? JSON.stringify(visitePayload) : undefined
+        body: edgeMethod === 'POST' ? JSON.stringify(visitePayload) : undefined,
+        signal: edgeCtrl ? edgeCtrl.signal : undefined,
+        keepalive: true // survit au unload de page (iOS Safari, navigation mobile)
       });
+      if (edgeTimer) { clearTimeout(edgeTimer); edgeTimer = null; }
       if (edgeResp.ok) {
         var edgeData = await edgeResp.json();
-        if (!dejaCompte) {
-          // Marquer la session dès que l'Edge Function a réussi (pas de double comptage)
-          try { safeSession.setItem(sessionKey, '1'); } catch(e) {}
-        }
         if (el && edgeData && edgeData.count != null) {
-          el.textContent = Number(edgeData.count).toLocaleString('fr-FR'); // Edge Function retourne toujours 'count'
+          el.textContent = Number(edgeData.count).toLocaleString('fr-FR');
         }
         edgeFnSuccess = true;
       } else {
         console.warn('[VisiteurCounter] Edge Function réponse non-ok:', edgeResp.status);
+        // Réponse non-ok : on remet la visite en queue pour retry ultérieur
+        if (!dejaCompte) ajouterALaQueueOffline(visitePayload);
       }
     } catch(edgeErr) {
-      console.warn('[VisiteurCounter] Edge Function indisponible, fallback Supabase:', edgeErr.message);
+      if (edgeTimer) { clearTimeout(edgeTimer); edgeTimer = null; }
+      console.warn('[VisiteurCounter] Edge Function indisponible:', edgeErr.message);
+      // Réseau KO / timeout : stocker en queue pour retry au prochain chargement
+      if (!dejaCompte) ajouterALaQueueOffline(visitePayload);
     }
+
+    // --- Rejeu de la queue offline (visites en attente depuis une précédente session) ---
+    // Non-bloquant, best-effort. Si l'Edge Function est joignable maintenant,
+    // on pousse les visites accumulées.
+    (function rejouerQueueOffline() {
+      if (!edgeFnSuccess) return; // Réseau encore KO, on ne tente pas
+      var queue = lireQueueOffline();
+      if (queue.length === 0) return;
+      // Ne rejouer que les payloads qui ne sont pas celui qu'on vient d'envoyer
+      var queueRestante = [];
+      (async function() {
+        for (var i = 0; i < queue.length; i++) {
+          var item = queue[i];
+          try {
+            var r = await fetch(VISITOR_COUNTER, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(item.payload),
+              keepalive: true
+            });
+            if (!r.ok) queueRestante.push(item);
+          } catch(e) {
+            queueRestante.push(item);
+          }
+        }
+        ecrireQueueOffline(queueRestante);
+      })();
+    })();
 
     // --- Fallback : REST API directe (uniquement si Edge Function a échoué) ---
     if (!edgeFnSuccess) {

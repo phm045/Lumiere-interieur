@@ -8562,12 +8562,24 @@ function getComments(articleId) {
         var raw = localStorage.getItem(OFFLINE_QUEUE_KEY);
         if (!raw) return [];
         var arr = JSON.parse(raw);
-        if (!Array.isArray(arr)) return [];
+        if (!Array.isArray(arr)) {
+          // Donnée corrompue : on nettoie
+          try { localStorage.removeItem(OFFLINE_QUEUE_KEY); } catch(e) {}
+          return [];
+        }
         var now = Date.now();
         return arr.filter(function(item) {
-          return item && item.ts && (now - item.ts) < QUEUE_MAX_AGE_MS;
+          // Garde-fous : item doit être un objet avec ts valide et payload objet
+          return item && typeof item === 'object' &&
+                 typeof item.ts === 'number' && isFinite(item.ts) &&
+                 (now - item.ts) < QUEUE_MAX_AGE_MS &&
+                 item.payload && typeof item.payload === 'object';
         });
-      } catch(e) { return []; }
+      } catch(e) {
+        // JSON invalide : on nettoie
+        try { localStorage.removeItem(OFFLINE_QUEUE_KEY); } catch(e2) {}
+        return [];
+      }
     }
     function ecrireQueueOffline(arr) {
       try { localStorage.setItem(OFFLINE_QUEUE_KEY, JSON.stringify(arr.slice(-20))); } catch(e) {}
@@ -8716,35 +8728,28 @@ function getComments(articleId) {
         dernierEnvoi = maintenant;
         compteurNavigations++;
 
-        // Payload : mêmes infos geo que la 1ère visite (déjà résolues serveur)
-        // mais on ne marque QUE la page — le serveur enverra via x-forwarded-for
-        // la géoloc si besoin.
-        var navPayload = {
-          navigateur: navigator.userAgent.substring(0, 200),
-          page: window.location.hash || '#accueil',
-          // Champ marqueur pour différencier des visites principales
-          // (pas d'incrément compteur — mais la ligne est bien logée)
-          _navigation_interne: true
-        };
-        // On ne veut PAS incrémenter le compteur pour les navigations internes,
-        // donc on va directement sur /rest/v1/visites_log au lieu de l'Edge Function.
+        // Navigation interne : on utilise l'Edge Function avec skip_increment=true
+        // pour bénéficier de la géoloc serveur automatique (via x-forwarded-for)
+        // et être moins bloqué par les adblockers que REST API directe.
         try {
-          fetch(SUPABASE_URL + '/rest/v1/visites_log', {
+          var navCtrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+          var navTimer = navCtrl ? setTimeout(function() { navCtrl.abort(); }, 5000) : null;
+          fetch(VISITOR_COUNTER, {
             method: 'POST',
-            headers: {
-              'apikey': SUPABASE_ANON_KEY,
-              'Authorization': 'Bearer ' + SUPABASE_ANON_KEY,
-              'Content-Type': 'application/json',
-              'Prefer': 'return=minimal'
-            },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-              navigateur: navPayload.navigateur,
-              page:       navPayload.page
-              // Pas d'IP/ville/coord — c'est une navigation interne, la visite
-              // principale a déjà logé la géoloc complète
+              skip_increment: true, // ← important : ne pas incrémenter le compteur
+              navigateur: navigator.userAgent.substring(0, 200),
+              page: window.location.hash || '#accueil'
+              // Pas d'IP/ville/coord : le serveur les détecte via x-forwarded-for
             }),
+            signal: navCtrl ? navCtrl.signal : undefined,
             keepalive: true
-          }).catch(function() {/* silencieux */});
+          }).then(function() {
+            if (navTimer) clearTimeout(navTimer);
+          }).catch(function() {
+            if (navTimer) clearTimeout(navTimer);
+          });
         } catch(e) {/* silencieux */}
       }
 

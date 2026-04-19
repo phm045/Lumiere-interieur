@@ -186,22 +186,28 @@ async function handleRequest(req: Request): Promise<Response> {
       // Body vide ou invalide — on continue, on géocodera côté serveur
     }
 
-    // Incrément atomique via RPC (UPDATE total = total + 1 côté Postgres)
-    const rpcResp = await fetch(`${supabaseUrl}/rest/v1/rpc/incrementer_visiteurs`, {
-      method: "POST",
-      headers: { ...restHeaders, "Prefer": "return=minimal" },
-      body: "{}",
-    });
+    // Flag skip_increment : la navigation interne (hashchange) log
+    // une ligne visites_log SANS toucher au compteur total.
+    const skipIncrement = body.skip_increment === true;
 
-    if (!rpcResp.ok) {
-      const err = await rpcResp.text();
-      return new Response(JSON.stringify({ error: "rpc_failed", detail: err }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+    // Incrément atomique via RPC (UPDATE total = total + 1 côté Postgres)
+    // — uniquement si ce n'est PAS une navigation interne
+    if (!skipIncrement) {
+      const rpcResp = await fetch(`${supabaseUrl}/rest/v1/rpc/incrementer_visiteurs`, {
+        method: "POST",
+        headers: { ...restHeaders, "Prefer": "return=minimal" },
+        body: "{}",
+        signal: AbortSignal.timeout(4000),
+      }).catch(() => null);
+
+      if (!rpcResp || !rpcResp.ok) {
+        // Échec RPC : on continue quand même pour logger la visite,
+        // mais on renvoie un warning au client
+        console.warn("[visitor-counter] RPC increment failed");
+      }
     }
 
-    // Lire le nouveau total après incrément
+    // Lire le total (après incrément, ou inchangé si skip)
     const newCount = await lireTotal();
 
     // ─── Détermination de la source de géoloc ───

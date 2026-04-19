@@ -3401,7 +3401,32 @@ Cal("init", "consultations", { origin: "https://app.cal.eu" });
 <script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('./sw.js').catch(function() {});
+    navigator.serviceWorker.register('./sw.js').then(function(reg) {
+      // Vérifier régulièrement les mises à jour du SW (important pour iOS qui met le SW en cache longtemps)
+      if (reg.update) { try { reg.update(); } catch(_){} }
+      // Si un nouveau SW est en attente, demander immédiatement son activation
+      if (reg.waiting) {
+        try { reg.waiting.postMessage({ type: 'SKIP_WAITING' }); } catch(_){}
+      }
+      // Détecter l'arrivée d'un nouveau SW et le faire passer en actif
+      reg.addEventListener('updatefound', function() {
+        var newWorker = reg.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener('statechange', function() {
+          if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            try { newWorker.postMessage({ type: 'SKIP_WAITING' }); } catch(_){}
+          }
+        });
+      });
+    }).catch(function() {});
+
+    // Recharger la page une seule fois quand le SW change (nouvelle version activée)
+    var swRefreshed = false;
+    navigator.serviceWorker.addEventListener('controllerchange', function() {
+      if (swRefreshed) return;
+      swRefreshed = true;
+      window.location.reload();
+    });
   });
 }
 </script>

@@ -43,30 +43,64 @@ function extractClientIp(req: Request): string | null {
   return null;
 }
 
-// ── Géolocalisation serveur via ipwho.is (gratuit, pas de Cloudflare) ──
+// ── Géolocalisation serveur ──
+// Stratégie multi-providers : ipwho.is → ip-api.com (fallback) → null
+// Les deux sont gratuits, sans Cloudflare, appelés depuis Deno donc pas de CORS
 async function geocodeIp(ip: string): Promise<Record<string, unknown> | null> {
   // Ignorer les IP privées, locales, et IPv6 link-local
   if (
     ip.startsWith("10.") || ip.startsWith("192.168.") ||
     ip.startsWith("127.") || ip.startsWith("172.") ||
     ip.startsWith("::1") || ip.startsWith("fe80:") ||
-    ip === "unknown"
+    ip === "unknown" || ip === ""
   ) {
     return null;
   }
 
+  // Provider 1 : ipwho.is (format identique au client, préférentiel)
   try {
     const resp = await fetch(`https://ipwho.is/${encodeURIComponent(ip)}`, {
       headers: { "User-Agent": "une-voix-interieure-edge/1.0" },
-      signal: AbortSignal.timeout(5000),
+      signal: AbortSignal.timeout(4000),
     });
-    if (!resp.ok) return null;
-    const data = await resp.json();
-    if (!data || !data.success) return null;
-    return data;
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data && data.success) return data;
+    }
   } catch (_) {
-    return null;
+    // timeout ou réseau — passer au provider suivant
   }
+
+  // Provider 2 : ip-api.com (fallback, champs différents — on normalise)
+  try {
+    const resp = await fetch(
+      `http://ip-api.com/json/${encodeURIComponent(ip)}?fields=status,country,regionName,city,zip,lat,lon,isp,query`,
+      {
+        headers: { "User-Agent": "une-voix-interieure-edge/1.0" },
+        signal: AbortSignal.timeout(4000),
+      }
+    );
+    if (resp.ok) {
+      const d = await resp.json();
+      if (d && d.status === "success") {
+        return {
+          success:    true,
+          ip:         d.query,
+          city:       d.city,
+          country:    d.country,
+          region:     d.regionName,
+          latitude:   d.lat,
+          longitude:  d.lon,
+          postal:     d.zip,
+          connection: { isp: d.isp },
+        };
+      }
+    }
+  } catch (_) {
+    // échec des deux providers
+  }
+
+  return null;
 }
 
 serve(async (req) => {

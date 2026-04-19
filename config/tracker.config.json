@@ -1,0 +1,50 @@
+{
+  "_comment": "Source de vérité du traceur (traceur visiteurs admin). Toute modification de ces valeurs doit passer par une PR et être répercutée dans app.js (bloc TRACKER_CONFIG / CATEGORIES_VISITEURS). Le code vérifie au démarrage que les constantes n'ont pas été altérées en mémoire.",
+  "version": "2026-04-19-locked",
+  "config": {
+    "MAX_NAVIGATIONS": 12,
+    "DELAI_MIN_MS": 3000,
+    "SESSION_GAP_MS": 1800000,
+    "TIMEOUT_FETCH_MS": 8000,
+    "TIMEOUT_RPC_MS": 4000,
+    "QUEUE_TTL_MS": 604800000,
+    "QUEUE_MAX": 20
+  },
+  "categories_visiteurs": {
+    "accueil": "Accueil",
+    "a-propos": "À propos",
+    "services": "Services",
+    "therapie": "Thérapie",
+    "boutique": "Boutique",
+    "blog": "Blog",
+    "temoignages": "Témoignages",
+    "contact": "Contact",
+    "mon-compte": "Mon compte",
+    "connexion": "Connexion",
+    "inscription": "Inscription",
+    "cgv": "CGV",
+    "mentions-legales": "Mentions légales",
+    "confidentialite": "Confidentialité",
+    "main": "Accueil",
+    "blog:libre-arbitre": "Blog : Libre arbitre",
+    "blog:biologie-emotions": "Blog : Biologie des émotions",
+    "blog:astrologie-lumiere-interieur": "Blog : Astrologie & lumière intérieure",
+    "blog:vraie-spiritualite": "Blog : Vraie spiritualité",
+    "blog:numerologie-pythagoricienne": "Blog : Numérologie pythagoricienne",
+    "blog:vampires-energetiques": "Blog : Vampires énergétiques",
+    "blog:confiance-ressenti": "Blog : Confiance & ressenti",
+    "blog:lithotherapie": "Blog : Lithothérapie",
+    "boutique:cristaux": "Boutique : Cristaux",
+    "boutique:accessoires": "Boutique : Accessoires",
+    "boutique:bijoux & lithothérapie": "Boutique : Bijoux & Lithothérapie",
+    "boutique:bijoux-lithotherapie": "Boutique : Bijoux & Lithothérapie",
+    "boutique:encens & purification": "Boutique : Encens & Purification",
+    "boutique:encens-purification": "Boutique : Encens & Purification",
+    "boutique:tout": "Boutique : Tous les produits"
+  },
+  "notes": {
+    "verrouillage": "Object.freeze appliqué sur TRACKER_CONFIG et CATEGORIES_VISITEURS dans app.js. Toute tentative d'écriture à chaud est silencieusement ignorée en mode non-strict, et lance une TypeError en mode strict.",
+    "self_check": "Un IIFE au démarrage compare TRACKER_CONFIG aux valeurs attendues et vérifie la présence des clés de mapping critiques (accueil, blog, boutique, contact, services, therapie, main). En cas d'anomalie : console.warn pour alerter l'admin, sans casser le site.",
+    "diagnostic_console": "window.__trackerConfigSnapshot() renvoie un snapshot runtime pour vérification manuelle depuis la DevTools."
+  }
+}

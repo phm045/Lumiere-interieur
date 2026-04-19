@@ -43,11 +43,30 @@
     return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
   }
 
+  // ============================================================
+  // TRACKER — Paramètres verrouillés (ne pas modifier à chaud)
+  // ============================================================
+  // Source de vérité versionnée : config/tracker.config.json
+  // Tout changement doit passer par une PR.
+  // Les objets ci-dessous sont figés (Object.freeze) pour empêcher
+  // toute mutation runtime qui ferait réapparaître un bug.
+
+  var TRACKER_CONFIG = Object.freeze({
+    VERSION:           '2026-04-19-locked',
+    MAX_NAVIGATIONS:   12,          // max d'événements par session (anti-spam BDD)
+    DELAI_MIN_MS:      3000,        // throttle entre 2 logs (ms)
+    SESSION_GAP_MS:    30 * 60 * 1000, // gap inter-session (ms) pour le regroupement admin
+    TIMEOUT_FETCH_MS:  8000,        // timeout HTTP côté client
+    TIMEOUT_RPC_MS:    4000,        // timeout RPC compteur
+    QUEUE_TTL_MS:      7 * 24 * 3600 * 1000, // TTL de la queue offline (7j)
+    QUEUE_MAX:         20           // taille max de la queue offline
+  });
+
   // --- Mapping hash → catégorie humaine (pour le traceur admin) ---
   // Sert à afficher "Thérapie" plutôt que "#therapie" dans la liste des visiteurs.
   // Les clés doivent correspondre aux id des sections d'index.html
   // ET aux slugs des articles/catégories boutique qu'on track manuellement.
-  var CATEGORIES_VISITEURS = {
+  var CATEGORIES_VISITEURS = Object.freeze({
     // --- Sections principales ---
     'accueil':          'Accueil',
     'a-propos':         'À propos',
@@ -83,7 +102,46 @@
     'boutique:encens & purification':     'Boutique : Encens & Purification',
     'boutique:encens-purification':       'Boutique : Encens & Purification',
     'boutique:tout':                      'Boutique : Tous les produits'
-  };
+  });
+
+  // --- Self-check : verrou d'intégrité des paramètres ---
+  // Vérifie au démarrage que les valeurs critiques sont intactes.
+  // Si quelque chose a été modifié en mémoire (extension, conflit d'id),
+  // on log une alerte admin mais on ne casse pas le site.
+  (function verifierIntegriteTraceur() {
+    try {
+      var attendu = {
+        MAX_NAVIGATIONS: 12,
+        DELAI_MIN_MS: 3000,
+        SESSION_GAP_MS: 1800000
+      };
+      var anomalies = [];
+      for (var k in attendu) {
+        if (TRACKER_CONFIG[k] !== attendu[k]) {
+          anomalies.push(k + '=' + TRACKER_CONFIG[k] + ' (attendu ' + attendu[k] + ')');
+        }
+      }
+      // Sanity check mapping : clés indispensables
+      var clesRequises = ['accueil','blog','boutique','contact','services','therapie','main'];
+      for (var ci = 0; ci < clesRequises.length; ci++) {
+        if (!CATEGORIES_VISITEURS[clesRequises[ci]]) {
+          anomalies.push('mapping manquant: ' + clesRequises[ci]);
+        }
+      }
+      if (anomalies.length && typeof console !== 'undefined' && console.warn) {
+        console.warn('[Tracker] Anomalies de configuration détectées :', anomalies.join(' | '));
+      }
+      // Expose un diagnostic accessible depuis la console admin
+      window.__trackerConfigSnapshot = function() {
+        return {
+          version: TRACKER_CONFIG.VERSION,
+          anomalies: anomalies,
+          config: JSON.parse(JSON.stringify(TRACKER_CONFIG)),
+          mappingKeys: Object.keys(CATEGORIES_VISITEURS).length
+        };
+      };
+    } catch (e) { /* silencieux */ }
+  })();
   function categorieDepuisHash(hashOuPage) {
     if (!hashOuPage) return 'Accueil';
     var brut = String(hashOuPage).replace(/^#/, '').trim();
@@ -8768,8 +8826,9 @@ function getComments(articleId) {
       var derniereCategorieLoguee = categorieDepuisHash(window.location.hash || '#accueil');
       var dernierEnvoi = Date.now();
       var compteurNavigations = 0;
-      var MAX_NAVIGATIONS = 12;
-      var DELAI_MIN_MS = 3000;
+      // Lecture depuis config verrouillée (Object.freeze) pour empêcher mutation runtime
+      var MAX_NAVIGATIONS = TRACKER_CONFIG.MAX_NAVIGATIONS;
+      var DELAI_MIN_MS = TRACKER_CONFIG.DELAI_MIN_MS;
 
       // Fonction centrale : envoie une ligne visites_log avec la page spécifiée
       // Accepte soit un hash standard ("#accueil"), soit un pseudo-path
@@ -8875,7 +8934,7 @@ function getComments(articleId) {
       // Pas de session_id en base : on reconstruit les sessions par heuristique
       // (même IP + événements espacés de ≤ 30 minutes).
       // data est trié DESC (plus récent d'abord) ; on le passe en ASC pour clusteriser.
-      var SESSION_GAP_MS = 30 * 60 * 1000;
+      var SESSION_GAP_MS = TRACKER_CONFIG.SESSION_GAP_MS;
       var sorted = data.slice().sort(function(a, b) {
         return new Date(a.created_at || 0) - new Date(b.created_at || 0);
       });

@@ -8871,6 +8871,51 @@ function getComments(articleId) {
         return;
       }
 
+      // --- Regroupement par session ---
+      // Pas de session_id en base : on reconstruit les sessions par heuristique
+      // (même IP + événements espacés de ≤ 30 minutes).
+      // data est trié DESC (plus récent d'abord) ; on le passe en ASC pour clusteriser.
+      var SESSION_GAP_MS = 30 * 60 * 1000;
+      var sorted = data.slice().sort(function(a, b) {
+        return new Date(a.created_at || 0) - new Date(b.created_at || 0);
+      });
+      var sessionsMap = {};
+      var sessionsOrder = [];
+      for (var si = 0; si < sorted.length; si++) {
+        var ev = sorted[si];
+        var tEv = ev.created_at ? new Date(ev.created_at).getTime() : 0;
+        var ipKey = ev.ip || ('no-ip-' + si); // IP absente → session isolée
+        var bucket = sessionsMap[ipKey];
+        if (!bucket || (tEv - bucket.lastTime) > SESSION_GAP_MS) {
+          bucket = {
+            ip: ev.ip, ville: ev.ville, region: ev.region, pays: ev.pays,
+            code_postal: ev.code_postal, latitude: ev.latitude, longitude: ev.longitude,
+            isp: ev.isp, navigateur: ev.navigateur,
+            firstTime: tEv, lastTime: tEv,
+            parcours: [],          // catégories ordonnées (sans doublons consécutifs)
+            pagesVues: 0
+          };
+          sessionsMap[ipKey] = bucket;
+          sessionsOrder.push(bucket);
+        }
+        bucket.lastTime = tEv;
+        bucket.pagesVues++;
+        var cat = categorieDepuisHash(ev.page);
+        if (bucket.parcours.length === 0 || bucket.parcours[bucket.parcours.length - 1] !== cat) {
+          bucket.parcours.push(cat);
+        }
+        // Enrichir la session avec la meilleure donnée géo disponible
+        if (!bucket.ville && ev.ville) bucket.ville = ev.ville;
+        if (!bucket.region && ev.region) bucket.region = ev.region;
+        if (!bucket.pays && ev.pays) bucket.pays = ev.pays;
+        if (!bucket.code_postal && ev.code_postal) bucket.code_postal = ev.code_postal;
+        if (bucket.latitude == null && ev.latitude != null) bucket.latitude = ev.latitude;
+        if (bucket.longitude == null && ev.longitude != null) bucket.longitude = ev.longitude;
+        if (!bucket.isp && ev.isp) bucket.isp = ev.isp;
+      }
+      // Tri DESC : sessions les plus récentes d'abord (par heure de début)
+      sessionsOrder.sort(function(a, b) { return b.firstTime - a.firstTime; });
+
       var html = '<div class="admin-dash-table--visiteurs">';
       html += '<div class="admin-dash-table__row admin-dash-table__row--header">' +
         '<div class="admin-dash-table__cell">Date</div>' +
@@ -8879,29 +8924,51 @@ function getComments(articleId) {
         '<div class="admin-dash-table__cell">R\u00e9gion</div>' +
         '<div class="admin-dash-table__cell">Pays</div>' +
         '<div class="admin-dash-table__cell">FAI</div>' +
-        '<div class="admin-dash-table__cell">Catégorie</div>' +
+        '<div class="admin-dash-table__cell">Catégories visitées</div>' +
         '</div>';
 
-      for (var i = 0; i < data.length; i++) {
-        var v = data[i];
-        var d = v.created_at ? new Date(v.created_at) : null;
-        var dateStr = d ? d.toLocaleDateString('fr-FR') + ' ' + d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) : '\u2014';
-        var ipDisplay = v.ip || '\u2014';
-        // Ville : avec code postal + lien Google Maps si coordonn\u00e9es disponibles
-        var villeLabel = v.ville ? (v.code_postal ? v.ville + '\u00a0(' + v.code_postal + ')' : v.ville) : '\u2014';
-        // Lien Google Maps : accepter lat=0 et lon=0 (méridien/équateur), rejeter uniquement null/NaN/hors-plage
-        var vLat = (v.latitude  != null) ? Number(v.latitude)  : NaN;
-        var vLon = (v.longitude != null) ? Number(v.longitude) : NaN;
+      for (var i = 0; i < sessionsOrder.length; i++) {
+        var s = sessionsOrder[i];
+        var dStart = s.firstTime ? new Date(s.firstTime) : null;
+        var dEnd   = s.lastTime  ? new Date(s.lastTime)  : null;
+        var dateStr;
+        if (dStart && dEnd && (s.lastTime - s.firstTime) > 60000) {
+          // Session multi-pages : afficher intervalle
+          dateStr = dStart.toLocaleDateString('fr-FR') + ' ' +
+                    dStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }) +
+                    '\u2013' + dEnd.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        } else if (dStart) {
+          dateStr = dStart.toLocaleDateString('fr-FR') + ' ' + dStart.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+        } else {
+          dateStr = '\u2014';
+        }
+        var ipDisplay = s.ip || '\u2014';
+        var villeLabel = s.ville ? (s.code_postal ? s.ville + '\u00a0(' + s.code_postal + ')' : s.ville) : '\u2014';
+        var vLat = (s.latitude  != null) ? Number(s.latitude)  : NaN;
+        var vLon = (s.longitude != null) ? Number(s.longitude) : NaN;
         var coordsValides = isFinite(vLat) && isFinite(vLon) &&
                             vLat >= -90 && vLat <= 90 && vLon >= -180 && vLon <= 180 &&
                             !(vLat === 0 && vLon === 0);
-        var villeDisplay = (coordsValides && v.ville)
+        var villeDisplay = (coordsValides && s.ville)
           ? '<a href="https://maps.google.com/?q=' + vLat + ',' + vLon + '" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline dotted;">' + escHtml(villeLabel) + '</a>'
           : escHtml(villeLabel);
-        var regionDisplay = v.region || '\u2014';
-        var paysDisplay = v.pays || '\u2014';
-        var pageDisplay = categorieDepuisHash(v.page);
-        var ispDisplay = v.isp || '\u2014';
+        var regionDisplay = s.region || '\u2014';
+        var paysDisplay = s.pays || '\u2014';
+        var ispDisplay = s.isp || '\u2014';
+
+        // Parcours : badges chaînés par \u2192 (flèche), avec compteur si > 1 page
+        var parcoursHtml = '';
+        if (s.parcours.length === 0) {
+          parcoursHtml = '<span style="color:var(--color-text-muted);">\u2014</span>';
+        } else {
+          for (var pi = 0; pi < s.parcours.length; pi++) {
+            if (pi > 0) parcoursHtml += '<span style="margin:0 4px;color:var(--color-text-muted);opacity:0.6;">\u2192</span>';
+            parcoursHtml += '<span style="display:inline-block;padding:2px 8px;margin:2px 0;border-radius:10px;background:rgba(212,165,116,0.12);color:var(--accent,#d4a574);font-size:0.8rem;white-space:nowrap;">' + escHtml(s.parcours[pi]) + '</span>';
+          }
+          if (s.pagesVues > s.parcours.length) {
+            parcoursHtml += '<span style="margin-left:6px;color:var(--color-text-muted);font-size:0.75rem;" title="Pages vues totales (incluant les rafraîchissements)">(' + s.pagesVues + '\u00a0vues)</span>';
+          }
+        }
 
         html += '<div class="admin-dash-table__row">' +
           '<div class="admin-dash-table__cell" data-label="Date">' + dateStr + '</div>' +
@@ -8910,7 +8977,7 @@ function getComments(articleId) {
           '<div class="admin-dash-table__cell" data-label="R\u00e9gion">' + escHtml(regionDisplay) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="Pays">' + escHtml(paysDisplay) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="FAI" style="font-size:0.8rem;opacity:0.8;">' + escHtml(ispDisplay) + '</div>' +
-          '<div class="admin-dash-table__cell" data-label="Catégorie" style="font-weight:500;"><span style="display:inline-block;padding:2px 8px;border-radius:10px;background:rgba(212,165,116,0.12);color:var(--accent,#d4a574);font-size:0.8rem;">' + escHtml(pageDisplay) + '</span></div>' +
+          '<div class="admin-dash-table__cell" data-label="Catégories visitées" style="font-weight:500;line-height:1.6;">' + parcoursHtml + '</div>' +
           '</div>';
       }
       html += '</div>';

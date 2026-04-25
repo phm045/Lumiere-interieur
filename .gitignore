@@ -1,3 +1,22 @@
 node_modules/
 .env
+.env.local
+.env.*.local
 db/*.db
+
+# Configurations contenant des secrets
+.mcp.json
+.claude/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.swp

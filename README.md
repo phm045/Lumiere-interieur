@@ -1,87 +1,93 @@
 # Une voix intérieure
 
-Site web du salon de bien-être Une voix intérieure avec système d'authentification client.
+Site web du cabinet de voyance / cartomancie **Une voix intérieure**.
 
-## Prérequis
+🌐 https://www.une-voix-interieure.fr
 
-- [Node.js](https://nodejs.org/) v18 ou supérieur
+## Architecture
 
-## Installation
+Site **100 % statique** servi par **GitHub Pages**, alimenté par :
 
-```bash
-# Cloner le dépôt
-git clone <url-du-repo>
-cd Lumiere-interieur
-
-# Installer les dépendances
-npm install
-
-# Configurer les variables d'environnement
-cp .env.example .env
-# Modifier les valeurs dans .env (surtout JWT_SECRET et COOKIE_SECRET en production)
-```
-
-## Lancement
-
-```bash
-# Mode production
-npm start
-
-# Mode développement (rechargement automatique)
-npm run dev
-```
-
-Le site est accessible sur `http://localhost:3000`
-
-## Variables d'environnement
-
-| Variable | Description | Valeur par défaut |
+| Couche | Technologie | Rôle |
 |---|---|---|
-| `JWT_SECRET` | Clé secrète pour la signature des tokens JWT | *(obligatoire)* |
-| `COOKIE_SECRET` | Clé secrète pour les cookies de session | *(obligatoire)* |
-| `PORT` | Port du serveur | `3000` |
-| `NODE_ENV` | Environnement (`development` / `production`) | `development` |
+| Frontend | HTML / CSS / JS vanilla | Pages, blog, boutique, formulaires |
+| Données | [Supabase](https://supabase.com) | Base PostgreSQL + RLS, Realtime, Storage |
+| Backend serverless | Supabase **Edge Functions** (Deno) | `brevo-proxy`, `cal-proxy`, `stripe-checkout`, `stripe-webhook`, `visitor-counter`, `geocode-retroactif` |
+| Paiements | [Stripe Payment Links](https://stripe.com/payments/payment-links) | Liens de paiement directs (pas de backend custom) |
+| Newsletter | [Brevo](https://brevo.com) (via Edge Function `brevo-proxy`) | Inscription en liste 3 |
+| Hébergement | GitHub Pages (CNAME : `www.une-voix-interieure.fr`) | Cert HTTPS Let's Encrypt |
 
-## Fonctionnalités d'authentification
+## Structure du dépôt
 
-- **Inscription** : formulaire avec nom, prénom, email, mot de passe et téléphone (optionnel)
-- **Connexion** : email et mot de passe
-- **Page Mon compte** : affichage des informations du client connecté
-- **Déconnexion** : suppression du cookie d'authentification
+```
+.
+├── index.html              # Page principale
+├── astrologie-boussole.html # Page astrologie
+├── app.js                  # JS client unique (à découper à terme)
+├── style.css, base.css     # Styles
+├── manifest.json, sw.js    # PWA
+├── CNAME                   # Domaine custom GitHub Pages
+├── supabase/
+│   ├── functions/          # Edge Functions Deno
+│   │   ├── brevo-proxy/
+│   │   ├── cal-proxy/
+│   │   ├── geocode-retroactif/
+│   │   ├── stripe-checkout/
+│   │   ├── stripe-webhook/
+│   │   └── visitor-counter/
+│   └── migrations/         # Scripts SQL versionnés (à appliquer manuellement
+│                           #  via Supabase Dashboard > SQL Editor)
+├── config/
+│   └── tracker.config.json # Config du tracker visiteurs
+└── *.png, *.jpg, *.mp3     # Assets médias
+```
+
+## Développement local
+
+Comme le site est statique, n'importe quel serveur HTTP local fonctionne :
+
+```bash
+# Python (intégré sur la plupart des OS)
+python3 -m http.server 8000
+
+# Ou avec npx
+npx serve .
+```
+
+Puis ouvrir http://localhost:8000.
+
+## Edge Functions Supabase
+
+Les Edge Functions (dans `supabase/functions/`) tournent sur Deno côté Supabase. Variables d'environnement à configurer **dans le dashboard Supabase** (Project Settings → Edge Functions → Secrets) :
+
+| Variable | Utilisée par | Description |
+|---|---|---|
+| `BREVO_API_KEY` | `brevo-proxy` | Clé API Brevo (newsletter, transactionnel) |
+| `STRIPE_SECRET_KEY` | `stripe-checkout`, `stripe-webhook` | Clé secrète Stripe |
+| `STRIPE_WEBHOOK_SECRET` | `stripe-webhook` | Secret de signature webhook Stripe |
+| `CAL_API_KEY` | `cal-proxy` | Clé API Cal.com (calendrier rendez-vous) |
+
+Déploiement d'une Edge Function :
+
+```bash
+# Prérequis : npx supabase CLI installé et project lié
+npx supabase functions deploy brevo-proxy
+```
+
+## Migrations SQL
+
+Les scripts dans `supabase/migrations/` doivent être **appliqués manuellement** dans l'ordre via le **SQL Editor** du dashboard Supabase. Ils ne sont **pas** appliqués automatiquement (le projet n'utilise pas la CLI Supabase pour les migrations).
+
+## Déploiement
+
+GitHub Pages déploie automatiquement le contenu de la branche `main` à chaque push. Aucune action CI/CD nécessaire.
 
 ## Sécurité
 
-- Hashage des mots de passe avec bcrypt (12 rounds)
-- Tokens JWT stockés dans des cookies `httpOnly` + `sameSite: strict`
-- Validation des entrées (email, mot de passe fort, longueur des champs)
-- Limitation de débit (rate limiting) sur les routes d'authentification
-- En-têtes de sécurité HTTP via Helmet
-- Base de données SQLite locale (pas de serveur externe requis)
+- 🔒 **Aucun secret côté client** : la clé Supabase utilisée dans `app.js` est la clé publique `anon` (sécurité assurée par les Row-Level Security policies)
+- 🔒 **Edge Functions** : c'est le seul endroit où les secrets vivent (Brevo API, Stripe Secret, Cal API)
+- 🔒 **Stripe** : les paiements passent par des Payment Links Stripe-hosted, aucune clé secrète Stripe côté client
 
-## Structure du projet
+## Licence
 
-```
-├── server.js              # Point d'entrée du serveur Express
-├── db/
-│   └── database.js        # Configuration SQLite et création des tables
-├── routes/
-│   └── auth.js            # Routes d'authentification (API)
-├── middleware/
-│   └── auth.js            # Middleware de vérification JWT
-├── index.html             # Page principale (SPA)
-├── app.js                 # Logique frontend
-├── style.css              # Styles du site
-├── base.css               # Reset CSS
-├── .env.example           # Modèle de variables d'environnement
-└── package.json           # Dépendances et scripts
-```
-
-## API
-
-| Méthode | Endpoint | Description |
-|---|---|---|
-| `POST` | `/api/auth/inscription` | Créer un nouveau compte client |
-| `POST` | `/api/auth/connexion` | Se connecter |
-| `POST` | `/api/auth/deconnexion` | Se déconnecter |
-| `GET` | `/api/auth/statut` | Vérifier l'état de connexion |
-| `GET` | `/api/auth/profil` | Récupérer le profil du client connecté |
+ISC

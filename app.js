@@ -14,6 +14,20 @@
   var CAL_PROXY = EDGE_FN_BASE + '/cal-proxy';
   var VISITOR_COUNTER = EDGE_FN_BASE + '/visitor-counter';
 
+  // --- Image fallback : local .png URLs are rewritten to .webp on the fly ---
+  // Some image_url values stored in Supabase still point to legacy local .png
+  // assets that were migrated to .webp. We rewrite those local paths at render
+  // time. Absolute URLs (Supabase Storage, CDN, http/https) are left untouched.
+  function preferWebp(url) {
+    if (!url || typeof url !== 'string') return url;
+    if (/^https?:\/\//i.test(url) || url.startsWith('//')) return url;
+    if (/^(data|blob):/i.test(url)) return url;
+    if (/\.png(\?|$)/i.test(url)) {
+      return url.replace(/\.png(\?|$)/i, '.webp$1');
+    }
+    return url;
+  }
+
   // --- Safe storage wrappers (fallback to in-memory when sandboxed) ---
   var _memStore = {};
   var _memSession = {};
@@ -840,7 +854,7 @@
         items.push({
           type: 'service', slug: slug,
           pinned: isItemPinned(slug),
-          img: img ? img.getAttribute('src') : 'services-tarot.png',
+          img: img ? img.getAttribute('src') : 'services-tarot.webp',
           imgAlt: h3.textContent,
           category: 'Consultation',
           title: h3.textContent,
@@ -863,7 +877,7 @@
         items.push({
           type: 'therapie', slug: slug,
           pinned: isItemPinned(slug),
-          img: img ? img.getAttribute('src') : 'crystals-nature.png',
+          img: img ? img.getAttribute('src') : 'crystals-nature.webp',
           imgAlt: h3.textContent,
           category: 'Th\u00e9rapie',
           title: h3.textContent,
@@ -890,7 +904,7 @@
           items.push({
             type: 'boutique', slug: 'btq-' + pslug,
             pinned: isItemPinned('btq-' + pslug),
-            img: pimg ? pimg.getAttribute('src') : 'crystals-nature.png',
+            img: pimg ? pimg.getAttribute('src') : 'crystals-nature.webp',
             imgAlt: pimg ? pimg.getAttribute('alt') : '',
             category: pcat ? pcat.textContent : 'Boutique',
             title: pname.textContent,
@@ -910,7 +924,7 @@
           items.push({
             type: 'boutique', slug: 'boutique-coming',
             pinned: isItemPinned('boutique-coming'),
-            img: 'crystals-nature.png',
+            img: 'crystals-nature.webp',
             imgAlt: 'Boutique Une voix int\u00e9rieure',
             category: 'Boutique',
             title: 'Boutique bient\u00f4t disponible',
@@ -4205,7 +4219,7 @@ function getComments(articleId) {
     card.innerHTML =
       '<div class="blog-card__image">' +
         (isAdmin ? '<button class="admin-delete-btn" data-delete-type="blog" data-delete-slug="' + data.slug + '" title="Supprimer">\ud83d\uddd1\ufe0f</button>' : '') +
-        '<img src="' + (data.image_url || 'hero-voyance.png') + '" alt="' + data.title + '" width="640" height="400" loading="lazy">' +
+        '<img src="' + preferWebp(data.image_url || 'hero-voyance.webp') + '" alt="' + data.title + '" width="640" height="400" loading="lazy">' +
       '</div>' +
       '<div class="blog-card__content">' +
         '<p class="blog-card__category">' + data.category + '</p>' +
@@ -4233,10 +4247,10 @@ function getComments(articleId) {
       : '<span class="boutique-product-card__stock-badge boutique-product-card__stock-badge--out">&Eacute;puis&eacute;</span>';
 
     // Build images array: main image + extra images
-    var allImages = [data.image_url || 'crystals-nature.png'];
+    var allImages = [preferWebp(data.image_url || 'crystals-nature.webp')];
     if (data.extra_images && data.extra_images.length > 0) {
       for (var ei = 0; ei < data.extra_images.length; ei++) {
-        allImages.push(data.extra_images[ei].image_url);
+        allImages.push(preferWebp(data.extra_images[ei].image_url));
       }
     }
 
@@ -4334,7 +4348,7 @@ function getComments(articleId) {
           slug: data.slug,
           name: data.name,
           price: data.price,
-          image_url: data.image_url || 'crystals-nature.png',
+          image_url: data.image_url || 'crystals-nature.webp',
           category: data.category || '',
           stripe_link: data.stripe_link || ''
         });
@@ -4479,37 +4493,37 @@ function getComments(articleId) {
       {
         slug: 'amethyste-pierre-roulee', name: 'Am\u00e9thyste \u2014 Pierre roul\u00e9e',
         description: 'Pierre roul\u00e9e d\u2019am\u00e9thyste naturelle, soigneusement s\u00e9lectionn\u00e9e. Favorise l\u2019intuition, la s\u00e9r\u00e9nit\u00e9 et la m\u00e9ditation. Taille\u00a0: 2-3\u00a0cm environ.\n\nL\u2019am\u00e9thyste est l\u2019une des pierres les plus populaires en lithoth\u00e9rapie, appr\u00e9ci\u00e9e depuis l\u2019Antiquit\u00e9 pour ses vertus apaisantes et spirituelles.\n\nPlan physique\nSommeil\u00a0: favorise un sommeil r\u00e9parateur et aide \u00e0 lutter contre les insomnies\nMaux de t\u00eate\u00a0: r\u00e9put\u00e9e pour soulager les tensions et les c\u00e9phal\u00e9es\nSyst\u00e8me nerveux\u00a0: apaise le syst\u00e8me nerveux et r\u00e9duit le stress physique\nD\u00e9toxification\u00a0: traditionnellement associ\u00e9e \u00e0 la purification du corps\n\nPlan \u00e9motionnel et mental\n- Apaisement\u00a0: calme les pens\u00e9es excessives et l\u2019anxi\u00e9t\u00e9\n- Clart\u00e9 mentale\u00a0: aide \u00e0 prendre du recul et \u00e0 voir les situations avec lucidit\u00e9\n- \u00c9quilibre \u00e9motionnel\u00a0: temp\u00e8re les sautes d\u2019humeur et les \u00e9motions excessives\n- Lâcher-prise\u00a0: accompagne la lib\u00e9ration des sch\u00e9mas r\u00e9p\u00e9titifs et des attachements\n\nPlan spirituel\n- Intuition\u00a0: ouvre le troisi\u00e8me \u0153il et renforce les capacit\u00e9s intuitives\n- M\u00e9ditation\u00a0: facilite l\u2019entr\u00e9e en m\u00e9ditation et approfondit la pratique\n- Protection\u00a0: cr\u00e9e un bouclier \u00e9nerg\u00e9tique contre les influences n\u00e9gatives\n- \u00c9l\u00e9vation\u00a0: favorise la connexion aux plans sup\u00e9rieurs de conscience\n\nChakra\u00a0: troisi\u00e8me \u0153il (6e chakra), couronne (7e chakra)\n\nSignes astrologiques\u00a0: Poissons, Vierge, Sagittaire\n\n\u00c9l\u00e9ment\u00a0: Air\n\nRechargement\u00a0: lumi\u00e8re lunaire (\u00e9viter le soleil direct qui peut alt\u00e9rer sa couleur), g\u00e9ode de quartz\n\nPurification\u00a0: eau claire, fumigation (sauge, palo santo)\n\nPierres compl\u00e9mentaires\u00a0: s\u2019associe bien avec le quartz rose (douceur), la labradorite (protection) ou la pierre de lune (f\u00e9minit\u00e9)\n\nCes propri\u00e9t\u00e9s rel\u00e8vent de la tradition lithoth\u00e9rapeutique et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 8.90, category: 'Cristaux', image_url: 'crystals-nature.png',
+        price: 8.90, category: 'Cristaux', image_url: 'crystals-nature.webp',
         stripe_link: BOUTIQUE_STRIPE_LINKS['amethyste-pierre-roulee'], visible: false, status: 'disponible', _demo: true
       },
       {
         slug: 'quartz-rose-pierre-brute', name: 'Quartz Rose \u2014 Pierre brute',
         description: 'Pierre brute de quartz rose naturel, pierre de l\u2019amour inconditionnel et de la paix int\u00e9rieure. Taille\u00a0: 3-5\u00a0cm environ.\n\nLe quartz rose est consid\u00e9r\u00e9 comme la pierre du c\u0153ur par excellence, symbole universel d\u2019amour et de tendresse.\n\nPlan physique\nSyst\u00e8me circulatoire\u00a0: r\u00e9put\u00e9 pour renforcer le c\u0153ur et favoriser une bonne circulation sanguine\nPeau\u00a0: traditionnellement associ\u00e9 \u00e0 l\u2019\u00e9clat du teint et \u00e0 la r\u00e9g\u00e9n\u00e9ration cutan\u00e9e\nSyst\u00e8me nerveux\u00a0: apaise les tensions et favorise la d\u00e9tente profonde\nSommeil\u00a0: aide \u00e0 trouver un sommeil paisible et r\u00e9parateur\n\nPlan \u00e9motionnel et mental\n- Amour de soi\u00a0: encourage la bienveillance envers soi-m\u00eame et l\u2019acceptation\n- Gu\u00e9rison \u00e9motionnelle\u00a0: aide \u00e0 panser les blessures affectives et \u00e0 lib\u00e9rer les peines de c\u0153ur\n- Confiance\u00a0: renforce l\u2019estime de soi et la capacit\u00e9 \u00e0 donner et recevoir l\u2019amour\n- Douceur\u00a0: temp\u00e8re l\u2019agressivit\u00e9 et apporte la paix int\u00e9rieure\n\nPlan spirituel\n- Ouverture du c\u0153ur\u00a0: active et harmonise le chakra du c\u0153ur\n- Compassion\u00a0: d\u00e9veloppe l\u2019empathie et le pardon\n- Harmonie relationnelle\u00a0: favorise les relations saines et \u00e9quilibr\u00e9es\n- Paix int\u00e9rieure\u00a0: invite \u00e0 la s\u00e9r\u00e9nit\u00e9 et \u00e0 la douceur de vivre\n\nChakra\u00a0: c\u0153ur (4e chakra)\n\nSignes astrologiques\u00a0: Taureau, Balance, Cancer\n\n\u00c9l\u00e9ment\u00a0: Eau\n\nRechargement\u00a0: lumi\u00e8re lunaire, amas de quartz\n\nPurification\u00a0: eau claire, fumigation (sauge, palo santo)\n\nPierres compl\u00e9mentaires\u00a0: s\u2019associe bien avec l\u2019am\u00e9thyste (apaisement), la rhodonite (gu\u00e9rison \u00e9motionnelle) ou la kunzite (ouverture du c\u0153ur)\n\nCes propri\u00e9t\u00e9s rel\u00e8vent de la tradition lithoth\u00e9rapeutique et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 12.90, category: 'Cristaux', image_url: 'crystals-nature.png',
+        price: 12.90, category: 'Cristaux', image_url: 'crystals-nature.webp',
         stripe_link: BOUTIQUE_STRIPE_LINKS['quartz-rose-pierre-brute'], visible: false, status: 'disponible', _demo: true
       },
       {
         slug: 'tourmaline-noire-pierre-de-protection', name: 'Tourmaline Noire \u2014 Pierre de protection',
         description: 'Tourmaline noire naturelle, pierre de protection par excellence. Absorbe les \u00e9nergies n\u00e9gatives et favorise l\u2019ancrage. Taille\u00a0: 2-4\u00a0cm environ.\n\nLa tourmaline noire (ou schorl) est la pierre de protection la plus r\u00e9put\u00e9e en lithoth\u00e9rapie, v\u00e9ritable bouclier \u00e9nerg\u00e9tique.\n\nPlan physique\nProtection \u00e9lectromagn\u00e9tique\u00a0: r\u00e9put\u00e9e pour absorber les ondes \u00e9lectromagn\u00e9tiques (\u00e9crans, Wi-Fi)\nSyst\u00e8me immunitaire\u00a0: traditionnellement associ\u00e9e au renforcement des d\u00e9fenses naturelles\nCirculation\u00a0: favorise une bonne circulation sanguine et \u00e9nerg\u00e9tique\nAncrage corporel\u00a0: reconnecte au corps physique et \u00e0 la sensation de solidit\u00e9\n\nPlan \u00e9motionnel et mental\n- Protection psychique\u00a0: agit comme un bouclier contre les \u00e9nergies n\u00e9gatives et les influences ext\u00e9rieures\n- Ancrage\u00a0: l\u2019une des pierres d\u2019ancrage les plus puissantes, stabilise et recentre\n- Confiance\u00a0: renforce le sentiment de s\u00e9curit\u00e9 int\u00e9rieure\n- Clart\u00e9\u00a0: aide \u00e0 dissiper la confusion mentale et les pens\u00e9es parasites\n\nPlan spirituel\n- Purification\u00a0: nettoie l\u2019aura et les espaces des \u00e9nergies stagnantes\n- Enracinement\u00a0: connecte profond\u00e9ment \u00e0 l\u2019\u00e9nergie terrestre\n- Protection lors de pratiques\u00a0: indispensable lors de m\u00e9ditations ou tirages pour prot\u00e9ger l\u2019espace sacr\u00e9\n- Transmutation\u00a0: transforme les \u00e9nergies lourdes en \u00e9nergies neutres\n\nChakra\u00a0: racine (1er chakra)\n\nSignes astrologiques\u00a0: Capricorne, Scorpion, Balance\n\n\u00c9l\u00e9ment\u00a0: Terre\n\nRechargement\u00a0: soleil, amas de quartz ou g\u00e9ode d\u2019am\u00e9thyste\n\nPurification\u00a0: eau courante, fumigation (sauge, palo santo), terre\n\nPierres compl\u00e9mentaires\u00a0: s\u2019associe bien avec la labradorite (protection renforc\u00e9e), l\u2019\u0153il de tigre (ancrage) ou l\u2019am\u00e9thyste (apaisement)\n\nCes propri\u00e9t\u00e9s rel\u00e8vent de la tradition lithoth\u00e9rapeutique et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 14.90, category: 'Cristaux', image_url: 'crystals-nature.png',
+        price: 14.90, category: 'Cristaux', image_url: 'crystals-nature.webp',
         stripe_link: BOUTIQUE_STRIPE_LINKS['tourmaline-noire-pierre-de-protection'], visible: false, status: 'disponible', _demo: true
       },
       {
         slug: 'sauge-blanche-baton-de-purification', name: 'Sauge Blanche \u2014 B\u00e2ton de purification',
         description: 'B\u00e2ton de sauge blanche de Californie pour la purification \u00e9nerg\u00e9tique des espaces et des personnes. Longueur\u00a0: environ 10\u00a0cm.\n\nLa sauge blanche (Salvia apiana) est utilis\u00e9e depuis des si\u00e8cles par les peuples am\u00e9rindiens pour ses propri\u00e9t\u00e9s purifiantes et protectrices.\n\nPropri\u00e9t\u00e9s\nPurification des espaces\u00a0: la fum\u00e9e de sauge neutralise les \u00e9nergies stagnantes et n\u00e9gatives dans un lieu\nNettoyage \u00e9nerg\u00e9tique\u00a0: purifie l\u2019aura et les objets (cristaux, cartes, pendules)\nProtection\u00a0: cr\u00e9e une barri\u00e8re \u00e9nerg\u00e9tique protectrice apr\u00e8s la purification\nRelaxation\u00a0: son parfum herbac\u00e9 favorise la d\u00e9tente et la concentration\n\nUtilisation\n- Allumez l\u2019extr\u00e9mit\u00e9 du b\u00e2ton et soufflez d\u00e9licatement pour obtenir une fum\u00e9e douce\n- Passez dans chaque pi\u00e8ce en insistant sur les coins et les zones de passage\n- Ouvrez une fen\u00eatre pour laisser les \u00e9nergies n\u00e9gatives s\u2019\u00e9vacuer\n- Id\u00e9al avant une m\u00e9ditation, un tirage de cartes ou une consultation\n- \u00c9teignez en posant le b\u00e2ton dans un r\u00e9cipient r\u00e9sistant \u00e0 la chaleur (coquille d\u2019ormeau, c\u00e9ramique)\n\nConseils\n- Ne jamais laisser la sauge br\u00fbler sans surveillance\n- Conserver dans un endroit sec \u00e0 l\u2019abri de la lumi\u00e8re\n- Un b\u00e2ton peut servir pour plusieurs purifications\n- Compl\u00e9mentaire avec le palo santo pour une purification douce\n\nAssociations courantes\u00a0: palo santo, tourmaline noire, am\u00e9thyste, s\u00e9l\u00e9nite\n\nCes informations rel\u00e8vent de la tradition \u00e9nerg\u00e9tique et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 7.50, category: 'Encens & Purification', image_url: 'crystals-nature.png',
+        price: 7.50, category: 'Encens & Purification', image_url: 'crystals-nature.webp',
         stripe_link: BOUTIQUE_STRIPE_LINKS['sauge-blanche-baton-de-purification'], visible: false, status: 'disponible', _demo: true
       },
       {
         slug: 'palo-santo-baton', name: 'Palo Santo \u2014 B\u00e2ton de purification',
         description: 'B\u00e2ton de Palo Santo (Bursera graveolens) r\u00e9colt\u00e9 de mani\u00e8re \u00e9thique en Am\u00e9rique du Sud. Bois sacr\u00e9 utilis\u00e9 depuis des si\u00e8cles pour la purification \u00e9nerg\u00e9tique et la m\u00e9ditation. Longueur\u00a0: environ 10\u00a0cm.\n\nLe Palo Santo (\u00ab bois sacr\u00e9 \u00bb en espagnol) est un arbre originaire des for\u00eats s\u00e8ches d\u2019Am\u00e9rique du Sud. Seuls les arbres tomb\u00e9s naturellement sont r\u00e9colt\u00e9s, apr\u00e8s un repos au sol de 4 \u00e0 10 ans, ce qui lui conf\u00e8re son parfum unique.\n\nPropri\u00e9t\u00e9s\nPurification douce\u00a0: sa fum\u00e9e l\u00e9g\u00e8re et parfum\u00e9e purifie les espaces sans agresser les \u00e9nergies positives\nApaisement\u00a0: son parfum chaud et bois\u00e9 calme le mental et r\u00e9duit le stress\nM\u00e9ditation\u00a0: favorise la concentration, la relaxation profonde et l\u2019\u00e9l\u00e9vation spirituelle\nProtection\u00a0: cr\u00e9e une atmosph\u00e8re protectrice et sacr\u00e9e dans l\u2019espace de vie\nCr\u00e9ativit\u00e9\u00a0: stimule l\u2019inspiration et la clart\u00e9 mentale\n\nUtilisation\n- Allumez l\u2019extr\u00e9mit\u00e9 du b\u00e2ton et laissez la flamme br\u00fbler quelques secondes\n- Soufflez d\u00e9licatement pour obtenir une fum\u00e9e odorante\n- Passez dans les pi\u00e8ces ou autour de votre espace de m\u00e9ditation\n- D\u00e9posez le b\u00e2ton dans un r\u00e9cipient r\u00e9sistant \u00e0 la chaleur, il s\u2019\u00e9teindra de lui-m\u00eame\n- Id\u00e9al en compl\u00e9ment de la sauge blanche pour une purification en douceur\n\nConseils\n- Ne jamais laisser br\u00fbler sans surveillance\n- Conserver dans un endroit sec pour pr\u00e9server l\u2019intensit\u00e9 du parfum\n- Un b\u00e2ton peut servir de nombreuses fois\n- Plus doux que la sauge blanche, id\u00e9al pour une purification quotidienne\n\nAssociations courantes\u00a0: sauge blanche, tourmaline noire, am\u00e9thyste, s\u00e9l\u00e9nite, quartz clair\n\nCes informations rel\u00e8vent de la tradition \u00e9nerg\u00e9tique et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 6.90, category: 'Encens & Purification', image_url: 'palo-santo-baton.png',
+        price: 6.90, category: 'Encens & Purification', image_url: 'palo-santo-baton.webp',
         stripe_link: BOUTIQUE_STRIPE_LINKS['palo-santo-baton'], visible: true, status: 'epuise', _demo: true
       },
       {
         slug: 'pendule-spirale-dore', name: 'Pendule Spirale Dor\u00e9',
         description: 'Pendule divinatoire en laiton, forme spirale conique avec cha\u00eene et perle ornementale. Id\u00e9al pour la radiesth\u00e9sie, la divination et la guidance intuitive. Livr\u00e9 avec sa cha\u00eene dor\u00e9e.\n\nLe pendule est l\u2019un des outils de divination les plus anciens et les plus accessibles. Sa forme en spirale favorise une circulation harmonieuse de l\u2019\u00e9nergie.\n\nCaract\u00e9ristiques\nMat\u00e9riau\u00a0: laiton dor\u00e9 de qualit\u00e9\nForme\u00a0: spirale conique, favorisant un mouvement fluide et pr\u00e9cis\nCha\u00eene\u00a0: cha\u00eene dor\u00e9e avec perle de pr\u00e9hension\nPoids\u00a0: \u00e9quilibr\u00e9 pour une oscillation naturelle et r\u00e9active\n\nUtilisation\n- Tenez le pendule par la perle entre le pouce et l\u2019index, le coude l\u00e9g\u00e8rement soulev\u00e9\n- Laissez-le se stabiliser puis posez votre question (r\u00e9ponse oui/non)\n- Convenez d\u2019abord de la signification des mouvements (rotation horaire = oui, antihoraire = non, par exemple)\n- Utilisez-le au-dessus d\u2019une planche de radiesth\u00e9sie pour des r\u00e9ponses plus d\u00e9taill\u00e9es\n- Nettoyez-le \u00e9nerg\u00e9tiquement r\u00e9guli\u00e8rement (fumigation, souffle, intention)\n\nConseils\n- Commencez par des questions simples dont vous connaissez la r\u00e9ponse pour calibrer votre pendule\n- Restez d\u00e9tendu et neutre\u00a0: \u00e9vitez d\u2019influencer le mouvement avec vos attentes\n- Pratiquez r\u00e9guli\u00e8rement pour affiner votre connexion intuitive\n- Conservez votre pendule dans une pochette d\u00e9di\u00e9e pour pr\u00e9server son \u00e9nergie\n\nAssociations courantes\u00a0: am\u00e9thyste (intuition), labradorite (protection), quartz clair (amplification)\n\nCes informations rel\u00e8vent de la tradition \u00e9nerg\u00e9tique et divinatoire et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 19.90, category: 'Accessoires', image_url: 'crystals-nature.png',
+        price: 19.90, category: 'Accessoires', image_url: 'crystals-nature.webp',
         stripe_link: BOUTIQUE_STRIPE_LINKS['pendule-spirale-dore'], visible: false, status: 'disponible', _demo: true
       },
       {
@@ -4521,31 +4535,31 @@ function getComments(articleId) {
       {
         slug: 'bracelet-elastique-6mm', name: 'Bracelet \u00c9lastique en Jaspe rouge \u2014 6\u00a0mm',
         description: 'Bracelet en Jaspe rouge de 6\u00a0mm mont\u00e9 sur \u00e9lastique r\u00e9sistant. L\u00e9ger et confortable, il s\u2019adapte \u00e0 tous les poignets. Id\u00e9al pour b\u00e9n\u00e9ficier des bienfaits de la lithoth\u00e9rapie au quotidien.\n\nLe jaspe rouge est une pierre tr\u00e8s appr\u00e9ci\u00e9e en lithoth\u00e9rapie pour ses vertus dynamisantes et protectrices.\n\nPlan physique\nVitalit\u00e9 et \u00e9nergie\u00a0: pierre dynamisante, elle stimule le corps et combat la fatigue\nCirculation sanguine\u00a0: r\u00e9put\u00e9e pour favoriser une bonne circulation et r\u00e9guler le syst\u00e8me sanguin\nSyst\u00e8me reproducteur\u00a0: traditionnellement associ\u00e9e \u00e0 la fertilit\u00e9 et \u00e0 l\u2019\u00e9quilibre hormonal\nAncrage corporel\u00a0: li\u00e9e au chakra racine, elle renforce le sentiment d\u2019enracinement physique\n\nPlan \u00e9motionnel et mental\n- Courage et d\u00e9termination\u00a0: consid\u00e9r\u00e9e comme une pierre de volont\u00e9, elle aide \u00e0 surmonter les obstacles\n- Stabilit\u00e9 \u00e9motionnelle\u00a0: apporte un sentiment de s\u00e9curit\u00e9 int\u00e9rieure et calme les \u00e9motions excessives\n- Confiance en soi\u00a0: encourage l\u2019affirmation de soi et la prise de d\u00e9cision\n- Protection\u00a0: traditionnellement utilis\u00e9e comme bouclier contre les \u00e9nergies n\u00e9gatives\n\nPlan spirituel\n- Ancrage et enracinement\u00a0: connecte \u00e0 l\u2019\u00e9nergie terrestre via le chakra racine (Muladhara)\n- Endurance spirituelle\u00a0: soutient la pers\u00e9v\u00e9rance dans les pratiques m\u00e9ditatives\n- Connexion \u00e0 la Terre\u00a0: renforce le lien avec la nature et les cycles naturels\n\nChakra\u00a0: racine (1er chakra)\n\nSignes astrologiques\u00a0: B\u00e9lier, Scorpion, Taureau\n\n\u00c9l\u00e9ment\u00a0: Terre\n\nRechargement\u00a0: soleil, amas de quartz ou g\u00e9ode d\u2019am\u00e9thyste\n\nPurification\u00a0: eau claire, fumigation (sauge, palo santo)\n\nPierres compl\u00e9mentaires\u00a0: s\u2019associe bien avec la cornaline (cr\u00e9ativit\u00e9), l\u2019\u0153il de tigre (protection) ou l\u2019h\u00e9matite (ancrage)\n\nCes propri\u00e9t\u00e9s rel\u00e8vent de la tradition lithoth\u00e9rapeutique et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 14.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'crystals-nature.png',
+        price: 14.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'crystals-nature.webp',
         stripe_link: BOUTIQUE_STRIPE_LINKS['bracelet-elastique-6mm'], visible: true, status: 'disponible', _demo: true
       },
       {
         slug: 'bracelet-pierre-de-lave-6mm', name: 'Bracelet \u00c9lastique Pierre de Lave \u2014 6\u00a0mm',
         description: 'Bracelet en perles de pierre de lave naturelle de 6\u00a0mm sur \u00e9lastique r\u00e9sistant. Pierre volcanique d\u2019ancrage et de protection, la lave apporte force int\u00e9rieure et stabilit\u00e9 \u00e9motionnelle. Poreuse, elle peut servir de diffuseur d\u2019huiles essentielles. L\u00e9ger et discret, il se porte au quotidien.',
-        price: 14.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'crystals-nature.png',
+        price: 14.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'crystals-nature.webp',
         stripe_link: BOUTIQUE_STRIPE_LINKS['bracelet-pierre-de-lave-6mm'], visible: true, status: 'disponible', _demo: true
       },
       {
         slug: 'bracelet-lapis-lazuli-6mm', name: 'Bracelet \u00c9lastique Lapis-Lazuli \u2014 6\u00a0mm',
         description: 'Bracelet en perles de lapis-lazuli naturel de 6\u00a0mm mont\u00e9 sur \u00e9lastique r\u00e9sistant. Ses perles bleu royal profond parsem\u00e9es d\u2019\u00e9clats dor\u00e9s de pyrite en font un bijou aussi \u00e9l\u00e9gant que spirituel. L\u00e9ger et confortable, il se porte au quotidien.\n\nLe lapis-lazuli est une pierre sacr\u00e9e depuis l\u2019\u00c9gypte ancienne et la M\u00e9sopotamie, symbole de sagesse, de v\u00e9rit\u00e9 et de royaut\u00e9. Il \u00e9tait broy\u00e9 pour fabriquer le pigment outremer, le plus pr\u00e9cieux des bleus.\n\nPlan physique\nSyst\u00e8me nerveux\u00a0: apaise les maux de t\u00eate, les migraines et les tensions nerveuses\nGorge et voix\u00a0: r\u00e9put\u00e9 pour soulager les affections de la gorge et favoriser la voix\nSommeil\u00a0: aide \u00e0 lutter contre les insomnies et favorise des r\u00eaves r\u00e9parateurs\nPeau\u00a0: traditionnellement associ\u00e9 \u00e0 la r\u00e9g\u00e9n\u00e9ration cutan\u00e9e et aux probl\u00e8mes d\u2019allergie\n\nPlan \u00e9motionnel et mental\n- Sagesse\u00a0: stimule l\u2019intelligence, la clart\u00e9 d\u2019esprit et le discernement\n- Expression de soi\u00a0: lib\u00e8re la parole et encourage la communication authentique\n- Confiance\u00a0: renforce l\u2019estime de soi et aide \u00e0 s\u2019affirmer avec s\u00e9r\u00e9nit\u00e9\n- Cr\u00e9ativit\u00e9\u00a0: stimule l\u2019imagination et l\u2019inspiration artistique\n- Honn\u00eatet\u00e9\u00a0: encourage la v\u00e9rit\u00e9 int\u00e9rieure et la sinc\u00e9rit\u00e9 dans les relations\n\nPlan spirituel\n- Troisi\u00e8me \u0153il\u00a0: ouvre et active le chakra du troisi\u00e8me \u0153il, renfor\u00e7ant l\u2019intuition et la clairvoyance\n- \u00c9l\u00e9vation spirituelle\u00a0: facilite la m\u00e9ditation profonde et l\u2019acc\u00e8s \u00e0 la connaissance int\u00e9rieure\n- Protection\u00a0: bouclier puissant contre les attaques psychiques et les \u00e9nergies n\u00e9gatives\n- Harmonisation\u00a0: \u00e9quilibre les \u00e9nergies entre le corps et l\u2019esprit\n\nAssociations courantes\nChakra\u00a0: troisi\u00e8me \u0153il (6e chakra), gorge (5e chakra)\nSignes astrologiques\u00a0: Sagittaire, Poissons, Verseau\n\u00c9l\u00e9ment\u00a0: Eau\nRechargement\u00a0: lumi\u00e8re lunaire, amas de quartz (\u00e9viter le soleil direct)\nPurification\u00a0: fumigation (sauge, palo santo), son (bol tib\u00e9tain) \u2014 \u00e9viter l\u2019eau et le sel\nPierres compl\u00e9mentaires\u00a0: s\u2019associe bien avec la sodalite (communication), l\u2019am\u00e9thyste (spiritualit\u00e9) ou la labradorite (protection)\n\nCes propri\u00e9t\u00e9s rel\u00e8vent de la tradition lithoth\u00e9rapeutique et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 16.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'bracelet-lapis-lazuli-6mm.png',
+        price: 16.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'bracelet-lapis-lazuli-6mm.webp',
         stripe_link: '', visible: true, status: 'disponible', _demo: true
       },
       {
         slug: 'bracelet-hematite-6mm', name: 'Bracelet \u00c9lastique H\u00e9matite \u2014 6\u00a0mm',
         description: 'Bracelet en perles d\u2019h\u00e9matite naturelle de 6\u00a0mm mont\u00e9 sur \u00e9lastique r\u00e9sistant. Ses perles gris m\u00e9tallique au reflet miroir apportent une touche sobre et \u00e9l\u00e9gante. L\u00e9ger et confortable, il se porte au quotidien.\n\nL\u2019h\u00e9matite est une pierre d\u2019ancrage et de vitalit\u00e9, utilis\u00e9e depuis l\u2019Antiquit\u00e9 pour ses propri\u00e9t\u00e9s protectrices et dynamisantes. Son nom vient du grec \u00ab haima \u00bb (sang) en raison de sa poudre rouge.\n\nPlan physique\nCirculation sanguine\u00a0: r\u00e9put\u00e9e pour stimuler la circulation et favoriser l\u2019oxyg\u00e9nation du sang\nVitalit\u00e9\u00a0: pierre dynamisante qui combat la fatigue et renforce l\u2019\u00e9nergie physique\nSyst\u00e8me immunitaire\u00a0: traditionnellement associ\u00e9e au renforcement des d\u00e9fenses naturelles\nR\u00e9cup\u00e9ration\u00a0: aide \u00e0 la r\u00e9cup\u00e9ration apr\u00e8s un effort physique ou une p\u00e9riode de convalescence\n\nPlan \u00e9motionnel et mental\n- Ancrage\u00a0: l\u2019une des pierres d\u2019ancrage les plus puissantes, elle recentre et stabilise\n- Confiance en soi\u00a0: renforce la volont\u00e9, le courage et la d\u00e9termination\n- Concentration\u00a0: am\u00e9liore la m\u00e9moire et les capacit\u00e9s de concentration\n- Protection\u00a0: cr\u00e9e un bouclier contre les \u00e9nergies n\u00e9gatives et les pens\u00e9es parasites\n- Optimisme\u00a0: aide \u00e0 surmonter les p\u00e9riodes difficiles avec r\u00e9silience\n\nPlan spirituel\n- Enracinement\u00a0: connecte profond\u00e9ment \u00e0 l\u2019\u00e9nergie terrestre et au moment pr\u00e9sent\n- Harmonisation\u00a0: \u00e9quilibre les \u00e9nergies yin et yang dans le corps\n- Protection spirituelle\u00a0: prot\u00e8ge l\u2019aura lors des pratiques m\u00e9ditatives et des tirages\n- Transmutation\u00a0: transforme les \u00e9nergies n\u00e9gatives en \u00e9nergies positives\n\nAssociations courantes\nChakra\u00a0: racine (1er chakra)\nSignes astrologiques\u00a0: B\u00e9lier, Scorpion, Capricorne\n\u00c9l\u00e9ment\u00a0: Terre et Feu\nRechargement\u00a0: soleil (courte exposition), amas de quartz ou g\u00e9ode d\u2019am\u00e9thyste\nPurification\u00a0: fumigation (sauge, palo santo), son (bol tib\u00e9tain) \u2014 \u00e9viter l\u2019eau prolong\u00e9e\nPierres compl\u00e9mentaires\u00a0: s\u2019associe bien avec la tourmaline noire (protection renforc\u00e9e), l\u2019\u0153il de tigre (confiance) ou le quartz clair (amplification)\n\nCes propri\u00e9t\u00e9s rel\u00e8vent de la tradition lithoth\u00e9rapeutique et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 14.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'bracelet-hematite-6mm.png',
+        price: 14.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'bracelet-hematite-6mm.webp',
         stripe_link: '', visible: true, status: 'disponible', _demo: true
       },
       {
         slug: 'bracelet-malachite-synthetique-6mm', name: 'Bracelet \u00c9lastique Malachite synth\u00e9tique \u2014 6\u00a0mm',
         description: 'Bracelet en perles de malachite synth\u00e9tique de 6\u00a0mm mont\u00e9 sur \u00e9lastique r\u00e9sistant. Ses perles vert intense aux motifs band\u00e9s caract\u00e9ristiques apportent une touche d\u2019\u00e9l\u00e9gance naturelle. L\u00e9ger et confortable, il se porte au quotidien.\n\nLa malachite est une pierre associ\u00e9e \u00e0 la transformation et \u00e0 la protection depuis l\u2019\u00c9gypte ancienne. Ce bracelet en version synth\u00e9tique reproduit fid\u00e8lement ses motifs verts band\u00e9s tout en offrant une grande r\u00e9gularit\u00e9 et une r\u00e9sistance accrue.\n\nPlan physique\nD\u00e9toxification\u00a0: traditionnellement associ\u00e9e au soutien des processus de purification du corps\nSyst\u00e8me immunitaire\u00a0: r\u00e9put\u00e9e pour stimuler les d\u00e9fenses naturelles\nCirculation\u00a0: favorise une bonne circulation sanguine et r\u00e9duit les inflammations\nDouleurs articulaires\u00a0: utilis\u00e9e en lithoth\u00e9rapie pour apaiser les tensions musculaires et articulaires\n\nPlan \u00e9motionnel et mental\n- Transformation\u00a0: pierre du changement, elle accompagne les transitions et aide \u00e0 briser les sch\u00e9mas r\u00e9p\u00e9titifs\n- Protection \u00e9motionnelle\u00a0: absorbe les \u00e9nergies n\u00e9gatives et prot\u00e8ge des influences ext\u00e9rieures\n- Confiance en soi\u00a0: encourage l\u2019affirmation personnelle et la prise de d\u00e9cision\n- L\u00e2cher-prise\u00a0: aide \u00e0 lib\u00e9rer les \u00e9motions refoul\u00e9es et les blocages int\u00e9rieurs\n- Empathie\u00a0: renforce la compr\u00e9hension des \u00e9motions d\u2019autrui\n\nPlan spirituel\n- Ouverture du c\u0153ur\u00a0: active et \u00e9quilibre le chakra du c\u0153ur, favorisant l\u2019amour inconditionnel\n- Guidance int\u00e9rieure\u00a0: renforce l\u2019intuition et aide \u00e0 suivre son chemin de vie\n- Purification \u00e9nerg\u00e9tique\u00a0: nettoie l\u2019aura et les espaces des \u00e9nergies stagnantes\n- Connexion \u00e0 la nature\u00a0: renforce le lien avec le monde v\u00e9g\u00e9tal et les \u00e9nergies terrestres\n\nAssociations courantes\nChakra\u00a0: c\u0153ur (4e chakra), plexus solaire (3e chakra)\nSignes astrologiques\u00a0: Scorpion, Capricorne, Balance\n\u00c9l\u00e9ment\u00a0: Terre\nRechargement\u00a0: lumi\u00e8re lunaire, amas de quartz (\u00e9viter le soleil direct et l\u2019eau)\nPurification\u00a0: fumigation (sauge, palo santo), fleur de vie, son (bol tib\u00e9tain)\nPierres compl\u00e9mentaires\u00a0: s\u2019associe bien avec le quartz rose (douceur), la chrysocolle (communication) ou la turquoise (protection)\n\nNote\u00a0: ce bracelet est en malachite synth\u00e9tique (reconstitu\u00e9e). Il reproduit les motifs et couleurs de la malachite naturelle avec une r\u00e9gularit\u00e9 et une durabilit\u00e9 sup\u00e9rieures.\n\nCes propri\u00e9t\u00e9s rel\u00e8vent de la tradition lithoth\u00e9rapeutique et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 12.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'bracelet-malachite-synthetique-6mm.png',
+        price: 12.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'bracelet-malachite-synthetique-6mm.webp',
         stripe_link: '', visible: true, status: 'disponible', _demo: true
       },
       {
@@ -4563,13 +4577,13 @@ function getComments(articleId) {
       {
         slug: 'bracelet-aigue-marine-6mm', name: 'Bracelet \u00c9lastique Aigue-Marine \u2014 6\u00a0mm',
         description: 'Bracelet en perles d\u2019aigue-marine naturelle de 6\u00a0mm mont\u00e9 sur \u00e9lastique r\u00e9sistant. Ses perles bleu p\u00e2le aux reflets laiteux \u00e9voquent la douceur des eaux claires. L\u00e9ger et d\u00e9licat, il se porte au quotidien pour accompagner votre s\u00e9r\u00e9nit\u00e9.\n\nL\u2019aigue-marine, pierre des marins et des voyageurs, appartient \u00e0 la famille des b\u00e9ryls. Elle est r\u00e9put\u00e9e depuis l\u2019Antiquit\u00e9 pour ses vertus apaisantes et protectrices.\n\nPlan physique\nGorge et voies respiratoires\u00a0: traditionnellement associ\u00e9e \u00e0 l\u2019apaisement des maux de gorge, des angines et des allergies respiratoires\nSyst\u00e8me immunitaire\u00a0: r\u00e9put\u00e9e pour renforcer les d\u00e9fenses naturelles\nYeux\u00a0: utilis\u00e9e pour soulager la fatigue oculaire et am\u00e9liorer la vision\nCirculation\u00a0: favorise la r\u00e9gulation des liquides corporels et la circulation lymphatique\n\nPlan \u00e9motionnel et mental\n- Apaisement\u00a0: calme les angoisses, le stress et les pens\u00e9es excessives\n- Communication\u00a0: facilite l\u2019expression de soi avec clart\u00e9 et douceur\n- Sensibilit\u00e9\u00a0: aide les personnes hypersensibles \u00e0 canaliser leurs \u00e9motions\n- Courage\u00a0: apporte la force tranquille n\u00e9cessaire pour traverser les p\u00e9riodes difficiles\n- L\u00e2cher-prise\u00a0: encourage \u00e0 lib\u00e9rer les attachements et les peurs\n\nPlan spirituel\n- Chakra de la gorge\u00a0: active et \u00e9quilibre le 5e chakra, favorisant la parole juste et authentique\n- M\u00e9ditation\u00a0: facilite l\u2019acc\u00e8s \u00e0 des \u00e9tats m\u00e9ditatifs profonds et la connexion avec l\u2019\u00e9l\u00e9ment Eau\n- Clairvoyance\u00a0: stimule les capacit\u00e9s intuitives et la r\u00e9ceptivit\u00e9 aux messages subtils\n- Protection du voyageur\u00a0: pierre de protection traditionnelle pour les d\u00e9placements\n\nChakra\u00a0: gorge (5e chakra)\n\nSignes astrologiques\u00a0: Poissons, Balance, G\u00e9meaux, Verseau\n\n\u00c9l\u00e9ment\u00a0: Eau\n\nRechargement\u00a0: lumi\u00e8re lunaire (id\u00e9alement pleine lune), amas de quartz\n\nPurification\u00a0: eau claire, fumigation (sauge, palo santo), sel (indirect)\n\nConseils d\u2019entretien\u00a0: \u00e9vitez l\u2019exposition prolong\u00e9e au soleil qui peut att\u00e9nuer la couleur. Nettoyez d\u00e9licatement sous l\u2019eau claire et rechargez \u00e0 la lumi\u00e8re de la lune.\n\nCes propri\u00e9t\u00e9s rel\u00e8vent de la tradition lithoth\u00e9rapeutique et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 16.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'bracelet-aigue-marine-6mm.png',
+        price: 16.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'bracelet-aigue-marine-6mm.webp',
         stripe_link: BOUTIQUE_STRIPE_LINKS['bracelet-aigue-marine-6mm'], visible: true, status: 'disponible', _demo: true
       },
       {
         slug: 'bracelet-oeil-de-tigre-6mm', name: 'Bracelet \u00c9lastique \u0152il de Tigre \u2014 6\u00a0mm',
         description: 'Bracelet en perles d\u2019\u0153il de tigre naturel de 6\u00a0mm mont\u00e9 sur \u00e9lastique r\u00e9sistant. Ses perles aux reflets dor\u00e9s et brun chocolat offrent un \u00e9clat chatoyant caract\u00e9ristique. L\u00e9ger et \u00e9l\u00e9gant, il se porte au quotidien.\n\nL\u2019\u0153il de tigre est l\u2019une des pierres les plus populaires en lithoth\u00e9rapie. Pierre de protection par excellence, elle est r\u00e9put\u00e9e pour ses vertus de bouclier \u00e9nerg\u00e9tique depuis l\u2019Antiquit\u00e9.\n\nPlan physique\nDigestion\u00a0: traditionnellement associ\u00e9 au bon fonctionnement du syst\u00e8me digestif et \u00e0 la r\u00e9gulation de l\u2019acidit\u00e9 gastrique\nArticulations\u00a0: r\u00e9put\u00e9 pour soulager les douleurs articulaires et les tensions musculaires\nVitalit\u00e9\u00a0: stimule l\u2019\u00e9nergie physique et combat la fatigue\nYeux\u00a0: traditionnellement utilis\u00e9 pour am\u00e9liorer la vision nocturne et soulager la fatigue oculaire\n\nPlan \u00e9motionnel et mental\n- Protection\u00a0: cr\u00e9e un bouclier contre les \u00e9nergies n\u00e9gatives, la malveillance et le mauvais \u0153il\n- Confiance en soi\u00a0: renforce l\u2019estime personnelle et le courage d\u2019agir\n- Volont\u00e9\u00a0: aide \u00e0 surmonter les blocages et \u00e0 pers\u00e9v\u00e9rer dans ses projets\n- Ancrage\u00a0: stabilise les \u00e9motions et apporte un sentiment de s\u00e9curit\u00e9 int\u00e9rieure\n- Lucidit\u00e9\u00a0: aide \u00e0 prendre du recul et \u00e0 voir les situations avec objectivit\u00e9\n\nPlan spirituel\n- Effet miroir\u00a0: renvoie les \u00e9nergies n\u00e9gatives \u00e0 leur \u00e9metteur, prot\u00e9geant l\u2019aura\n- Chakra du plexus solaire\u00a0: active et \u00e9quilibre le 3e chakra, si\u00e8ge de la volont\u00e9 et du pouvoir personnel\n- Enracinement\u00a0: renforce la connexion \u00e0 la terre tout en stimulant la force int\u00e9rieure\n- Discernement\u00a0: aide \u00e0 distinguer les influences positives des n\u00e9gatives dans son environnement\n\nChakra\u00a0: plexus solaire (3e chakra), sacr\u00e9 (2e chakra)\n\nSignes astrologiques\u00a0: G\u00e9meaux, Lion, Vierge\n\n\u00c9l\u00e9ment\u00a0: Terre, Feu\n\nRechargement\u00a0: lumi\u00e8re du soleil, amas de quartz\n\nPurification\u00a0: fumigation (sauge, palo santo), eau claire, terre\n\nConseils d\u2019entretien\u00a0: nettoyez r\u00e9guli\u00e8rement sous l\u2019eau claire. L\u2019\u0153il de tigre aime le soleil pour se recharger. \u00c9vitez les chocs et les produits chimiques.\n\nCes propri\u00e9t\u00e9s rel\u00e8vent de la tradition lithoth\u00e9rapeutique et ne se substituent pas \u00e0 un avis m\u00e9dical.',
-        price: 14.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'bracelet-oeil-de-tigre-6mm.png',
+        price: 14.90, category: 'Bijoux & Lithoth\u00e9rapie', image_url: 'bracelet-oeil-de-tigre-6mm.webp',
         stripe_link: BOUTIQUE_STRIPE_LINKS['bracelet-oeil-de-tigre-6mm'], visible: true, status: 'disponible', _demo: true
       }
     ];
@@ -4602,7 +4616,7 @@ function getComments(articleId) {
             // Uploader les images des nouveaux produits dans Supabase Storage
             for (var si = 0; si < toSeed.length; si++) {
               var sp = toSeed[si];
-              if (sp.image_url && sp.image_url !== 'crystals-nature.png' && sp.image_url.indexOf('http') !== 0) {
+              if (sp.image_url && sp.image_url !== 'crystals-nature.webp' && sp.image_url.indexOf('http') !== 0) {
                 try {
                   var seedImgResp = await fetch(sp.image_url);
                   if (seedImgResp.ok) {
@@ -4647,7 +4661,7 @@ function getComments(articleId) {
           var updFields = { name: demo.name, description: demo.description, price: demo.price, category: demo.category };
           // Ne pas toucher à l'image si le produit en base a déjà une URL custom (uploadée par l'admin)
           var dbHasCustomImage = dbp.image_url && dbp.image_url.indexOf('http') === 0;
-          if (!dbHasCustomImage && demo.image_url && demo.image_url !== 'crystals-nature.png' && demo.image_url.indexOf('http') !== 0) {
+          if (!dbHasCustomImage && demo.image_url && demo.image_url !== 'crystals-nature.webp' && demo.image_url.indexOf('http') !== 0) {
             // Upload l'image démo dans Supabase Storage uniquement si le produit n'a pas déjà une image custom
             try {
               var imgResp = await fetch(demo.image_url);
@@ -5056,7 +5070,7 @@ function getComments(articleId) {
           miniCard.setAttribute('data-suggestion-slug', p.slug);
           miniCard.innerHTML =
             '<div class="boutique-suggestion-card__image">' +
-              '<img src="' + (p.image_url || 'crystals-nature.png') + '" alt="' + sanitizeForHtml(p.name || '') + '" width="320" height="213" loading="lazy">' +
+              '<img src="' + preferWebp(p.image_url || 'crystals-nature.webp') + '" alt="' + sanitizeForHtml(p.name || '') + '" width="320" height="213" loading="lazy">' +
             '</div>' +
             '<div class="boutique-suggestion-card__body">' +
               '<div class="boutique-suggestion-card__cat">' + sanitizeForHtml(p.category || '') + '</div>' +
@@ -5240,10 +5254,10 @@ function getComments(articleId) {
           imageUrl = await uploadImage(file, 'images', path);
         } catch(e) {
           console.warn('Upload failed, using dropdown image:', e);
-          if (!imageUrl) imageUrl = 'blog-journal.png';
+          if (!imageUrl) imageUrl = 'blog-journal.webp';
         }
       } else if (!imageUrl) {
-        imageUrl = 'blog-journal.png';
+        imageUrl = 'blog-journal.webp';
       }
 
       var data = {
@@ -5551,7 +5565,7 @@ function getComments(articleId) {
     if (priceEl) priceEl.textContent = parseFloat(productData.price).toFixed(2) + ' \u20ac';
 
     // Build gallery with all images
-    var allImages = [productData.image_url || 'crystals-nature.png'];
+    var allImages = [preferWebp(productData.image_url || 'crystals-nature.webp')];
     if (productData.extra_images && productData.extra_images.length > 0) {
       for (var i = 0; i < productData.extra_images.length; i++) {
         allImages.push(productData.extra_images[i].image_url);
@@ -5586,7 +5600,7 @@ function getComments(articleId) {
     overlay.setAttribute('data-product-slug', productData.slug);
     overlay.setAttribute('data-product-name', productData.name);
     overlay.setAttribute('data-product-price', productData.price);
-    overlay.setAttribute('data-product-image', productData.image_url || 'crystals-nature.png');
+    overlay.setAttribute('data-product-image', preferWebp(productData.image_url || 'crystals-nature.webp'));
     overlay.setAttribute('data-product-stripe-link', productData.stripe_link || '');
 
     // Show overlay and scroll to top
@@ -5708,7 +5722,7 @@ function getComments(articleId) {
         slug: product.slug,
         name: product.name,
         price: parseFloat(product.price),
-        image_url: product.image_url || 'crystals-nature.png',
+        image_url: product.image_url || 'crystals-nature.webp',
         category: product.category || '',
         stripe_link: product.stripe_link || '',
         qty: 1
@@ -5888,7 +5902,7 @@ function getComments(articleId) {
         slug: slug,
         name: name,
         price: parseFloat(price),
-        image_url: image || 'crystals-nature.png',
+        image_url: image || 'crystals-nature.webp',
         category: '',
         stripe_link: stripeLink
       });
@@ -6022,10 +6036,10 @@ function getComments(articleId) {
           imageUrl = await uploadImage(file, 'images', path);
         } catch(e) {
           console.warn('Upload failed, using dropdown image:', e);
-          if (!imageUrl) imageUrl = 'crystals-nature.png';
+          if (!imageUrl) imageUrl = 'crystals-nature.webp';
         }
       } else if (!imageUrl) {
-        imageUrl = 'crystals-nature.png';
+        imageUrl = 'crystals-nature.webp';
       }
 
       var isVisible = fd.get('visible') === 'true';
@@ -6762,7 +6776,7 @@ function getComments(articleId) {
       for (var i = 0; i < data.length; i++) {
         var a = data[i];
         html += '<div class="admin-dash-table__row">' +
-          '<div class="admin-dash-table__cell admin-dash-table__cell--img" data-label="Image"><img src="' + escHtml(a.image_url || 'hero-voyance.png') + '" alt="" loading="lazy"></div>' +
+          '<div class="admin-dash-table__cell admin-dash-table__cell--img" data-label="Image"><img src="' + escHtml(preferWebp(a.image_url || 'hero-voyance.webp')) + '" alt="" loading="lazy"></div>' +
           '<div class="admin-dash-table__cell" data-label="Titre">' + escHtml(a.title) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="Cat\u00e9gorie"><span class="admin-dash-badge admin-dash-badge--neutral">' + escHtml(a.category) + '</span></div>' +
           '<div class="admin-dash-table__cell" data-label="Date">' + escHtml(a.date_publication || formatDateFR(a.created_at)) + '</div>' +
@@ -6887,7 +6901,7 @@ function getComments(articleId) {
           ? '<span class="admin-dash-badge admin-dash-badge--warning">Masqu\u00e9</span>'
           : '<span class="admin-dash-badge admin-dash-badge--success">Visible</span>';
         html += '<div class="admin-dash-table__row' + (p.visible === false ? ' admin-dash-table__row--muted' : '') + '">' +
-          '<div class="admin-dash-table__cell admin-dash-table__cell--img" data-label="Image"><img src="' + escHtml(p.image_url || 'crystals-nature.png') + '" alt="" loading="lazy"></div>' +
+          '<div class="admin-dash-table__cell admin-dash-table__cell--img" data-label="Image"><img src="' + escHtml(preferWebp(p.image_url || 'crystals-nature.webp')) + '" alt="" loading="lazy"></div>' +
           '<div class="admin-dash-table__cell" data-label="Nom">' + escHtml(p.name) + '</div>' +
           '<div class="admin-dash-table__cell" data-label="Cat\u00e9gorie"><span class="admin-dash-badge admin-dash-badge--neutral">' + escHtml(p.category) + '</span></div>' +
           '<div class="admin-dash-table__cell" data-label="Prix">' + parseFloat(p.price).toFixed(2) + ' \u20ac</div>' +
@@ -6997,7 +7011,7 @@ function getComments(articleId) {
             var item = document.createElement('div');
             item.className = 'admin-gallery-existing__item';
             item.setAttribute('data-image-id', img.id);
-            item.innerHTML = '<img src="' + img.image_url + '" alt="Photo galerie">' +
+            item.innerHTML = '<img src="' + preferWebp(img.image_url) + '" alt="Photo galerie">' +
               '<button type="button" class="admin-gallery-existing__remove" title="Supprimer">&times;</button>';
             item.querySelector('.admin-gallery-existing__remove').addEventListener('click', function() {
               supabase.from('product_images').delete().eq('id', img.id).then(function(delRes) {
@@ -7702,7 +7716,7 @@ function getComments(articleId) {
             try {
               imageUrl = await uploadImage(file, 'images', path);
             } catch(err) {
-              if (!imageUrl) imageUrl = 'blog-journal.png';
+              if (!imageUrl) imageUrl = 'blog-journal.webp';
             }
           }
 
@@ -7711,7 +7725,7 @@ function getComments(articleId) {
             title: fd.get('title').trim(),
             excerpt: fd.get('excerpt').trim(),
             content: fd.get('content').trim(),
-            image_url: imageUrl || 'blog-journal.png',
+            image_url: imageUrl || 'blog-journal.webp',
             date_publication: fd.get('date_publication').trim()
           };
 
@@ -7772,7 +7786,7 @@ function getComments(articleId) {
             try {
               imageUrl = await uploadImage(file, 'images', path);
             } catch(err) {
-              if (!imageUrl) imageUrl = 'crystals-nature.png';
+              if (!imageUrl) imageUrl = 'crystals-nature.webp';
             }
           }
 
@@ -7781,7 +7795,7 @@ function getComments(articleId) {
             description: fd.get('description').trim(),
             price: parseFloat(fd.get('price')),
             category: fd.get('category').trim(),
-            image_url: imageUrl || 'crystals-nature.png',
+            image_url: imageUrl || 'crystals-nature.webp',
             visible: fd.get('visible') === 'true',
             status: fd.get('status') || 'disponible',
             stripe_link: (fd.get('stripe_link') || '').trim()

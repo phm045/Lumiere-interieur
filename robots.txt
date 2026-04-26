@@ -1,0 +1,25 @@
+User-agent: *
+Allow: /
+Disallow: /sw.js
+Disallow: /manifest.json
+
+# Bloquer les bots IA agressifs (entraînement non consenti)
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ChatGPT-User
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: anthropic-ai
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+Sitemap: https://www.une-voix-interieure.fr/sitemap.xml

@@ -34,21 +34,35 @@
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta http-equiv="Permissions-Policy" content="camera=(), microphone=(), geolocation=(), payment=(self &quot;https://buy.stripe.com&quot;)">
 <title>Une voix intérieure — Consultations de voyance par les oracles</title>
-<meta name="description" content="Une voix intérieure — Consultations de voyance personnalisées. Guidance authentique et bienveillante.">
-<meta property="og:title" content="Une voix intérieure — Voyance & Guidance">
-<meta property="og:description" content="Consultations de voyance personnalisées. Guidance authentique et bienveillante.">
-<meta property="og:image" content="https://une-voix-interieure.fr/og-image.png">
+<meta name="description" content="Voyance & guidance personnalisées par les oracles : tirages de cartes, voyance par mail (9 €), accompagnement spirituel et thérapie holistique. Authentique et bienveillant.">
+<meta name="keywords" content="voyance, guidance, oracle, tirage de cartes, voyance par mail, médium, accompagnement spirituel, thérapie holistique, cartomancie, voyance en ligne, consultation voyance, France">
+<meta name="author" content="Une voix intérieure">
+<meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1">
+<meta name="googlebot" content="index, follow">
+<meta name="format-detection" content="telephone=yes">
+
+<!-- Open Graph (Facebook, LinkedIn, WhatsApp) -->
+<meta property="og:title" content="Une voix intérieure — Voyance & Guidance par les oracles">
+<meta property="og:description" content="Consultations de voyance personnalisées : tirages de cartes, voyance par mail, accompagnement spirituel et thérapie holistique. Guidance authentique et bienveillante.">
+<meta property="og:image" content="https://www.une-voix-interieure.fr/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image" content="https://une-voix-interieure.fr/og-image-square.png">
+<meta property="og:image:alt" content="Une voix intérieure — Voyance et guidance par les oracles">
+<meta property="og:image" content="https://www.une-voix-interieure.fr/og-image-square.png">
 <meta property="og:image:width" content="600">
 <meta property="og:image:height" content="600">
 <meta property="og:type" content="website">
-<meta property="og:url" content="https://une-voix-interieure.fr/">
-  <link rel="canonical" href="https://une-voix-interieure.fr/">
+<meta property="og:url" content="https://www.une-voix-interieure.fr/">
+<meta property="og:locale" content="fr_FR">
+  <link rel="canonical" href="https://www.une-voix-interieure.fr/">
 <meta property="og:site_name" content="Une voix intérieure">
+
+<!-- Twitter Cards -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:image" content="https://une-voix-interieure.fr/og-image.png">
+<meta name="twitter:title" content="Une voix intérieure — Voyance & Guidance">
+<meta name="twitter:description" content="Consultations de voyance personnalisées par les oracles. Guidance authentique et bienveillante.">
+<meta name="twitter:image" content="https://www.une-voix-interieure.fr/og-image.png">
+<meta name="twitter:image:alt" content="Une voix intérieure — Voyance et guidance">
 <link rel="apple-touch-icon" href="./logo-lumiere-interieure.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -73,25 +87,67 @@
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  "name": "Une voix intérieure",
-  "description": "Consultations de voyance personnalisées. Guidance authentique, bienveillante et ancrée dans le respect de votre libre arbitre.",
-  "url": "https://une-voix-interieure.fr",
-  "image": "https://une-voix-interieure.fr/og-image.png",
-  "telephone": "+33638597567",
-  "email": "philippe.medium45@gmail.com",
-  "priceRange": "€€",
-  "serviceType": "Voyance, Oracle, Guidance intuitive",
-  "areaServed": "France",
-  "openingHoursSpecification": {
-    "@type": "OpeningHoursSpecification",
-    "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
-    "opens": "09:00",
-    "closes": "19:00"
-  },
-  "sameAs": [
-    "https://www.instagram.com/une_voix_interieure/",
-    "https://www.facebook.com/profile.php?id=61577589637856"
+  "@graph": [
+    {
+      "@type": "LocalBusiness",
+      "@id": "https://www.une-voix-interieure.fr/#business",
+      "name": "Une voix intérieure",
+      "description": "Consultations de voyance personnalisées. Guidance authentique, bienveillante et ancrée dans le respect de votre libre arbitre.",
+      "url": "https://www.une-voix-interieure.fr/",
+      "image": "https://www.une-voix-interieure.fr/og-image.png",
+      "logo": "https://www.une-voix-interieure.fr/logo-lumiere-interieure.png",
+      "telephone": "+33638597567",
+      "email": "philippe.medium45@gmail.com",
+      "priceRange": "€€",
+      "areaServed": {
+        "@type": "Country",
+        "name": "France"
+      },
+      "openingHoursSpecification": {
+        "@type": "OpeningHoursSpecification",
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"],
+        "opens": "09:00",
+        "closes": "19:00"
+      },
+      "sameAs": [
+        "https://www.instagram.com/une_voix_interieure/",
+        "https://www.facebook.com/profile.php?id=61577589637856"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://www.une-voix-interieure.fr/#website",
+      "url": "https://www.une-voix-interieure.fr/",
+      "name": "Une voix intérieure",
+      "description": "Voyance & guidance par les oracles",
+      "publisher": { "@id": "https://www.une-voix-interieure.fr/#business" },
+      "inLanguage": "fr-FR"
+    },
+    {
+      "@type": "Service",
+      "@id": "https://www.une-voix-interieure.fr/#voyance-mail",
+      "serviceType": "Voyance par mail",
+      "name": "Voyance par mail — 1 question",
+      "description": "Réponse écrite et détaillée à une question précise par tirage de cartes oracle, envoyée sous 48 heures.",
+      "provider": { "@id": "https://www.une-voix-interieure.fr/#business" },
+      "areaServed": { "@type": "Country", "name": "France" },
+      "offers": {
+        "@type": "Offer",
+        "price": "9.00",
+        "priceCurrency": "EUR",
+        "availability": "https://schema.org/InStock",
+        "url": "https://www.une-voix-interieure.fr/#services"
+      }
+    },
+    {
+      "@type": "Service",
+      "@id": "https://www.une-voix-interieure.fr/#therapie",
+      "serviceType": "Thérapie holistique",
+      "name": "Accompagnement holistique",
+      "description": "Soins énergétiques et accompagnement holistique sur rendez-vous.",
+      "provider": { "@id": "https://www.une-voix-interieure.fr/#business" },
+      "areaServed": { "@type": "Country", "name": "France" }
+    }
   ]
 }
 </script>
@@ -279,8 +335,8 @@
           <div class="newsletter-inline">
             <form class="newsletter-form" data-newsletter>
               <div class="newsletter-form__fields">
-                <input type="text" name="prenom" placeholder="Votre prénom" required class="newsletter-form__input" maxlength="40" autocomplete="given-name">
-                <input type="email" name="email" placeholder="Votre adresse email" required class="newsletter-form__input newsletter-form__input--email" autocomplete="email">
+                <input type="text" name="prenom" placeholder="Votre prénom" required class="newsletter-form__input" maxlength="40" autocomplete="given-name" aria-label="Prénom">
+                <input type="email" name="email" placeholder="Votre adresse email" required class="newsletter-form__input newsletter-form__input--email" autocomplete="email" aria-label="Adresse email">
               </div>
               <button type="submit" class="btn btn--primary newsletter-form__btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -788,8 +844,8 @@
           <div class="newsletter-inline fade-in">
             <form class="newsletter-form" data-newsletter>
               <div class="newsletter-form__fields">
-                <input type="text" name="prenom" placeholder="Votre prénom" required class="newsletter-form__input" maxlength="40" autocomplete="given-name">
-                <input type="email" name="email" placeholder="Votre adresse email" required class="newsletter-form__input newsletter-form__input--email" autocomplete="email">
+                <input type="text" name="prenom" placeholder="Votre prénom" required class="newsletter-form__input" maxlength="40" autocomplete="given-name" aria-label="Prénom">
+                <input type="email" name="email" placeholder="Votre adresse email" required class="newsletter-form__input newsletter-form__input--email" autocomplete="email" aria-label="Adresse email">
               </div>
               <button type="submit" class="btn btn--primary newsletter-form__btn">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
@@ -3241,7 +3297,7 @@ Cal("init", "consultations", { origin: "https://app.cal.eu" });
       <p class="restock-modal__product-name" id="restock-modal-product-name"></p>
       <p class="restock-modal__text">Recevez un email dès que ce produit sera de nouveau disponible.</p>
       <form class="restock-modal__form" id="restock-form">
-        <input type="email" class="restock-modal__input" id="restock-email" placeholder="Votre adresse email" required autocomplete="email">
+        <input type="email" class="restock-modal__input" id="restock-email" placeholder="Votre adresse email" required autocomplete="email" aria-label="Adresse email pour notification de restock">
         <button type="submit" class="restock-modal__submit" id="restock-submit-btn">M'alerter du restock</button>
         <p class="restock-modal__error" id="restock-error" hidden></p>
       </form>

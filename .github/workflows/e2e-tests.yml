@@ -1,0 +1,59 @@
+name: "🧪 Tests E2E Playwright"
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    name: Tests E2E (${{ matrix.project }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, mobile-chrome]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Setup Python (pour http.server)
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps ${{ matrix.project == 'mobile-chrome' && 'chromium' || matrix.project }}
+
+      - name: Run Playwright tests
+        env:
+          CI: true
+        run: npx playwright test --project=${{ matrix.project }}
+
+      - name: Upload HTML report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-${{ matrix.project }}
+          path: playwright-report/
+          retention-days: 14
+
+      - name: Upload traces (failures only)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-traces-${{ matrix.project }}
+          path: test-results/
+          retention-days: 14

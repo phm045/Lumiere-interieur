@@ -1,0 +1,17 @@
+{
+  "name": "une-voix-interieure",
+  "version": "1.0.0",
+  "description": "Site officiel Une voix intérieure - Voyance & guidance par les oracles",
+  "private": true,
+  "scripts": {
+    "serve": "python3 -m http.server 8080",
+    "test": "playwright test",
+    "test:headed": "playwright test --headed",
+    "test:ui": "playwright test --ui",
+    "test:debug": "playwright test --debug",
+    "test:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.47.0"
+  }
+}
